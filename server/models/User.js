@@ -22,6 +22,7 @@ const userSchema = mongoose.Schema({
     role: {
         type: String,
         default: 'student',
+        enum: ['student', 'admin', 'employee', 'parent', 'coach', 'hr'],
     },
 
     studentProfile: {
@@ -32,6 +33,11 @@ const userSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Employee',
     },
+    // For Parent Role
+    children: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Student',
+    }],
     twoFactorSecret: {
         type: Object,
     },

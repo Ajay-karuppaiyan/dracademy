@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -21,19 +21,13 @@ import {
 import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import Payroll from "../../pages/payroll/Payroll";
 
-const EmployeeList = ({
-  employees,
-  loading,
-  onRefresh,
-  onEdit,
-  onToggleStatus,
-}) => {
+const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
 
-  const toggleMenu = (id) => {
-    setOpenMenuId(openMenuId === id ? null : id);
-  };
+  const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       {/* Table Header / Filters */}
@@ -76,10 +70,7 @@ const EmployeeList = ({
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td
-                  colSpan="6"
-                  className="px-6 py-10 text-center text-slate-400"
-                >
+                <td colSpan="7" className="px-6 py-10 text-center text-slate-400">
                   <div className="flex flex-col items-center gap-2">
                     <Clock className="animate-spin" size={24} />
                     <span>Loading employees...</span>
@@ -88,22 +79,14 @@ const EmployeeList = ({
               </tr>
             ) : employees.length === 0 ? (
               <tr>
-                <td
-                  colSpan="6"
-                  className="px-6 py-10 text-center text-slate-400"
-                >
+                <td colSpan="7" className="px-6 py-10 text-center text-slate-400">
                   No employees found.
                 </td>
               </tr>
             ) : (
               employees.map((emp, index) => (
-                <tr
-                  key={emp._id}
-                  className="hover:bg-slate-50 transition-colors group"
-                >
-                  <td className="px-6 py-4 font-medium text-slate-600">
-                    {index + 1}
-                  </td>
+                <tr key={emp._id} className="hover:bg-slate-50 transition-colors group">
+                  <td className="px-6 py-4 font-medium text-slate-600">{index + 1}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-brand-50 border border-slate-200 overflow-hidden">
@@ -123,9 +106,7 @@ const EmployeeList = ({
                         <div className="font-bold text-slate-900">
                           {emp.firstName} {emp.lastName}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {emp.employeeId}
-                        </div>
+                        <div className="text-xs text-slate-500">{emp.employeeId}</div>
                       </div>
                     </div>
                   </td>
@@ -146,7 +127,9 @@ const EmployeeList = ({
                       }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${emp.status === "active" ? "bg-green-500" : "bg-yellow-500"}`}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          emp.status === "active" ? "bg-green-500" : "bg-yellow-500"
+                        }`}
                       ></span>
                       {emp.status}
                     </span>
@@ -168,6 +151,7 @@ const EmployeeList = ({
                       year: "numeric",
                     })}
                   </td>
+
                   <td className="px-6 py-4 text-right relative">
                     <button
                       onClick={() => toggleMenu(emp._id)}
@@ -175,7 +159,7 @@ const EmployeeList = ({
                     >
                       <MoreVertical size={18} />
                     </button>
-
+                    
                     {openMenuId === emp._id && (
                       <>
                         <div
@@ -183,6 +167,7 @@ const EmployeeList = ({
                           onClick={() => setOpenMenuId(null)}
                         ></div>
                         <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
+                          {/* Edit Button */}
                           <button
                             onClick={() => {
                               onEdit(emp);
@@ -193,6 +178,8 @@ const EmployeeList = ({
                             <Edit size={16} className="text-slate-400" />
                             Edit Details
                           </button>
+
+                          {/* Toggle Status Button */}
                           <button
                             onClick={() => {
                               onToggleStatus(emp._id);
@@ -214,10 +201,24 @@ const EmployeeList = ({
                               </>
                             )}
                           </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete ${emp.firstName}?`)) {
+                                onDelete(emp._id);
+                                setOpenMenuId(null);
+                              }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <XCircle size={16} /> Delete Employee
+                          </button>
                         </div>
                       </>
                     )}
                   </td>
+
                 </tr>
               ))
             )}
@@ -225,17 +226,13 @@ const EmployeeList = ({
         </table>
       </div>
 
-      {/* Pagination (Simple) */}
+      {/* Pagination */}
       <div className="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
         <span>
           Showing {employees.length} of {employees.length} employees
         </span>
-
         <div className="flex gap-2">
-          <button
-            className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50"
-            disabled
-          >
+          <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50" disabled>
             Previous
           </button>
           <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">
@@ -253,6 +250,7 @@ const HR = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [user, setUser] = useState(null); // logged-in user
 
   const fetchEmployees = async () => {
     try {
@@ -263,6 +261,15 @@ const HR = () => {
       toast.error("Failed to load employees");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      const res = await api.get("/auth/me");
+      setUser(res.data);
+    } catch {
+      toast.error("Failed to fetch user info");
     }
   };
 
@@ -281,7 +288,19 @@ const HR = () => {
     setIsAddModalOpen(true);
   };
 
-  React.useEffect(() => {
+  // --- Delete Handler ---
+  const handleDeleteEmployee = async (id) => {
+    try {
+      await api.delete(`/employees/${id}`);
+      toast.success("Employee deleted successfully");
+      fetchEmployees();
+    } catch {
+      toast.error("Failed to delete employee");
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
     fetchEmployees();
   }, []);
 
@@ -296,6 +315,7 @@ const HR = () => {
           fetchEmployees();
         }}
       />
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -321,12 +341,7 @@ const HR = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          {
-            label: "Total Employees",
-            value: employees.length,
-            icon: Users,
-            color: "blue",
-          },
+          { label: "Total Employees", value: employees.length, icon: Users, color: "blue" },
           {
             label: "Active Staff",
             value: employees.filter((e) => e.status === "active").length,
@@ -354,13 +369,9 @@ const HR = () => {
               <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">
                 {stat.label}
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
-                {stat.value}
-              </p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
             </div>
-            <div
-              className={`p-3 rounded-lg bg-${stat.color}-50 text-${stat.color}-600`}
-            >
+            <div className={`p-3 rounded-lg bg-${stat.color}-50 text-${stat.color}-600`}>
               <stat.icon size={20} />
             </div>
           </div>
@@ -370,21 +381,19 @@ const HR = () => {
       {/* Tabs */}
       <div className="border-b border-slate-200">
         <div className="flex gap-6">
-          {["employees", "attendance", "leave_requests", "payroll"].map(
-            (tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${
-                  activeTab === tab
-                    ? "border-brand-600 text-brand-700"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {tab.replace("_", " ")}
-              </button>
-            ),
-          )}
+          {["employees", "payroll"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+                activeTab === tab
+                  ? "border-brand-600 text-brand-700"
+                  : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              {tab.replace("_", " ")}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -397,37 +406,11 @@ const HR = () => {
             onRefresh={fetchEmployees}
             onEdit={handleEditInitiate}
             onToggleStatus={handleToggleStatus}
+            onDelete={handleDeleteEmployee}
           />
         )}
 
-        {activeTab === "attendance" && (
-          <div className="bg-white p-12 text-center rounded-xl border border-slate-200 text-slate-400">
-            <Clock size={48} className="mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium text-slate-700">
-              Attendance Module
-            </h3>
-            <p>Biometric and manual attendance logs will appear here.</p>
-          </div>
-        )}
-        {activeTab === "leave_requests" && (
-          <div className="bg-white p-12 text-center rounded-xl border border-slate-200 text-slate-400">
-            <AlertCircle size={48} className="mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium text-slate-700">
-              Leave Requests
-            </h3>
-            <p>Pending approvals for sick leave and vacations.</p>
-          </div>
-        )}
-        {activeTab === "payroll" && (
-          <div className="bg-white p-12 text-center rounded-xl border border-slate-200 text-slate-400">
-            <DollarSign size={48} className="mx-auto mb-4 opacity-50" />{" "}
-            {/* DollarSign needs import if used, using text for now or add to imports */}
-            <h3 className="text-lg font-medium text-slate-700">
-              Payroll Processing
-            </h3>
-            <p>Salary slips and monthly processing tools.</p>
-          </div>
-        )}
+        {activeTab === "payroll" && <Payroll />}
       </div>
     </div>
   );

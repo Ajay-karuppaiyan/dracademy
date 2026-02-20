@@ -6,47 +6,89 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Toaster } from "react-hot-toast";
+
+// Layouts
 import DashboardLayout from "./layouts/DashboardLayout";
 import PublicLayout from "./layouts/PublicLayout";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
+
+// Public Pages
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import CourseCatalog from "./pages/lms/CourseCatalog";
-import CoursePlayer from "./pages/lms/CoursePlayer";
+
+// Dashboard Pages
+import Dashboard from "./pages/Dashboard";
 import MyLearning from "./pages/lms/MyLearning";
+import CoursePlayer from "./pages/lms/CoursePlayer";
 import EnrollClass from "./pages/lms/EnrollClass";
 import CourseManagement from "./pages/admin/CourseManagement";
 import AdministrativeConfigs from "./pages/admin/AdministrativeConfigs";
 import HR from "./pages/dashboard/HR";
 import Settings from "./pages/dashboard/Settings";
+import Students from "./pages/dashboard/Students";
+import ParentManagement from "./pages/admin/ParentManagement";
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import RegisterChild from "./pages/parent/RegisterChild";
+import Attendance from "./pages/attendance/Attendance";
+import Profile from "./pages/profile/Profile";
 
+// Leave
+import LeaveRequestList from "./components/LeaveRequestList";
+
+// ---------------------------
+// Private Route Wrapper
+// ---------------------------
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
 
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route wrapper (redirects to dashboard if already logged in, optional)
-const PublicOnlyRoute = ({ children }) => {
-  const { loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  // Allow access to public pages even if logged in, but for Login page specifically we might want to redirect
-  return children;
+// ---------------------------
+// Leave Role Logic
+// ---------------------------
+function LeaveRequestOrForm() {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  if (user.role === "admin") return <LeaveRequestList />;
+
+  if (["hr", "coach", "student"].includes(user.role?.toLowerCase())) {
+    return <LeaveRequestList showApplyButton={true} onlyMine={true} />;
+  }
+
+  return <div className="p-4">Not authorized</div>;
+}
+
+// ---------------------------
+// Dashboard Redirect Logic
+// ---------------------------
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+
+  if (user?.role === "parent") {
+    return <Navigate to="/dashboard/parent-dashboard" replace />;
+  }
+
+  return <Dashboard />;
 };
 
-import { Toaster } from "react-hot-toast";
-
+// ---------------------------
+// Main App
+// ---------------------------
 function App() {
   return (
     <AuthProvider>
       <Toaster position="top-right" reverseOrder={false} />
       <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* ================= PUBLIC ROUTES ================= */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
+
             <Route
               path="/about"
               element={
@@ -55,6 +97,7 @@ function App() {
                 </div>
               }
             />
+
             <Route
               path="/contact"
               element={
@@ -63,6 +106,7 @@ function App() {
                 </div>
               }
             />
+
             <Route
               path="/courses"
               element={
@@ -74,11 +118,11 @@ function App() {
             />
           </Route>
 
-          {/* Auth Routes */}
+          {/* ================= AUTH ROUTES ================= */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Login />} />
 
-          {/* Protected Dashboard Routes */}
+          {/* ================= DASHBOARD ROUTES ================= */}
           <Route
             path="/dashboard"
             element={
@@ -87,61 +131,45 @@ function App() {
               </PrivateRoute>
             }
           >
+            {/* Default Dashboard Page - Redirect Parents to Parent Dashboard */}
+            <Route index element={<DashboardRedirect />} />
+
+            {/* LMS */}
             <Route path="lms" element={<MyLearning />} />
             <Route path="lms/course/:id" element={<CoursePlayer />} />
             <Route path="enroll" element={<EnrollClass />} />
-            <Route
-              path="attendance"
-              element={
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Attendance</h2>
-                  <p>Coming Soon</p>
-                </div>
-              }
-            />
-            <Route
-              path="subscription"
-              element={
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Subscription</h2>
-                  <p>Coming Soon</p>
-                </div>
-              }
-            />
-            <Route
-              path="timetable"
-              element={
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Time Table</h2>
-                  <p>Coming Soon</p>
-                </div>
-              }
-            />
+
+            {/* Parent */}
+            <Route path="parent-dashboard" element={<ParentDashboard />} />
+            <Route path="parent/register-child" element={<RegisterChild />} />
+
+            {/* Attendance */}
+            <Route path="attendance" element={<Attendance />} />
+
+            {/* Admin */}
             <Route path="admin/courses" element={<CourseManagement />} />
             <Route path="admin/configs" element={<AdministrativeConfigs />} />
+            <Route path="admin/parents" element={<ParentManagement />} />
+
+            {/* HR (Payroll is inside HR tabs) */}
             <Route path="hr" element={<HR />} />
-            <Route
-              path="finance"
-              element={
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Finance</h2>
-                  <p>Coming Soon</p>
-                </div>
-              }
-            />
-            <Route
-              path="students"
-              element={
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Students</h2>
-                  <p>Coming Soon</p>
-                </div>
-              }
-            />
+
+            {/* Students */}
+            <Route path="students" element={<Students />} />
+
+            {/* Profile Routes (Fixed - relative paths) */}
+            <Route path="student/profile" element={<Profile />} />
+            <Route path="coach/profile" element={<Profile />} />
+            <Route path="hr/profile" element={<Profile />} />
+
+            {/* Settings */}
             <Route path="settings" element={<Settings />} />
+
+            {/* Leave */}
+            <Route path="leave-request" element={<LeaveRequestOrForm />} />
           </Route>
 
-          {/* Fallback */}
+          {/* ================= FALLBACK ================= */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

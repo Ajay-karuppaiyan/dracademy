@@ -228,4 +228,56 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// @desc    Register a new parent (Admin Only)
+// @route   POST /api/auth/register-parent
+// @access  Private (Admin)
+router.post('/register-parent', protect, async (req, res) => {
+    // Only Admin can create parents this way
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+
+    const { name, email, password, mobile, studentIds } = req.body;
+
+    try {
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            mobile,
+            password,
+            role: 'parent',
+            children: studentIds || []
+        });
+
+        if (user) {
+            // Also update the Students to link back to this parent
+            if (studentIds && studentIds.length > 0) {
+                const Student = require('../models/Student'); // Import here to avoid circular dependency issues at top if any
+                await Student.updateMany(
+                    { _id: { $in: studentIds } },
+                    { $set: { parent: user._id } }
+                );
+            }
+
+            res.status(201).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                children: user.children
+            });
+        } else {
+            res.status(400).json({ message: 'Invalid user data' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
