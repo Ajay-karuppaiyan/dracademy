@@ -13,20 +13,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // =================== APPLY LEAVE ===================
-router.post("/apply", upload.single("file"), async (req, res) => {
+router.post("/apply", protect, upload.single("file"), async (req, res) => {
   try {
-    console.log("REQ.BODY:", req.body);
-    console.log("REQ.FILE:", req.file);
+    const { leaveType, reason, startDate, endDate, numDays } = req.body;
 
-    const { userId, employeeName, leaveType, reason, startDate, endDate, numDays } = req.body;
-
-    if (!userId || !employeeName || !leaveType || !reason || !startDate || !endDate || !numDays) {
+    if (!leaveType || !reason || !startDate || !endDate || !numDays) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const leave = new Leave({
-      userId,
-      employeeName,
+      userId: req.user._id,               // ✅ From token
+      employeeName: req.user.name,        // ✅ From token
       leaveType,
       reason,
       startDate: new Date(startDate),
@@ -37,15 +34,16 @@ router.post("/apply", upload.single("file"), async (req, res) => {
 
     await leave.save();
     res.status(201).json({ message: "Leave applied successfully", leave });
+
   } catch (err) {
     console.error("SERVER ERROR:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 
 // =================== GET ALL LEAVES (All Users) ===================
-router.get("/all", protect, async (req, res) => {
+router.get("/all", protect, admin, async (req, res) => {
   try {
     const leaves = await Leave.find().sort({ createdAt: -1 });
     res.json(leaves);

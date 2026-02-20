@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
-const LeaveApplicationForm = () => {
+const LeaveApplicationForm = ({ onSuccess }) => {
   const today = new Date().toISOString().split("T")[0];
   const [employeeName, setEmployeeName] = useState(localStorage.getItem("name") || "");
   const [reason, setReason] = useState("");
@@ -46,6 +46,9 @@ const LeaveApplicationForm = () => {
       setSubmitting(true);
       await api.post("/leave/apply", formData, { headers: { "Content-Type": "multipart/form-data" } });
       toast.success("Leave applied successfully!");
+      if (onSuccess) {
+        onSuccess();
+      }
       setReason(""); setStartDate(""); setEndDate(""); setOtherLeaveType(""); setLeaveType("casual"); setFile(null);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to apply leave");

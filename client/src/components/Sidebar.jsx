@@ -26,16 +26,18 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => (
       end={item.path === "/dashboard"}
       onClick={closeMobile}
       className={({ isActive }) =>
-        `flex items-center p-3 my-1 rounded-xl transition-all duration-200 group overflow-hidden whitespace-nowrap ${isActive
-          ? "bg-brand-600 text-white shadow-lg shadow-brand-900/30"
-          : "text-slate-400 hover:bg-slate-800 hover:text-white"
+        `flex items-center p-3 my-1 rounded-xl transition-all duration-200 group overflow-hidden whitespace-nowrap ${
+          isActive
+            ? "bg-brand-600 text-white shadow-lg shadow-brand-900/30"
+            : "text-slate-400 hover:bg-slate-800 hover:text-white"
         }`
       }
     >
       <div className="flex-shrink-0">{item.icon}</div>
       <span
-        className={`ml-3 font-medium transition-opacity duration-300 ${isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
-          }`}
+        className={`ml-3 font-medium transition-opacity duration-300 ${
+          isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
+        }`}
       >
         {item.label}
       </span>
@@ -45,144 +47,77 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => (
 
 const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   const { user } = useAuth();
-
+  const role = user?.role?.toLowerCase();
+  console.log("USER:", user);
+  console.log("ROLE:", role);
   // ================= STUDENT MENU =================
   const studentItems = [
-    {
-      icon: <LayoutDashboard size={22} />,
-      label: "Dashboard",
-      path: "/dashboard",
-    },
-    {
-      icon: <MonitorPlay size={22} />,
-      label: "Enroll Class",
-      path: "/dashboard/enroll",
-    },
-    {
-      icon: <GraduationCap size={22} />,
-      label: "My Learning",
-      path: "/dashboard/lms",
-    },
-    {
-      icon: <CalendarCheck size={22} />,
-      label: "Attendance",
-      path: "/dashboard/attendance",
-    },
-    {
-      icon: <UserCheck size={22} />,
-      label: "Leave Request",
-      path: "/dashboard/leave-request",
-    },
-    {
-      icon: <CreditCard size={22} />,
-      label: "Subscription",
-      path: "/dashboard/subscription",
-    },
-    {
-      icon: <Clock size={22} />,
-      label: "Time Table",
-      path: "/dashboard/timetable",
-    },
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <MonitorPlay size={22} />, label: "Enroll Class", path: "/dashboard/enroll" },
+    { icon: <GraduationCap size={22} />, label: "My Learning", path: "/dashboard/lms" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <CreditCard size={22} />, label: "Subscription", path: "/dashboard/subscription" },
+    { icon: <Clock size={22} />, label: "Time Table", path: "/dashboard/timetable" },
   ];
 
-  // ================= ADMIN MAIN MENU =================
-  const adminNavItems = [
-    {
-      icon: <LayoutDashboard size={22} />,
-      label: "Dashboard",
-      path: "/dashboard",
-    },
-    {
-      icon: <BookOpen size={22} />,
-      label: "LMS Portal",
-      path: "/dashboard/lms",
-    },
-    {
-      icon: <Users size={22} />,
-      label: "Employee Management",
-      path: "/dashboard/hr",
-    },
-    {
-      icon: <DollarSign size={22} />,
-      label: "Finance",
-      path: "/dashboard/finance",
-    },
-    {
-      icon: <GraduationCap size={22} />,
-      label: "Students",
-      path: "/dashboard/students",
-    },
-    {
-      icon: <CalendarCheck size={22} />,
-      label: "Attendance",
-      path: "/dashboard/attendance",
-    },
-    {
-      icon: <UserCheck size={22} />,
-      label: "Leave Request",
-      path: "/dashboard/leave-request",
-    },
+  // ================= ADMIN / HR MENU =================
+  const adminItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <BookOpen size={22} />, label: "LMS Portal", path: "/dashboard/lms" },
+    { icon: <Users size={22} />, label: "Employee Management", path: "/dashboard/hr" },
+    { icon: <DollarSign size={22} />, label: "Finance", path: "/dashboard/finance" },
+    { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
   ];
 
-  // ================= STAFF ROLES =================
-  const staffRoles = ["admin", "hr", "coach"];
-
-  const staffExtraItems = [
-    {
-      icon: <CalendarCheck size={22} />,
-      label: "Attendance",
-      path: "/dashboard/attendance",
-    },
-    {
-      icon: <UserCheck size={22} />,
-      label: "Leave Requests",
-      path: "/dashboard/leaves",
-    },
-  ];
+  // ================= COACH MENU =================
+  const coachItems = adminItems.filter(
+    (item) =>
+      item.label !== "Employee Management" &&
+      item.label !== "Finance"
+  );
 
   // ================= PARENT MENU =================
   const parentItems = [
-    {
-      icon: <Users size={22} />,
-      label: "My Children",
-      path: "/dashboard/parent-dashboard",
-    },
+    { icon: <Users size={22} />, label: "My Children", path: "/dashboard/parent-dashboard" },
+  ];
+
+  const employeeItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
   ];
 
   // ================= ROLE BASED NAVIGATION =================
-  const currentNavItems =
-    user?.role?.toLowerCase() === "student"
-      ? studentItems
-      : user?.role?.toLowerCase() === "parent"
-        ? parentItems
-        : staffRoles.includes(user?.role?.toLowerCase())
-          ? adminNavItems
-          : [];
+  let currentNavItems = [];
 
-  // ================= ADMIN ZONE =================
-  const adminItems = [
-    {
-      icon: <Users size={22} />,
-      label: "Parent Mgmt",
-      path: "/dashboard/admin/parents",
-    },
-    {
-      icon: <ShieldCheck size={22} />,
-      label: "Course Mgmt",
-      path: "/dashboard/admin/courses",
-    },
-    {
-      icon: <Building2 size={22} />,
-      label: "Administrative",
-      path: "/dashboard/admin/configs",
-    },
+  if (role === "student") {
+    currentNavItems = studentItems;
+  } else if (role === "parent") {
+    currentNavItems = parentItems;
+  } else if (role === "admin" || role === "hr") {
+    currentNavItems = adminItems;
+  } else if (role === "coach") {
+    currentNavItems = coachItems;
+  } else if (role === "employee") {
+    currentNavItems = employeeItems;
+  }
+
+  // ================= ADMIN EXTRA ZONE =================
+  const superAdminItems = [
+    { icon: <Users size={22} />, label: "Parent Mgmt", path: "/dashboard/admin/parents" },
+    { icon: <ShieldCheck size={22} />, label: "Course Mgmt", path: "/dashboard/admin/courses" },
+    { icon: <Building2 size={22} />, label: "Administrative", path: "/dashboard/admin/configs" },
   ];
 
   const sidebarClasses =
     "fixed left-0 top-0 z-50 h-screen bg-slate-900 text-white transition-all duration-300 ease-in-out shadow-xl flex flex-col";
 
-  const responsiveClasses = `${mobileOpen ? "translate-x-0" : "-translate-x-[110%]"
-    } lg:translate-x-0 lg:static lg:h-screen lg:m-0 lg:shadow-none`;
+  const responsiveClasses = `${
+    mobileOpen ? "translate-x-0" : "-translate-x-[110%]"
+  } lg:translate-x-0 lg:static lg:h-screen lg:m-0 lg:shadow-none`;
 
   return (
     <>
@@ -194,21 +129,20 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
       )}
 
       <aside
-        className={`${sidebarClasses} ${responsiveClasses} ${isCollapsed ? "lg:w-20" : "lg:w-72"
-          }`}
+        className={`${sidebarClasses} ${responsiveClasses} ${
+          isCollapsed ? "lg:w-20" : "lg:w-72"
+        }`}
       >
         {/* HEADER */}
         <div className="h-20 flex items-center px-6 border-b border-white/10 relative">
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <div className="flex items-center gap-3">
               <div className="bg-brand-600 p-1.5 rounded-lg">
                 <BookOpen size={20} />
               </div>
               <span className="text-xl font-bold tracking-tight">DRRJ</span>
             </div>
-          )}
-
-          {isCollapsed && (
+          ) : (
             <div className="mx-auto bg-brand-600 p-2 rounded-lg">
               <BookOpen size={24} />
             </div>
@@ -218,26 +152,16 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
             onClick={toggleSidebar}
             className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-brand-600 rounded-full items-center justify-center text-white shadow-lg border border-slate-900 hover:scale-110 transition-transform"
           >
-            {isCollapsed ? (
-              <ChevronRight size={14} />
-            ) : (
-              <ChevronLeft size={14} />
-            )}
+            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </div>
 
         {/* NAVIGATION */}
         <div className="flex-1 overflow-y-auto px-4 py-6 no-scrollbar">
-          {!isCollapsed && (
-            <div className="px-2 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Main
-            </div>
-          )}
-
           <ul className="space-y-1 mb-8">
             {currentNavItems.map((item) => (
               <NavItem
-                key={item.label}
+                key={item.path}
                 item={item}
                 isCollapsed={isCollapsed}
                 closeMobile={closeMobile}
@@ -245,35 +169,21 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
             ))}
           </ul>
 
-          {/* ADMIN ZONE ONLY FOR ADMIN */}
-          {user?.role === "admin" && (
-            <>
-              {!isCollapsed && (
-                <div className="px-2 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Admin
-                </div>
-              )}
-
-              <ul className="space-y-1 mb-8">
-                {adminItems.map((item) => (
-                  <NavItem
-                    key={item.path}
-                    item={item}
-                    isCollapsed={isCollapsed}
-                    closeMobile={closeMobile}
-                  />
-                ))}
-              </ul>
-            </>
+          {/* SUPER ADMIN SECTION */}
+          {role === "admin" && (
+            <ul className="space-y-1 mb-8">
+              {superAdminItems.map((item) => (
+                <NavItem
+                  key={item.path}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                  closeMobile={closeMobile}
+                />
+              ))}
+            </ul>
           )}
 
           {/* SETTINGS */}
-          {!isCollapsed && (
-            <div className="px-2 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-              System
-            </div>
-          )}
-
           <ul className="space-y-1">
             <NavItem
               item={{
@@ -290,8 +200,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
         {/* USER FOOTER */}
         <div className="p-4 border-t border-white/10 bg-slate-800/50">
           <div
-            className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""
-              }`}
+            className={`flex items-center gap-3 ${
+              isCollapsed ? "justify-center" : ""
+            }`}
           >
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-500 to-brand-700 flex items-center justify-center text-sm font-bold border border-white/10">
               {user?.name?.charAt(0)}

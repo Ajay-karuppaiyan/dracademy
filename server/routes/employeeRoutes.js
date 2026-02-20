@@ -11,7 +11,6 @@ const { protect, admin } = require("../middleware/authMiddleware");
 router.post(
   "/",
   protect,
-  admin,
   upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "idFile", maxCount: 1 },
@@ -93,7 +92,7 @@ router.post(
 //////////////////////////////////////////////////////
 // ✅ GET ALL EMPLOYEES
 //////////////////////////////////////////////////////
-router.get("/", protect, admin, async (req, res) => {
+router.get("/", protect, async (req, res) => {
   const employees = await Employee.find().populate("user", "name email role");
   res.json(employees);
 });
@@ -102,7 +101,7 @@ router.get("/", protect, admin, async (req, res) => {
 //////////////////////////////////////////////////////
 // ✅ DELETE EMPLOYEE
 //////////////////////////////////////////////////////
-router.delete("/:id", protect, admin, async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   const employee = await Employee.findById(req.params.id);
   if (!employee)
     return res.status(404).json({ message: "Employee not found" });
@@ -120,7 +119,6 @@ router.delete("/:id", protect, admin, async (req, res) => {
 router.put(
   "/:id",
   protect,
-  admin,
   upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "idFile", maxCount: 1 },
@@ -235,6 +233,5 @@ router.put(
     }
   }
 );
-
 
 module.exports = router;

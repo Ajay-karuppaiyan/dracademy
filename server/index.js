@@ -13,6 +13,7 @@ const leaveRoutes = require("./routes/leaveRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const payroll = require("./routes/payrollRoutes");
 const parentRoutes = require("./routes/parentRoutes");
+// const paymentRoutes = require("./routes/paymentRoutes");
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api/leave", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/payroll", payroll);
 app.use("/api/parent", parentRoutes);
+// app.use("/api/payment", paymentRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

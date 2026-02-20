@@ -8,7 +8,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const sumValues = (obj) => (obj ? Object.values(obj).reduce((a, b) => a + b, 0) : 0);
 
 // GET all employees with payroll info (defaults if payroll does not exist)
-router.get('/salary/all', protect, admin, async (req, res) => {
+router.get('/salary/all', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
     if (!month || !year) return res.status(400).json({ message: "Month & year required" });
@@ -74,7 +74,7 @@ res.json(data);
 
 
 // CREATE or UPDATE payroll
-router.post('/', protect, admin, async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
     const {
       employeeId,

@@ -56,7 +56,7 @@ function LeaveRequestOrForm() {
 
   if (user.role === "admin") return <LeaveRequestList />;
 
-  if (["hr", "coach", "student"].includes(user.role?.toLowerCase())) {
+  if (["hr", "coach", "student", "employee"].includes(user.role?.toLowerCase())) {
     return <LeaveRequestList showApplyButton={true} onlyMine={true} />;
   }
 
