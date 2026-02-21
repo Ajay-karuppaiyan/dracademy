@@ -48,8 +48,7 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => (
 const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   const { user } = useAuth();
   const role = user?.role?.toLowerCase();
-  console.log("USER:", user);
-  console.log("ROLE:", role);
+
   // ================= STUDENT MENU =================
   const studentItems = [
     { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
@@ -81,7 +80,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
 
   // ================= PARENT MENU =================
   const parentItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Users size={22} />, label: "My Children", path: "/dashboard/parent-dashboard" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
   ];
 
   const employeeItems = [

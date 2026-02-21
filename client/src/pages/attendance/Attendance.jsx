@@ -178,34 +178,40 @@ const Attendance = () => {
     stats = { present, total };
   }
 
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Attendance</h2>
+ return (
+  <div className="min-h-screen bg-slate-50 p-6">
+    <div className="max-w-6xl mx-auto space-y-8">
 
-      {/* ===== ADD ATTENDANCE BUTTON ===== */}
-      {user?.role !== "admin" && !showForm && (
-        <div className="mb-6 flex justify-end">
+      {/* ===== HEADER ===== */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
+          <p className="text-sm text-slate-500">
+            Manage daily login and logout records
+          </p>
+        </div>
+
+        {user?.role !== "admin" && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl shadow-md transition-all duration-200"
           >
-            ➕ Add Attendance
+            + Mark Attendance
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ===== ATTENDANCE FORM ===== */}
+      {/* ===== FORM CARD ===== */}
       {user?.role !== "admin" && showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="mb-8 max-w-md mx-auto flex flex-col items-center"
-        >
+        <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 
-          {/* CAMERA / PHOTO CONTAINER */}
-          <div className="flex flex-col items-center gap-4 mb-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col items-center gap-6"
+          >
 
-            {/* Fixed Size Camera Frame */}
-            <div className="w-[420px] h-[320px] rounded-xl border border-gray-300 overflow-hidden bg-black flex items-center justify-center">
+            {/* Camera Container */}
+            <div className="w-[420px] h-[320px] rounded-2xl overflow-hidden border border-slate-200 bg-black flex items-center justify-center shadow-sm">
 
               {cameraActive && (
                 <video
@@ -223,149 +229,191 @@ const Attendance = () => {
                 />
               )}
 
+              {!cameraActive && !photo && (
+                <span className="text-white text-sm opacity-60">
+                  Starting camera...
+                </span>
+              )}
             </div>
 
             {/* Buttons */}
-            {cameraActive && (
-              <button
-                type="button"
-                onClick={handleCapture}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                Capture Photo
-              </button>
-            )}
-
-            {photo && (
-              <div className="flex gap-4 justify-center mt-2">
+            <div className="flex gap-4">
+              {cameraActive && (
                 <button
                   type="button"
-                  onClick={handleRecapture}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition"
+                  onClick={handleCapture}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow transition"
                 >
-                  Recapture
+                  Capture
                 </button>
+              )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
-                >
-                  {loading ? "Submitting..." : "Submit"}
-                </button>
-              </div>
-            )}
-          </div>
+              {photo && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRecapture}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-xl transition"
+                  >
+                    Retake
+                  </button>
 
-          <canvas ref={canvasRef} style={{ display: "none" }} />
-        </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-xl shadow transition"
+                  >
+                    {loading ? "Submitting..." : "Submit"}
+                  </button>
+                </>
+              )}
+            </div>
+
+            <canvas ref={canvasRef} className="hidden" />
+          </form>
+        </div>
       )}
 
+      {/* ===== TABLE SECTION ===== */}
       {!showForm && (
-        <>
-          {/* ===== FILTER BAR & STATS ===== */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+
+          {/* Search & Stats */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <input
               type="text"
-              placeholder="Filter by name..."
+              placeholder="Search employee..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="border px-4 py-2 rounded w-full md:w-1/3"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-slate-200 px-4 py-2.5 rounded-xl w-full md:w-1/3 focus:ring-2 focus:ring-indigo-500 outline-none"
             />
+
             {user?.role !== "admin" && stats && (
-              <div className="flex gap-4 text-sm font-semibold">
+              <div className="flex gap-6 text-sm font-semibold bg-indigo-50 px-5 py-2 rounded-xl border border-indigo-100">
                 <span>
                   Present: <span className="text-green-600">{stats.present}</span>
                 </span>
                 <span>
-                  Total: <span className="text-blue-600">{stats.total}</span>
+                  Total Days: <span className="text-indigo-600">{stats.total}</span>
                 </span>
               </div>
             )}
           </div>
 
-          <h3 className="text-lg font-semibold mb-2">Attendance Records</h3>
-
-          <table className="w-full border-collapse border border-slate-300 text-center">
-            <thead>
-              <tr className="bg-slate-50">
-                <th className="border px-4 py-2 text-center">S.No</th>
-                <th className="border px-4 py-2 text-center">Employee</th>
-                <th className="border px-4 py-2 text-center">Date</th>
-                <th className="border px-4 py-2 text-center">Login Time</th>
-                <th className="border px-4 py-2 text-center">Logout Time</th>
-                <th className="border px-4 py-2 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAttendance.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">
-                    No attendance records found.
-                  </td>
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="text-slate-500 text-xs uppercase border-b">
+                  <th className="py-3 text-left">S.no</th>
+                  <th className="py-3 text-left">Employee</th>
+                  <th className="py-3 text-left">Date</th>
+                  <th className="py-3 text-left">Login</th>
+                  <th className="py-3 text-left">Logout</th>
+                  <th className="py-3 text-center">Action</th>
                 </tr>
-              ) : (
-                filteredAttendance.map((a, idx) => (
-                  <tr key={idx}>
-                    <td className="border px-4 py-2 text-center">{idx + 1}</td>
-                    <td className="border px-4 py-2 text-center">{a.name}</td>
-                    <td className="border px-4 py-2 text-center">{a.date}</td>
-                    <td className="border px-4 py-2 text-center">
-                      {formatTime12Hour(a.loginTime)}
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      {formatTime12Hour(a.logoutTime)}
-                    </td>
-                    <td className="border px-4 py-2 flex gap-2 justify-center">
-                      <button
-                        className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
-                        onClick={() => setViewModal(a)}
-                      >
-                        View
-                      </button>
+              </thead>
 
-                      {user?.role !== "admin" &&
-                        a.date === todayDate && (
-                          <button
-                            disabled={!!a.logoutTime}
-                            onClick={() => handleSetLogout(idx)}
-                            className={`px-2 py-1 rounded text-xs text-white transition
-                            ${a.logoutTime
-                                ? "bg-gray-500 cursor-not-allowed"
-                                : "bg-green-600 hover:bg-green-800"
-                              }`}
-                          >
-                            {a.logoutTime ? "Logged Out" : "Set Logout"}
-                          </button>
-                        )}
+              <tbody>
+                {filteredAttendance.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                      No attendance records available
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </>
+                ) : (
+                  filteredAttendance.map((a, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-b hover:bg-slate-50 transition"
+                    >
+                      <td className="py-3">{idx + 1}</td>
+                      <td className="py-3 font-medium">{a.name}</td>
+                      <td className="py-3">{a.date}</td>
+                      <td className="py-3">
+                        {formatTime12Hour(a.loginTime)}
+                      </td>
+                      <td className="py-3">
+                        {formatTime12Hour(a.logoutTime)}
+                      </td>
+
+                      <td className="py-3 flex justify-center gap-2">
+                        <button
+                          onClick={() => setViewModal(a)}
+                          className="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs hover:bg-blue-200 transition"
+                        >
+                          View
+                        </button>
+
+                        {user?.role !== "admin" &&
+                          a.date === todayDate && (
+                            <button
+                              disabled={!!a.logoutTime}
+                              onClick={() => handleSetLogout(idx)}
+                              className={`px-3 py-1 rounded-lg text-xs transition
+                                ${
+                                  a.logoutTime
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                                }`}
+                            >
+                              {a.logoutTime ? "Logged Out" : "Logout"}
+                            </button>
+                          )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
-      {/* ===== VIEW MODAL ===== */}
+      {/* ===== MODAL ===== */}
       {viewModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" onClick={() => setViewModal(null)}>
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-semibold mb-4">Attendance Details</h2>
-            <p><strong>Name:</strong> {viewModal.name}</p>
-            <p><strong>Role:</strong> {viewModal.role}</p>
-            <p><strong>Date:</strong> {viewModal.date}</p>
-            <p><strong>Login Time:</strong> {formatTime12Hour(viewModal.loginTime)}</p>
-            <p><strong>Logout Time:</strong> {formatTime12Hour(viewModal.logoutTime)}</p>
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setViewModal(null)}
+        >
+          <div
+            className="bg-white w-[420px] p-6 rounded-2xl shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setViewModal(null)}
+              className="absolute top-3 right-4 text-slate-400 hover:text-slate-700"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-xl font-semibold text-slate-800 mb-4">
+              Attendance Details
+            </h3>
+
+            <div className="space-y-3 text-sm text-slate-600">
+              <p><strong>Name:</strong> {viewModal.name}</p>
+              <p><strong>Role:</strong> {viewModal.role}</p>
+              <p><strong>Date:</strong> {viewModal.date}</p>
+              <p><strong>Login:</strong> {formatTime12Hour(viewModal.loginTime)}</p>
+              <p><strong>Logout:</strong> {formatTime12Hour(viewModal.logoutTime)}</p>
+            </div>
+
             {viewModal.photo && (
-              <div className="mt-2"><img src={viewModal.photo} alt="Attendance" className="w-32 h-32 object-cover rounded" /></div>
+              <div className="mt-5 flex justify-center">
+                <img
+                  src={viewModal.photo}
+                  alt="Attendance"
+                  className="w-32 h-32 rounded-xl object-cover border shadow-sm"
+                />
+              </div>
             )}
-            <button onClick={() => setViewModal(null)} className="absolute top-2 right-3 text-gray-600 hover:text-black">✕</button>
           </div>
         </div>
       )}
     </div>
-  );
+  </div>
+);
 };
 
 export default Attendance;

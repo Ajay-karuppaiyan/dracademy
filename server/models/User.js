@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema({
     },
     role: {
         type: String,
-        default: 'student',
+        default: 'parent',
         enum: ['student', 'admin', 'employee', 'parent', 'coach', 'hr'],
     },
 
@@ -49,6 +49,8 @@ const userSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
     }],
+    resetPasswordOtp: String,
+    resetPasswordOtpExpire: Date,
 }, {
     timestamps: true,
 });

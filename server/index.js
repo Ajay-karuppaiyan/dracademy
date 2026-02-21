@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
@@ -13,17 +14,26 @@ const leaveRoutes = require("./routes/leaveRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const payroll = require("./routes/payrollRoutes");
 const parentRoutes = require("./routes/parentRoutes");
-// const paymentRoutes = require("./routes/paymentRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const passwordRoutes = require("./routes/passwordRoutes");
 
 dotenv.config();
-
 connectDB();
 
 const app = express();
 
 app.use(cors());
+
+// 🔐 Razorpay Webhook RAW BODY (MUST BE BEFORE JSON)
+app.use(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" })
+);
+
+// Normal JSON parser
 app.use(express.json({ limit: "5mb" }));
 
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -35,7 +45,8 @@ app.use("/api/leave", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/payroll", payroll);
 app.use("/api/parent", parentRoutes);
-// app.use("/api/payment", paymentRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/password", passwordRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

@@ -256,14 +256,14 @@ const Login = () => {
                     />
                   </div>
 
-                  {isLogin && (
+                 {isLogin && (
                     <div className="text-right">
-                      <a
-                        href="#"
+                      <Link
+                        to="/forgot-password"
                         className="text-gray-400 text-xs hover:text-brand-500 underline decoration-gray-300"
                       >
-                        Forgot your password?
-                      </a>
+                        Forgot password?
+                      </Link>
                     </div>
                   )}
 

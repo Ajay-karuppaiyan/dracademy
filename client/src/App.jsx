@@ -16,6 +16,7 @@ import PublicLayout from "./layouts/PublicLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import CourseCatalog from "./pages/lms/CourseCatalog";
+import ForgotPassword from "./components/forgotPassword";
 
 // Dashboard Pages
 import Dashboard from "./pages/Dashboard";
@@ -56,7 +57,7 @@ function LeaveRequestOrForm() {
 
   if (user.role === "admin") return <LeaveRequestList />;
 
-  if (["hr", "coach", "student", "employee"].includes(user.role?.toLowerCase())) {
+  if (["hr", "coach", "student", "employee", "parent"].includes(user.role?.toLowerCase())) {
     return <LeaveRequestList showApplyButton={true} onlyMine={true} />;
   }
 
@@ -89,49 +90,18 @@ function App() {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
 
-            <Route
-              path="/about"
-              element={
-                <div className="p-20 text-center">
-                  About Us Page (Coming Soon)
-                </div>
-              }
-            />
+            <Route path="/about" element={ <div className="p-20 text-center"> About Us Page (Coming Soon) </div> } />
+            <Route path="/contact" element={<div className="p-20 text-center"> Contact Page (Coming Soon) </div> }/>
+            <Route path="/courses"element={<div className="p-20 text-center"><h1 className="text-2xl font-bold mb-4">All Courses</h1><CourseCatalog /></div>}/></Route>
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            <Route
-              path="/contact"
-              element={
-                <div className="p-20 text-center">
-                  Contact Page (Coming Soon)
-                </div>
-              }
-            />
+            {/* ================= AUTH ROUTES ================= */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Login />} />
 
-            <Route
-              path="/courses"
-              element={
-                <div className="p-20 text-center">
-                  <h1 className="text-2xl font-bold mb-4">All Courses</h1>
-                  <CourseCatalog />
-                </div>
-              }
-            />
-          </Route>
+            {/* ================= DASHBOARD ROUTES ================= */}
+            <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
 
-          {/* ================= AUTH ROUTES ================= */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Login />} />
-
-          {/* ================= DASHBOARD ROUTES ================= */}
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <DashboardLayout />
-              </PrivateRoute>
-            }
-          >
-            {/* Default Dashboard Page - Redirect Parents to Parent Dashboard */}
             <Route index element={<DashboardRedirect />} />
 
             {/* LMS */}

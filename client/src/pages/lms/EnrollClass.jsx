@@ -30,16 +30,72 @@ const EnrollClass = () => {
     fetchAvailableCourses();
   }, []);
 
-  const handleEnroll = async (id) => {
-    try {
-      await api.post(`/courses/${id}/enroll`);
-      toast.success("Successfully enrolled in the course!");
-      // Refresh list to remove the enrolled course
+const handleEnroll = async (course) => {
+  try {
+    if (course.price === 0) {
+      await api.post(`/courses/${course._id}/enroll-free`);
+      toast.success("Enrolled successfully");
       fetchAvailableCourses();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Enrollment failed");
+      return;
     }
-  };
+
+    // 1️⃣ Create Order
+    const { data } = await api.post("/payment/create-order", {
+      courseId: course._id,
+    });
+
+    const options = {
+      key: "rzp_test_43B9POe4e23YRY",
+      amount: data.amount, // paise
+      currency: data.currency,
+      name: "Dr Academy",
+      description: course.title,
+      order_id: data.orderId,
+
+      handler: async function (response) {
+        try {
+          // 2️⃣ Verify Payment
+          await api.post("/payment/verify-payment", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            courseId: course._id,
+          });
+
+          toast.success("Payment successful 🎉");
+          fetchAvailableCourses();
+
+        } catch (err) {
+          toast.error("Verification failed. Contact support.");
+        }
+      },
+
+      modal: {
+        ondismiss: function () {
+          toast.error("Payment cancelled");
+        },
+      },
+
+      theme: {
+        color: "#2563eb",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+
+    // Handle payment failure
+    rzp.on("payment.failed", function (response) {
+      toast.error("Payment failed. Try again.");
+      console.error(response.error);
+    });
+
+    rzp.open();
+
+  } catch (error) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Payment failed");
+  }
+};
 
   if (loading) {
     return (
@@ -113,7 +169,7 @@ const EnrollClass = () => {
                   )}
                 </div>
                 <button
-                  onClick={() => handleEnroll(course._id)}
+                  onClick={() => handleEnroll(course)}
                   className="rounded-2xl bg-brand-600 px-6 py-2.5 text-sm font-black text-white hover:bg-brand-700 shadow-lg shadow-brand-600/20 active:scale-95 transition-all flex items-center gap-2"
                 >
                   <GraduationCap size={18} /> Enroll Now
