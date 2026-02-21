@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Loader2, Mail, Key } from "lucide-react";
 
 const ForgotPassword = () => {
+  const API_BASE = import.meta.env.VITE_API_URL;
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
@@ -17,16 +19,19 @@ const ForgotPassword = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // =============================
-  // STEP 1 - SEND OTP
-  // =============================
+  // ===============================
+  // SEND OTP
+  // ===============================
   const sendOtp = async () => {
-    if (!formData.email) return alert("Enter your email");
+    if (!formData.email) {
+      alert("Please enter your email");
+      return;
+    }
 
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/password/forgot-password", {
+      const res = await fetch(`${API_BASE}/password/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email }),
@@ -34,62 +39,74 @@ const ForgotPassword = () => {
 
       const data = await res.json();
 
-      if (res.ok) {
-        alert("OTP sent to your email");
-        setStep(2);
-        setTimer(30); // start 30s timer
-      } else {
-        alert(data.message);
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send OTP");
       }
-    } catch (err) {
-      alert("Something went wrong");
+
+      alert("OTP sent successfully");
+      setStep(2);
+      setTimer(30);
+    } catch (error) {
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // =============================
-  // STEP 2 - VERIFY OTP
-  // =============================
+  // ===============================
+  // VERIFY OTP
+  // ===============================
   const verifyOtp = async () => {
-    if (!formData.otp) return alert("Enter OTP");
+    if (!formData.otp) {
+      alert("Please enter OTP");
+      return;
+    }
 
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/password/verify-otp", {
+      const res = await fetch(`${API_BASE}/password/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+        body: JSON.stringify({
+          email: formData.email,
+          otp: formData.otp,
+        }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
-        alert("OTP verified successfully");
-        setStep(3);
-      } else {
-        alert(data.message);
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid OTP");
       }
-    } catch (err) {
-      alert("Something went wrong");
+
+      alert("OTP verified");
+      setStep(3);
+    } catch (error) {
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // =============================
-  // STEP 3 - RESET PASSWORD
-  // =============================
+  // ===============================
+  // RESET PASSWORD
+  // ===============================
   const resetPassword = async () => {
+    if (!formData.newPassword || !formData.confirmPassword) {
+      alert("Please fill all password fields");
+      return;
+    }
+
     if (formData.newPassword !== formData.confirmPassword) {
-      return alert("Passwords do not match");
+      alert("Passwords do not match");
+      return;
     }
 
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/password/reset-password", {
+      const res = await fetch(`${API_BASE}/password/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,27 +118,30 @@ const ForgotPassword = () => {
 
       const data = await res.json();
 
-      if (res.ok) {
-        alert("Password reset successful");
-        window.location.href = "/login";
-      } else {
-        alert(data.message);
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to reset password");
       }
-    } catch (err) {
-      alert("Something went wrong");
+
+      alert("Password reset successful!");
+      window.location.href = "/login";
+    } catch (error) {
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // =============================
-  // Timer for Resend OTP
-  // =============================
+  // ===============================
+  // OTP TIMER
+  // ===============================
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-      return () => clearInterval(interval);
-    }
+    if (timer <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [timer]);
 
   return (
@@ -131,7 +151,7 @@ const ForgotPassword = () => {
           Forgot Password
         </h2>
 
-        {/* Progress Indicator */}
+        {/* Step Indicator */}
         <div className="flex justify-between mb-8 text-sm font-medium text-gray-500">
           <span className={step >= 1 ? "text-blue-600" : ""}>Email</span>
           <span className={step >= 2 ? "text-blue-600" : ""}>OTP</span>
@@ -156,7 +176,7 @@ const ForgotPassword = () => {
             <button
               onClick={sendOtp}
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex justify-center items-center mb-2"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex justify-center items-center"
             >
               {loading ? <Loader2 className="animate-spin" /> : "Send OTP"}
             </button>

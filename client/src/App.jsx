@@ -16,7 +16,7 @@ import PublicLayout from "./layouts/PublicLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import CourseCatalog from "./pages/lms/CourseCatalog";
-import ForgotPassword from "./components/forgotPassword";
+import ForgotPassword from "./components/ForgotPassword";
 
 // Dashboard Pages
 import Dashboard from "./pages/Dashboard";

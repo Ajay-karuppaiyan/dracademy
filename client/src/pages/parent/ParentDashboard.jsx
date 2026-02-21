@@ -1,204 +1,332 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
-import { Loader2, User, BookOpen, Clock, CreditCard, Award, LogOut } from "lucide-react";
+import {
+  Loader2,
+  User,
+  BookOpen,
+  Clock,
+  CreditCard,
+  Award,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const ParentDashboard = () => {
-    const [children, setChildren] = useState([]);
-    const [selectedChild, setSelectedChild] = useState(null);
-    const [overview, setOverview] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const { logout } = useAuth();
+  const [children, setChildren] = useState([]);
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("dashboard");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
-    // Fetch linked children on mount
-    useEffect(() => {
-        fetchChildren();
-    }, []);
+  const { logout } = useAuth();
 
-    // Fetch overview when a child is selected
-    useEffect(() => {
-        if (selectedChild) {
-            fetchOverview(selectedChild._id);
-        }
-    }, [selectedChild]);
+  useEffect(() => {
+    fetchChildren();
+  }, []);
 
-    const fetchChildren = async () => {
-        try {
-            const res = await api.get("/parent/children");
-            setChildren(res.data);
-            if (res.data.length > 0) {
-                setSelectedChild(res.data[0]); 
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchOverview = async (studentId) => {
-        setLoading(true);
-        try {
-            const res = await api.get(`/parent/child/${studentId}/overview`);
-            setOverview(res.data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading && !children.length) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-50">
-                <Loader2 className="animate-spin text-blue-600" size={40} />
-            </div>
-        );
+  useEffect(() => {
+    if (selectedChild) {
+      fetchOverview(selectedChild._id);
     }
+  }, [selectedChild]);
 
-    if (children.length === 0) {
-        return (
-            <div className="p-8 text-center bg-gray-50 h-screen flex flex-col justify-center items-center">
-                <h2 className="text-xl font-bold text-gray-700 mb-2">No students linked to this parent account.</h2>
-                <p className="text-gray-500 mb-6">Register your child to get started.</p>
-
-                <a
-                    href="/dashboard/parent/register-child"
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition mb-4"
-                >
-                    <span className="text-xl font-bold">+</span> Register New Child
-                </a>
-
-                <button onClick={logout} className="text-red-500 underline text-sm">Logout</button>
-            </div>
-        );
+  const fetchChildren = async () => {
+    try {
+      const res = await api.get("/parent/children");
+      setChildren(res.data);
+      if (res.data.length > 0) {
+        setSelectedChild(res.data[0]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const fetchOverview = async (studentId) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/parent/child/${studentId}/overview`);
+      setOverview(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAttendanceList = async (studentId) => {
+    try {
+      setLoading(true);
+      const res = await api.get(
+        `/parent/child/${studentId}/attendance?month=${selectedMonth}`
+      );
+      setAttendanceList(res.data);
+      setView("attendance");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Loading Screen
+  if (loading && !children.length) {
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <header className="mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Parent Dashboard</h1>
-                    <p className="text-gray-600 text-sm">Monitor your child's progress</p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    {/* Child Selector */}
-                    <div className="flex gap-2">
-                        {children.map(child => (
-                            <button
-                                key={child._id}
-                                onClick={() => setSelectedChild(child)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedChild?._id === child._id
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
-                            >
-                                {child.firstName}
-                            </button>
-                        ))}
-                        {/* Register New Child Button */}
-                        <a
-                            href="/dashboard/parent/register-child"
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
-                        >
-                            <span className="text-xl font-bold">+</span> New
-                        </a>
-                    </div>
-                    <button onClick={logout} className="text-red-500 hover:bg-red-50 p-2 rounded-full" title="Logout">
-                        <LogOut size={20} />
-                    </button>
-                </div>
-            </header>
-
-            {overview ? (
-                <div className="space-y-6">
-                    {/* Student Profile Card */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border flex items-center gap-4">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                            <User size={32} />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold">{overview.student.name}</h2>
-                            <p className="text-gray-500">ID: {overview.student.id} | Class: {overview.student.class}</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Attendance Card */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-2 mb-4 text-purple-600">
-                                <Clock size={20} />
-                                <h3 className="font-semibold">Attendance</h3>
-                            </div>
-                            <div className="text-3xl font-bold text-gray-800">{overview.attendance.percentage}%</div>
-                            <p className="text-sm text-gray-500">
-                                Present: {overview.attendance.presentDays}/{overview.attendance.totalDays} days
-                            </p>
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                                <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: `${overview.attendance.percentage}%` }}></div>
-                            </div>
-                        </div>
-
-                        {/* Fees Card */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-2 mb-4 text-green-600">
-                                <CreditCard size={20} />
-                                <h3 className="font-semibold">Fees Due</h3>
-                            </div>
-                            <div className="text-3xl font-bold text-gray-800">₹ {overview.fees.pending.toLocaleString()}</div>
-                            <p className="text-sm text-gray-500">
-                                Status: <span className={`font-medium ${overview.fees.status === 'Paid' ? 'text-green-600' : 'text-orange-600'}`}>{overview.fees.status}</span>
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">Next Due: {overview.fees.nextDueDate}</p>
-                        </div>
-
-                        {/* Grades Card */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border md:col-span-2 hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-2 mb-4 text-indigo-600">
-                                <BookOpen size={20} />
-                                <h3 className="font-semibold">Recent Performance</h3>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                {overview.grades.map((g, idx) => (
-                                    <div key={idx} className="bg-indigo-50 p-3 rounded-lg text-center">
-                                        <div className="text-sm font-medium text-gray-500">{g.subject}</div>
-                                        <div className="text-2xl font-bold text-indigo-700">{g.grade}</div>
-                                        <div className="text-xs text-gray-500">{g.score}/100</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Certificates & Remarks */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border">
-                        <div className="flex items-center gap-2 mb-4 text-yellow-600">
-                            <Award size={20} />
-                            <h3 className="font-semibold">Certificates & Achievements</h3>
-                        </div>
-                        {overview.certificates.length > 0 ? (
-                            <ul className="space-y-2">
-                                {overview.certificates.map((cert, idx) => (
-                                    <li key={idx} className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg text-sm border border-yellow-100">
-                                        <span className="font-medium text-gray-800">{cert.name}</span>
-                                        <span className="text-gray-500">{cert.date}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-500 text-sm italic">No recent certificates issued.</p>
-                        )}
-                    </div>
-
-                </div>
-            ) : (
-                <div className="flex justify-center py-10">
-                    <Loader2 className="animate-spin text-gray-400" />
-                </div>
-            )}
-        </div>
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <Loader2 className="animate-spin text-blue-600" size={40} />
+      </div>
     );
+  }
+
+  // No Children Linked
+  if (!loading && children.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-center px-4 bg-gray-50">
+        <h2 className="text-lg font-bold text-gray-700 mb-2">
+          No students linked to this account
+        </h2>
+        <a
+          href="/dashboard/parent/register-child"
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg mt-4"
+        >
+          Register Child
+        </a>
+        <button
+          onClick={logout}
+          className="text-red-500 underline mt-4 text-sm"
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen pb-10">
+      {/* Header */}
+      <div className="bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">
+            Parent Dashboard
+          </h1>
+          <p className="text-xs text-gray-500">
+            Monitor your child's progress
+          </p>
+        </div>
+
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 text-red-500 text-sm"
+        >
+          <LogOut size={18} /> Logout
+        </button>
+      </div>
+
+      {/* Child Selector - Scrollable on mobile */}
+      <div className="flex overflow-x-auto gap-2 p-3 bg-white shadow-sm">
+        {children.map((child) => (
+          <button
+            key={child._id}
+            onClick={() => setSelectedChild(child)}
+            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm ${
+              selectedChild?._id === child._id
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {child.firstName}
+          </button>
+        ))}
+
+        <a
+          href="/dashboard/parent/register-child"
+          className="whitespace-nowrap px-4 py-2 rounded-full text-sm bg-green-600 text-white"
+        >
+          + Add
+        </a>
+      </div>
+
+      <div className="p-4">
+        {/* Attendance View */}
+        {view === "attendance" ? (
+          <div className="bg-white p-4 rounded-xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold">Attendance Records</h3>
+              <button
+                onClick={() => setView("dashboard")}
+                className="text-blue-600 text-sm underline"
+              >
+                Back
+              </button>
+            </div>
+
+            {attendanceList.length > 0 ? (
+            <div className="overflow-x-auto">
+                <table className="min-w-[900px] w-full text-sm">
+                <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
+                    <tr>
+                    <th className="p-2 text-left">S.No</th>
+                    <th className="p-2 text-left">Date</th>
+                    <th className="p-2 text-left">Day</th>
+                    <th className="p-2 text-left">Login</th>
+                    <th className="p-2 text-left">Logout</th>
+                    <th className="p-2 text-left">Hours</th>
+                    <th className="p-2 text-left">Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {attendanceList.map((item, index) => (
+                    <tr
+                        key={index}
+                        className="border-b hover:bg-gray-50 transition"
+                    >
+                        <td className="p-2 font-medium">{item.sNo}</td>
+
+                        <td className="p-2">{item.date}</td>
+
+                        <td className="p-2 text-gray-600">{item.day}</td>
+
+                        <td className="p-2">{item.loginTime}</td>
+
+                        <td className="p-2">{item.logoutTime}</td>
+
+                        <td className="p-2 font-medium text-blue-600">
+                        {item.totalHours}
+                        </td>
+
+                        <td
+                        className={`p-2 font-semibold ${
+                            item.status === "Present"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                        >
+                        {item.status}
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+            ) : (
+            <p className="text-gray-500 text-sm">
+                No attendance records found.
+            </p>
+            )}
+          </div>
+        ) : (
+          overview && (
+            <div className="space-y-4">
+              {/* Profile */}
+              <div className="bg-white p-4 rounded-xl shadow-sm flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="text-blue-600" size={28} />
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg">
+                    {overview.student.name}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Class: {overview.student.class}
+                  </p>
+                </div>
+              </div>
+
+              {/* Cards */}
+              <div className="grid grid-cols-1 gap-4">
+                {/* Attendance Card */}
+                <div
+                  onClick={() =>
+                    fetchAttendanceList(selectedChild._id)
+                  }
+                  className="bg-white p-4 rounded-xl shadow-sm cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 text-purple-600 mb-2">
+                    <Clock size={18} />
+                    <span className="font-semibold text-sm">
+                      Attendance
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {overview.attendance.percentage}%
+                  </div>
+                </div>
+
+                {/* Fees Card */}
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 text-green-600 mb-2">
+                    <CreditCard size={18} />
+                    <span className="font-semibold text-sm">
+                      Fees Due
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold">
+                    ₹ {overview.fees.pending}
+                  </div>
+                </div>
+
+                {/* Grades */}
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 text-indigo-600 mb-3">
+                    <BookOpen size={18} />
+                    <span className="font-semibold text-sm">
+                      Performance
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {overview.grades.map((g, i) => (
+                      <div
+                        key={i}
+                        className="bg-indigo-50 p-2 rounded text-center"
+                      >
+                        <div className="text-xs text-gray-500">
+                          {g.subject}
+                        </div>
+                        <div className="font-bold text-indigo-700">
+                          {g.grade}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Certificates */}
+                <div className="bg-white p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 text-yellow-600 mb-2">
+                    <Award size={18} />
+                    <span className="font-semibold text-sm">
+                      Achievements
+                    </span>
+                  </div>
+
+                  {overview.certificates.length > 0 ? (
+                    overview.certificates.map((cert, i) => (
+                      <div
+                        key={i}
+                        className="text-sm border-b py-2"
+                      >
+                        {cert.name}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      No achievements yet
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default ParentDashboard;

@@ -53,16 +53,17 @@ const ParentManagement = () => {
   };
 
   // Handle delete parent
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this parent?")) return;
-    try {
-      await api.delete(`/auth/parents/${id}`);
-      toast.success("Parent deleted successfully");
-      setParents((prev) => prev.filter((p) => p._id !== id));
-    } catch (err) {
-      toast.error("Failed to delete parent");
-    }
-  };
+const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this parent?")) return;
+
+  try {
+    await api.delete(`/parent/parent/${id}`);
+    toast.success("Parent deleted successfully");
+    setParents((prev) => prev.filter((p) => p._id !== id));
+  } catch (err) {
+    toast.error(err?.response?.data?.message || "Failed to delete parent");
+  }
+};
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -150,7 +151,7 @@ const ParentManagement = () => {
           <table className="min-w-full border text-center">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3 border">#</th>
+                <th className="p-3 border">S.no</th>
                 <th className="p-3 border">Name</th>
                 <th className="p-3 border">Email</th>
                 <th className="p-3 border">Mobile</th>

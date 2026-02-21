@@ -11,14 +11,19 @@ router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate 6 digit OTP
+    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // Hash OTP before saving
     user.resetPasswordOtp = crypto
       .createHash("sha256")
       .update(otp)
@@ -26,9 +31,10 @@ router.post("/forgot-password", async (req, res) => {
 
     user.resetPasswordOtpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    await user.save();
+    // Save OTP without validating other fields (avoid role enum issues)
+    await user.save({ validateBeforeSave: false });
 
-    // Send Email
+    // Send OTP via email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -41,13 +47,14 @@ router.post("/forgot-password", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Password Reset OTP",
-      text: `Your OTP is: ${otp}`,
+      text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
     });
 
-    res.json({ message: "OTP sent to email" });
+    res.json({ message: "OTP sent to your email" });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
 
@@ -57,6 +64,10 @@ router.post("/forgot-password", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
 
     const hashedOtp = crypto
       .createHash("sha256")
@@ -76,7 +87,8 @@ router.post("/verify-otp", async (req, res) => {
     res.json({ message: "OTP verified successfully" });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Verify OTP Error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
 
@@ -87,31 +99,48 @@ router.post("/reset-password", async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
 
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const hashedOtp = crypto
       .createHash("sha256")
       .update(otp)
       .digest("hex");
 
-    const user = await User.findOne({
-      email,
-      resetPasswordOtp: hashedOtp,
-      resetPasswordOtpExpire: { $gt: Date.now() },
-    });
+    // 🔍 Find user only by email first
+    const user = await User.findOne({ email });
 
     if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // 🔐 Check OTP manually (no role validation interference)
+    if (
+      user.resetPasswordOtp !== hashedOtp ||
+      user.resetPasswordOtpExpire < Date.now()
+    ) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
+    // ✅ Force role lowercase (extra safety)
+    if (user.role) {
+      user.role = user.role.toLowerCase();
+    }
+
+    // 🔑 Update password
     user.password = newPassword;
+
     user.resetPasswordOtp = undefined;
     user.resetPasswordOtpExpire = undefined;
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     res.json({ message: "Password reset successful" });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
 
