@@ -27,7 +27,6 @@ const Students = () => {
         setLoading(false);
       }
     };
-
     fetchStudents();
   }, []);
 
@@ -51,11 +50,7 @@ const Students = () => {
   // ================= DELETE =================
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this student?")) return;
-
-    await fetch(`http://localhost:5000/api/students/${id}`, {
-      method: "DELETE",
-    });
-
+    await fetch(`http://localhost:5000/api/students/${id}`, { method: "DELETE" });
     setStudents((prev) => prev.filter((s) => s._id !== id));
   };
 
@@ -66,7 +61,6 @@ const Students = () => {
       Name: s.user?.name,
       Email: s.user?.email,
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
@@ -80,43 +74,38 @@ const Students = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editStudent),
     });
-
     setStudents((prev) =>
-      prev.map((s) =>
-        s._id === editStudent._id ? editStudent : s
-      )
+      prev.map((s) => (s._id === editStudent._id ? editStudent : s))
     );
-
     setEditStudent(null);
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-4">Students</h1>
 
       {/* SEARCH + EXPORT */}
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
         <input
           type="text"
           placeholder="Search by name or email..."
-          className="border p-2 rounded w-1/3"
+          className="border p-2 rounded w-full sm:w-1/3"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
         <button
           onClick={exportToExcel}
-          className="bg-green-600 text-white px-4 py-2 rounded"
+          className="bg-green-600 text-white px-4 py-2 rounded w-full sm:w-auto"
         >
           Export Excel
         </button>
       </div>
 
-      {/* TABLE */}
+      {/* ===== TABLE ===== */}
       <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-full text-center border">
+        <table className="min-w-[600px] w-full text-center border">
           <thead className="bg-gray-100">
             <tr>
               <th className="p-3 border">S.No</th>
@@ -128,34 +117,40 @@ const Students = () => {
           <tbody>
             {currentStudents.map((s, i) => (
               <tr key={s._id} className="hover:bg-gray-50">
-                <td className="p-3 border">
-                  {(currentPage - 1) * studentsPerPage + i + 1}
-                </td>
+                <td className="p-3 border">{(currentPage - 1) * studentsPerPage + i + 1}</td>
                 <td className="p-3 border">{s.user?.name}</td>
                 <td className="p-3 border">{s.user?.email}</td>
-                <td className="p-3 border space-x-2">
-                  <button
-                    onClick={() => setSelectedStudent(s)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded"
-                  >
-                    View
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDelete(s._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Delete
-                  </button>
+                <td className="p-3 border">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      onClick={() => setSelectedStudent(s)}
+                      className="bg-blue-500 text-white px-2 py-1 rounded flex-1 min-w-[60px]"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDelete(s._id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded flex-1 min-w-[60px]"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
+            {currentStudents.length === 0 && (
+              <tr>
+                <td colSpan={4} className="py-4 text-center text-gray-500">
+                  No students found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* PAGINATION */}
-      <div className="flex justify-center mt-4 space-x-2">
+      {/* ===== PAGINATION ===== */}
+      <div className="flex justify-center mt-4 space-x-2 flex-wrap">
         {[...Array(totalPages)].map((_, index) => (
           <button
             key={index}
@@ -171,17 +166,16 @@ const Students = () => {
         ))}
       </div>
 
-      {/* VIEW MODAL */}
+      {/* ===== VIEW MODAL ===== */}
       {selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white p-6 rounded w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4">
+          <div className="bg-white p-6 rounded w-full max-w-sm">
             <h2 className="text-lg font-bold mb-3">Student Details</h2>
             <p><strong>Name:</strong> {selectedStudent.user?.name}</p>
             <p><strong>Email:</strong> {selectedStudent.user?.email}</p>
-
             <button
               onClick={() => setSelectedStudent(null)}
-              className="mt-4 bg-gray-500 text-white px-3 py-1 rounded"
+              className="mt-4 bg-gray-500 text-white px-3 py-1 rounded w-full"
             >
               Close
             </button>
@@ -189,12 +183,11 @@ const Students = () => {
         </div>
       )}
 
-      {/* EDIT MODAL */}
+      {/* ===== EDIT MODAL ===== */}
       {editStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white p-6 rounded w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4">
+          <div className="bg-white p-6 rounded w-full max-w-sm">
             <h2 className="text-lg font-bold mb-3">Edit Student</h2>
-
             <input
               type="text"
               value={editStudent.user?.name}
@@ -206,7 +199,6 @@ const Students = () => {
               }
               className="border p-2 w-full mb-3"
             />
-
             <input
               type="email"
               value={editStudent.user?.email}
@@ -218,18 +210,16 @@ const Students = () => {
               }
               className="border p-2 w-full mb-3"
             />
-
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <button
                 onClick={handleUpdate}
-                className="bg-green-600 text-white px-3 py-1 rounded"
+                className="bg-green-600 text-white px-3 py-1 rounded flex-1"
               >
                 Update
               </button>
-
               <button
                 onClick={() => setEditStudent(null)}
-                className="bg-gray-500 text-white px-3 py-1 rounded"
+                className="bg-gray-500 text-white px-3 py-1 rounded flex-1"
               >
                 Cancel
               </button>
