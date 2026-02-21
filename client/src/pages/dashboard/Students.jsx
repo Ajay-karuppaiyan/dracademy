@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
+// Use VITE env variable
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -13,16 +16,16 @@ const Students = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editStudent, setEditStudent] = useState(null);
 
-  // ================= FETCH =================
+  // ================= FETCH STUDENTS =================
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/students");
+        const res = await fetch(`${API_URL}/students`);
         const data = await res.json();
         setStudents(data);
         setFiltered(data);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch students:", err);
       } finally {
         setLoading(false);
       }
@@ -47,14 +50,19 @@ const Students = () => {
   const currentStudents = filtered.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filtered.length / studentsPerPage);
 
-  // ================= DELETE =================
+  // ================= DELETE STUDENT =================
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this student?")) return;
-    await fetch(`http://localhost:5000/api/students/${id}`, { method: "DELETE" });
-    setStudents((prev) => prev.filter((s) => s._id !== id));
+    try {
+      await fetch(`${API_URL}/students/${id}`, { method: "DELETE" });
+      setStudents((prev) => prev.filter((s) => s._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete student.");
+    }
   };
 
-  // ================= EXPORT =================
+  // ================= EXPORT TO EXCEL =================
   const exportToExcel = () => {
     const data = students.map((s, i) => ({
       "S.No": i + 1,
@@ -67,17 +75,22 @@ const Students = () => {
     XLSX.writeFile(workbook, "Students.xlsx");
   };
 
-  // ================= UPDATE =================
+  // ================= UPDATE STUDENT =================
   const handleUpdate = async () => {
-    await fetch(`http://localhost:5000/api/students/${editStudent._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editStudent),
-    });
-    setStudents((prev) =>
-      prev.map((s) => (s._id === editStudent._id ? editStudent : s))
-    );
-    setEditStudent(null);
+    try {
+      await fetch(`${API_URL}/students/${editStudent._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editStudent),
+      });
+      setStudents((prev) =>
+        prev.map((s) => (s._id === editStudent._id ? editStudent : s))
+      );
+      setEditStudent(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update student.");
+    }
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -103,7 +116,7 @@ const Students = () => {
         </button>
       </div>
 
-      {/* ===== TABLE ===== */}
+      {/* STUDENTS TABLE */}
       <div className="overflow-x-auto bg-white shadow rounded">
         <table className="min-w-[600px] w-full text-center border">
           <thead className="bg-gray-100">
@@ -117,7 +130,9 @@ const Students = () => {
           <tbody>
             {currentStudents.map((s, i) => (
               <tr key={s._id} className="hover:bg-gray-50">
-                <td className="p-3 border">{(currentPage - 1) * studentsPerPage + i + 1}</td>
+                <td className="p-3 border">
+                  {(currentPage - 1) * studentsPerPage + i + 1}
+                </td>
                 <td className="p-3 border">{s.user?.name}</td>
                 <td className="p-3 border">{s.user?.email}</td>
                 <td className="p-3 border">
@@ -149,16 +164,14 @@ const Students = () => {
         </table>
       </div>
 
-      {/* ===== PAGINATION ===== */}
+      {/* PAGINATION */}
       <div className="flex justify-center mt-4 space-x-2 flex-wrap">
         {[...Array(totalPages)].map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-3 py-1 rounded ${
-              currentPage === index + 1
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200"
+              currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
             }`}
           >
             {index + 1}
@@ -166,7 +179,7 @@ const Students = () => {
         ))}
       </div>
 
-      {/* ===== VIEW MODAL ===== */}
+      {/* VIEW MODAL */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4">
           <div className="bg-white p-6 rounded w-full max-w-sm">
@@ -183,7 +196,7 @@ const Students = () => {
         </div>
       )}
 
-      {/* ===== EDIT MODAL ===== */}
+      {/* EDIT MODAL */}
       {editStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4">
           <div className="bg-white p-6 rounded w-full max-w-sm">
