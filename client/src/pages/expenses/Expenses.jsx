@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
-import AddExpenseModal from "./addExpenseModel";
+import AddExpenseModal from "./AddExpenseModel";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
