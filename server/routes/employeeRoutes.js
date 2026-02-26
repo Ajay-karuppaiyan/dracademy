@@ -37,7 +37,7 @@ router.post(
 
       // ✅ Role validation and conversion
       const roleLower = role ? role.toLowerCase() : "employee";
-      const allowedRoles = ["student", "admin", "employee", "parent", "coach", "hr"];
+      const allowedRoles = ["student", "admin", "employee", "parent", "coach", "hr", "finance"];
       if (!allowedRoles.includes(roleLower)) {
         return res.status(400).json({ message: "Invalid role selected" });
       }

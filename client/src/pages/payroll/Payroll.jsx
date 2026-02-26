@@ -16,28 +16,17 @@ const Payroll = () => {
   const [attendanceEmployee, setAttendanceEmployee] = useState(null);
 
   const [salaryData, setSalaryData] = useState({
-    basic: 0,
-    totalDays: 30,
-    present: 0,
-    absent: 0,
-    lateDays: 0,
-    lateTime: 0,
-    advance: 0,
+    basic: 0, totalDays: 30, present: 0, absent: 0, lateDays: 0, lateTime: 0, advance: 0,
 
     allowances: {
-      hra: 0,
-      medical: 0,
-      bonus: 0,
+      hra: 0, medical: 0, bonus: 0,
     },
 
     deductions: {
-      pf: 0,
-      tax: 0,
+      pf: 0, tax: 0,
     },
 
-    totalAllowances: 0,
-    totalDeductions: 0,
-    netSalary: 0,
+    totalAllowances: 0, totalDeductions: 0, netSalary: 0,
   });
 
   const fetchEmployeeAttendance = async (employee) => {
@@ -107,28 +96,17 @@ const Payroll = () => {
       : 0;
 
     setSalaryData({
-      basic: employee.basicSalary || 0,
-      totalDays: daysInMonth,
-      present: employee.present || 0,
-      absent: employee.absent || 0,
-      lateDays: employee.lateDays || 0,
-      lateTime: employee.lateTime || 0,
-      advance: employee.advance || 0,
+      basic: employee.basicSalary || 0, totalDays: daysInMonth, present: employee.present || 0, absent: employee.absent || 0, lateDays: employee.lateDays || 0, lateTime: employee.lateTime || 0, advance: employee.advance || 0,
 
       allowances: employee.allowances || {
-        hra: 0,
-        medical: 0,
-        bonus: 0,
+        hra: 0, medical: 0, bonus: 0,
       },
 
       deductions: employee.deductions || {
-        pf: 0,
-        tax: 0,
+        pf: 0, tax: 0,
       },
 
-      totalAllowances: 0,
-      totalDeductions: 0,
-      netSalary: 0,
+      totalAllowances: 0, totalDeductions: 0, netSalary: 0,
     });
 
     setSalaryModalOpen(true);
@@ -150,16 +128,11 @@ const Payroll = () => {
 
     setSalaryData(prev => ({
       ...prev,
-      totalAllowances,
-      totalDeductions,
-      netSalary,
+      totalAllowances, totalDeductions, netSalary,
     }));
 
   }, [
-    salaryData.basic,
-    salaryData.allowances,
-    salaryData.deductions,
-    salaryData.advance
+    salaryData.basic, salaryData.allowances, salaryData.deductions, salaryData.advance
   ]);
 
   // Save payroll

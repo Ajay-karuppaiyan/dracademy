@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
+import { Eye, Trash2 } from "lucide-react";
 
 // Use VITE env variable
 const API_URL = import.meta.env.VITE_API_URL;
@@ -137,18 +138,22 @@ const Students = () => {
                 <td className="p-3 border">{s.user?.email}</td>
                 <td className="p-3 border">
                   <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex justify-center gap-2">
                     <button
-                      onClick={() => setSelectedStudent(s)}
-                      className="bg-blue-500 text-white px-2 py-1 rounded flex-1 min-w-[60px]"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => handleDelete(s._id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded flex-1 min-w-[60px]"
-                    >
-                      Delete
-                    </button>
+                        onClick={() => setSelectedStudent(s)}
+                        className="p-2 rounded hover:bg-blue-100 transition"
+                        title="View"
+                      >
+                        <Eye size={18} className="text-blue-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s._id)}
+                        className="p-2 rounded hover:bg-red-100 transition"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} className="text-red-600" />
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -165,18 +170,30 @@ const Students = () => {
       </div>
 
       {/* PAGINATION */}
-      <div className="flex justify-center mt-4 space-x-2 flex-wrap">
-        {[...Array(totalPages)].map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`px-3 py-1 rounded ${
-              currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
+      <div className="flex justify-center mt-4 gap-4">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+          className={`px-4 py-2 rounded ${
+            currentPage === 1 ? "bg-gray-300 text-gray-500" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Previous
+        </button>
+
+        <span className="px-4 py-2 text-gray-700">
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          className={`px-4 py-2 rounded ${
+            currentPage === totalPages ? "bg-gray-300 text-gray-500" : "bg-green-600 text-white hover:bg-green-700"
+          }`}
+        >
+          Next
+        </button>
       </div>
 
       {/* VIEW MODAL */}

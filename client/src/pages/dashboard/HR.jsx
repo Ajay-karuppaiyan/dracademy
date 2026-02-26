@@ -22,6 +22,7 @@ import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import Payroll from "../../pages/payroll/Payroll";
+import Expenses from "../../pages/expenses/Expenses";
 
 const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -381,7 +382,7 @@ const HR = () => {
       {/* Tabs */}
       <div className="border-b border-slate-200">
         <div className="flex gap-6">
-          {["employees", "payroll"].map((tab) => (
+          {["employees", "payroll", "expenses"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -411,6 +412,7 @@ const HR = () => {
         )}
 
         {activeTab === "payroll" && <Payroll />}
+        {activeTab === "expenses" && <Expenses />}
       </div>
     </div>
   );

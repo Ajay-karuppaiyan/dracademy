@@ -33,6 +33,9 @@ import ParentDashboard from "./pages/parent/ParentDashboard";
 import RegisterChild from "./pages/parent/RegisterChild";
 import Attendance from "./pages/attendance/Attendance";
 import Profile from "./pages/profile/Profile";
+import Finance from "./pages/Finance";
+import Announcement from "./pages/dashboard/Announcement";
+import Expenses from "./pages/expenses/Expenses";
 
 // Leave
 import LeaveRequestList from "./components/LeaveRequestList";
@@ -55,13 +58,14 @@ function LeaveRequestOrForm() {
   const { user } = useAuth();
   if (!user) return null;
 
-  if (user.role === "admin") return <LeaveRequestList />;
+  const isAdmin = user.role?.toLowerCase() === "admin";
 
-  if (["hr", "coach", "student", "employee", "parent"].includes(user.role?.toLowerCase())) {
-    return <LeaveRequestList showApplyButton={true} onlyMine={true} />;
-  }
-
-  return <div className="p-4">Not authorized</div>;
+  return (
+    <LeaveRequestList
+      showApplyButton={!isAdmin}
+      onlyMine={!isAdmin}
+    />
+  );
 }
 
 // ---------------------------
@@ -86,23 +90,59 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
       <Router>
         <Routes>
+
           {/* ================= PUBLIC ROUTES ================= */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
 
-            <Route path="/about" element={ <div className="p-20 text-center"> About Us Page (Coming Soon) </div> } />
-            <Route path="/contact" element={<div className="p-20 text-center"> Contact Page (Coming Soon) </div> }/>
-            <Route path="/courses"element={<div className="p-20 text-center"><h1 className="text-2xl font-bold mb-4">All Courses</h1><CourseCatalog /></div>}/></Route>
+            <Route
+              path="/about"
+              element={
+                <div className="p-20 text-center">
+                  About Us Page (Coming Soon)
+                </div>
+              }
+            />
+
+            <Route
+              path="/contact"
+              element={
+                <div className="p-20 text-center">
+                  Contact Page (Coming Soon)
+                </div>
+              }
+            />
+
+            <Route
+              path="/courses"
+              element={
+                <div className="p-20 text-center">
+                  <h1 className="text-2xl font-bold mb-4">All Courses</h1>
+                  <CourseCatalog />
+                </div>
+              }
+            />
+
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* ================= AUTH ROUTES ================= */}
+            {/* ================= AUTH ================= */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Login />} />
+          </Route>
 
-            {/* ================= DASHBOARD ROUTES ================= */}
-            <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
-
+          {/* ================= DASHBOARD ROUTES ================= */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <DashboardLayout />
+              </PrivateRoute>
+            }
+          >
             <Route index element={<DashboardRedirect />} />
+
+            {/* Announcements */}
+            <Route path="announcements" element={<Announcement />} />
 
             {/* LMS */}
             <Route path="lms" element={<MyLearning />} />
@@ -111,7 +151,10 @@ function App() {
 
             {/* Parent */}
             <Route path="parent-dashboard" element={<ParentDashboard />} />
-            <Route path="parent/register-child" element={<RegisterChild />} />
+            <Route
+              path="parent/register-child"
+              element={<RegisterChild />}
+            />
 
             {/* Attendance */}
             <Route path="attendance" element={<Attendance />} />
@@ -121,13 +164,15 @@ function App() {
             <Route path="admin/configs" element={<AdministrativeConfigs />} />
             <Route path="admin/parents" element={<ParentManagement />} />
 
-            {/* HR (Payroll is inside HR tabs) */}
+            {/* HR */}
             <Route path="hr" element={<HR />} />
+            <Route path="finance" element={<Finance />} />
+            <Route path="expenses" element={<Expenses />} />
 
             {/* Students */}
             <Route path="students" element={<Students />} />
 
-            {/* Profile Routes (Fixed - relative paths) */}
+            {/* Profile */}
             <Route path="student/profile" element={<Profile />} />
             <Route path="coach/profile" element={<Profile />} />
             <Route path="hr/profile" element={<Profile />} />
@@ -141,6 +186,7 @@ function App() {
 
           {/* ================= FALLBACK ================= */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </Router>
     </AuthProvider>

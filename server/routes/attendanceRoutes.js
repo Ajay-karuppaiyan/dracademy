@@ -89,4 +89,38 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
+// ============================
+// GET /attendance - Get attendance
+// ============================
+router.get("/", protect, async (req, res) => {
+  try {
+    let query = {};
+
+    // If NOT admin/employee → only show own attendance
+    if (req.user.role !== "admin" && req.user.role !== "employee") {
+      query.userId = req.user._id;
+    }
+
+    // ✅ Filter: Today only
+    if (req.query.today === "true") {
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      query.date = today;
+    }
+
+    // Optional filters
+    if (req.query.name) query.name = new RegExp(req.query.name, "i");
+
+    if (req.query.month && req.query.year) {
+      const month = req.query.month.padStart(2, "0");
+      query.date = { $regex: `^${req.query.year}-${month}` };
+    }
+
+    const data = await Attendance.find(query).sort({ date: -1 });
+    res.json(data);
+
+  } catch (err) {
+    console.error("GET /attendance error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;

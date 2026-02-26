@@ -16,6 +16,9 @@ const payroll = require("./routes/payrollRoutes");
 const parentRoutes = require("./routes/parentRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
+const financeRoutes = require("./routes/financeRoutes");
+const announcementRoutes = require("./routes/announcementRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 dotenv.config();
 connectDB();
@@ -47,6 +50,9 @@ app.use("/api/payroll", payroll);
 app.use("/api/parent", parentRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/password", passwordRoutes);
+app.use("/api/finance", financeRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/expenses", expenseRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

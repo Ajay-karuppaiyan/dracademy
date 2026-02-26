@@ -16,6 +16,8 @@ import {
   CreditCard,
   Clock,
   MonitorPlay,
+  Megaphone,
+  Receipt,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -58,6 +60,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <CreditCard size={22} />, label: "Subscription", path: "/dashboard/subscription" },
     { icon: <Clock size={22} />, label: "Time Table", path: "/dashboard/timetable" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
   ];
 
   // ================= ADMIN / HR MENU =================
@@ -69,6 +72,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
   ];
 
   // ================= COACH MENU =================
@@ -83,15 +87,26 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <Users size={22} />, label: "Dashboard", path: "/dashboard/parent-dashboard" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
   ];
 
   const employeeItems = [
     { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
   ];
 
-  // ================= ROLE BASED NAVIGATION =================
+  const financeItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <DollarSign size={22} />, label: "Finance", path: "/dashboard/finance" },
+    { icon: <Receipt size={22} />, label: "Expenses", path: "/dashboard/expenses" },
+    { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+  ];
+
+  // ================= ROLE BASED NAVIGATION ================
   let currentNavItems = [];
 
   if (role === "student") {
@@ -104,6 +119,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     currentNavItems = coachItems;
   } else if (role === "employee") {
     currentNavItems = employeeItems;
+  } else if (role === "finance") {
+    currentNavItems = financeItems;
   }
 
   // ================= ADMIN EXTRA ZONE =================

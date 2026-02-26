@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 
 const Attendance = () => {
-  const { user, token } = useAuth(); // Make sure AuthContext provides JWT token
+  const { user, token } = useAuth();
   const [photo, setPhoto] = useState(null);
   const [attendanceList, setAttendanceList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,10 +14,16 @@ const Attendance = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const todayDate = new Date().toISOString().slice(0, 10);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 5;
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Start camera
   const startCamera = async () => {
     setCameraActive(true);
     if (navigator.mediaDevices?.getUserMedia) {
@@ -30,7 +36,6 @@ const Attendance = () => {
     }
   };
 
-  // Capture photo
   const handleCapture = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -41,6 +46,7 @@ const Attendance = () => {
       setPhoto(canvas.toDataURL("image/png"));
       if (video.srcObject) {
         video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
       }
       setCameraActive(false);
     }
@@ -51,7 +57,6 @@ const Attendance = () => {
     startCamera();
   };
 
-  // Fetch attendance
   const fetchAttendance = async () => {
     if (!user) return;
     try {
@@ -67,17 +72,16 @@ const Attendance = () => {
   };
 
   useEffect(() => { fetchAttendance(); }, [user]);
-
   useEffect(() => { if (showForm) startCamera(); }, [showForm]);
 
   useEffect(() => {
     if (!showForm && videoRef.current?.srcObject) {
       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null; 
       setCameraActive(false);
     }
   }, [showForm]);
 
-  // Submit attendance
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -92,7 +96,10 @@ const Attendance = () => {
       );
 
       setAttendanceList([res.data, ...attendanceList]);
-      videoRef.current?.srcObject?.getTracks().forEach(track => track.stop());
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
       setPhoto(null);
       setCameraActive(false);
       setShowForm(false);
@@ -103,7 +110,6 @@ const Attendance = () => {
     setLoading(false);
   };
 
-  // Set logout time
   const handleSetLogout = async (record) => {
     try {
       const logoutTime = new Date().toLocaleTimeString();
@@ -124,18 +130,37 @@ const Attendance = () => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
-  const filteredAttendance =
-    user.role === "admin"
-      ? attendanceList.filter(a => a.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-      : attendanceList.filter(a => a.name === user.name);
+  // FILTERED ATTENDANCE
+const filteredAttendance = useMemo(() => {
+  return (user.role === "admin" ? attendanceList : attendanceList.filter(a => a.name === user.name))
+    .filter(a => {
+      const matchSearch = user.role === "admin"
+        ? (a.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           a.role?.toLowerCase().includes(searchTerm.toLowerCase()))
+        : true;
 
-  // Stats
+      const matchFrom = filterFrom ? new Date(a.date) >= new Date(filterFrom) : true;
+      const matchTo = filterTo ? new Date(a.date) <= new Date(filterTo) : true;
+
+      return matchSearch && matchFrom && matchTo;
+    });
+}, [attendanceList, searchTerm, filterFrom, filterTo, user]);
+
+  // PAGINATION
+  const totalPages = Math.ceil(filteredAttendance.length / recordsPerPage);
+  const indexOfLast = currentPage * recordsPerPage;
+  const indexOfFirst = indexOfLast - recordsPerPage;
+  const currentRecords = filteredAttendance.slice(indexOfFirst, indexOfLast);
+
+  // STATS (kept same)
   let stats = null;
   if (filteredAttendance.length > 0) {
     const person = filteredAttendance[0].name;
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
+    const month = selectedMonth.getMonth();
+    const year = selectedMonth.getFullYear();
+    const today = new Date();
+    const isCurrentMonth = month === today.getMonth() && year === today.getFullYear();
+    const todayDate = isCurrentMonth ? today.getDate() : new Date(year, month + 1, 0).getDate();
     const personMonthRecords = attendanceList.filter(
       (a) =>
         a.name === person &&
@@ -143,29 +168,60 @@ const Attendance = () => {
         new Date(a.date).getFullYear() === year
     );
     const present = personMonthRecords.length;
-    const total = new Date(year, month + 1, 0).getDate();
-    stats = { present, total };
+
+    let workingDaysTillToday = 0;
+    for (let day = 1; day <= todayDate; day++) {
+      const date = new Date(year, month, day);
+      if (date.getDay() !== 0) workingDaysTillToday++;
+    }
+
+    let totalWorkingDays = 0;
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      const date = new Date(year, month, day);
+      if (date.getDay() !== 0) totalWorkingDays++;
+    }
+
+    const absent = workingDaysTillToday - present;
+
+    stats = { present, absent, total: totalWorkingDays };
   }
 
+  useEffect(() => {
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
             <p className="text-sm text-slate-500">Manage daily login/logout</p>
           </div>
+
           {user.role !== "admin" && !showForm && (
-            <button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl shadow-md">+ Mark Attendance</button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto"
+            >
+              + Mark Attendance
+            </button>
           )}
         </div>
 
         {/* FORM */}
         {user.role !== "admin" && showForm && (
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6 w-full max-w-md mx-auto">
-            <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
-              <div className="w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-black flex items-center justify-center shadow-sm">
+          <div className="bg-white rounded-2xl shadow-lg border p-6 w-full max-w-md mx-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col items-center gap-5">
+              <div className="w-full aspect-video rounded-2xl overflow-hidden border bg-black flex items-center justify-center shadow">
                 {cameraActive ? (
                   <video ref={videoRef} autoPlay className="w-full h-full object-cover" />
                 ) : photo ? (
@@ -175,75 +231,170 @@ const Attendance = () => {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
-                {cameraActive && <button type="button" onClick={handleCapture} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow">Capture</button>}
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                {cameraActive && (
+                  <button
+                    type="button"
+                    onClick={handleCapture}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-2 rounded-xl shadow"
+                  >
+                    Capture
+                  </button>
+                )}
+
                 {photo && (
                   <>
-                    <button type="button" onClick={handleRecapture} className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-xl">Retake</button>
-                    <button type="submit" disabled={loading} className="flex-1 bg-green-600 text-white px-4 py-2 rounded-xl">{loading ? "Submitting..." : "Submit"}</button>
+                    <button
+                      type="button"
+                      onClick={handleRecapture}
+                      className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+                    >
+                      Retake
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow"
+                    >
+                      {loading ? "Submitting..." : "Submit"}
+                    </button>
                   </>
                 )}
               </div>
+
               <canvas ref={canvasRef} className="hidden" />
             </form>
           </div>
         )}
 
+        <div className="flex flex-col md:flex-row gap-4 items-center mb-4">
+  <input
+    type="text"
+    placeholder="Search by name or role..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="border px-4 py-2 rounded-lg w-full md:w-1/3 focus:ring-2 focus:ring-indigo-500 outline-none"
+  />
+  <input
+    type="date"
+    value={filterFrom}
+    onChange={(e) => setFilterFrom(e.target.value)}
+    className="border px-4 py-2 rounded-lg w-full md:w-1/6"
+  />
+  <input
+    type="date"
+    value={filterTo}
+    onChange={(e) => setFilterTo(e.target.value)}
+    className="border px-4 py-2 rounded-lg w-full md:w-1/6"
+  />
+</div>
+
         {/* TABLE */}
-        {!showForm && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 overflow-x-auto">
-            <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="border px-3 py-2 rounded-xl w-full sm:w-1/3 mb-4" />
+        <table className="w-full text-sm min-w-[700px]">
+          <thead>
+            <tr className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+              <th className="py-3 px-4 text-left">S.no</th>
+              <th className="py-3 px-4 text-left">Employee</th>
+              <th className="py-3 px-4 text-left">Date</th>
+              <th className="py-3 px-4 text-left">Login</th>
+              <th className="py-3 px-4 text-left">Logout</th>
+              <th className="py-3 px-4 text-center">Action</th>
+            </tr>
+          </thead>
 
-            {user.role !== "admin" && stats && (
-              <div className="flex gap-4 text-sm font-semibold bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 mb-4">
-                <span>Present: <span className="text-green-600">{stats.present}</span></span>
-                <span>Total Days: <span className="text-indigo-600">{stats.total}</span></span>
-              </div>
-            )}
-
-            <table className="w-full border-collapse text-sm min-w-[600px]">
-              <thead>
-                <tr className="text-slate-500 text-xs uppercase border-b">
-                  <th className="py-2 text-left">S.no</th>
-                  <th className="py-2 text-left">Employee</th>
-                  <th className="py-2 text-left">Date</th>
-                  <th className="py-2 text-left">Login</th>
-                  <th className="py-2 text-left">Logout</th>
-                  <th className="py-2 text-center">Action</th>
+          <tbody>
+            {currentRecords.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-14 text-center text-slate-400">
+                  No attendance records found
+                </td>
+              </tr>
+            ) : (
+              currentRecords.map((a, idx) => (
+                <tr key={a._id || idx} className="border-b hover:bg-indigo-50 transition">
+                  <td className="py-3 px-4">{indexOfFirst + idx + 1}</td>
+                  <td className="py-3 px-4 font-medium text-slate-800">{a.name}</td>
+                  <td className="py-3 px-4">{a.date}</td>
+                  <td className="py-3 px-4">{formatTime12Hour(a.loginTime)}</td>
+                  <td className="py-3 px-4">{formatTime12Hour(a.logoutTime)}</td>
+                  <td className="py-3 px-4 flex justify-center gap-2">
+                    <button
+                      onClick={() => setViewModal(a)}
+                      className="bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-indigo-600 transition"
+                    >
+                      View
+                    </button>
+                    {user.role !== "admin" && a.date === todayDate && (
+                      <button
+                        disabled={!!a.logoutTime}
+                        onClick={() => handleSetLogout(a)}
+                        className={`px-3 py-1 rounded-lg text-xs transition ${
+                          a.logoutTime
+                            ? "bg-gray-300 text-gray-500"
+                            : "bg-green-500 text-white hover:bg-green-600"
+                        }`}
+                      >
+                        {a.logoutTime ? "Logged Out" : "Logout"}
+                      </button>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredAttendance.length === 0 ? (
-                  <tr><td colSpan={6} className="py-8 text-center text-slate-400">No attendance records</td></tr>
-                ) : filteredAttendance.map((a, idx) => (
-                  <tr key={idx} className="border-b hover:bg-slate-50">
-                    <td className="py-2">{idx + 1}</td>
-                    <td className="py-2">{a.name}</td>
-                    <td className="py-2">{a.date}</td>
-                    <td className="py-2">{formatTime12Hour(a.loginTime)}</td>
-                    <td className="py-2">{formatTime12Hour(a.logoutTime)}</td>
-                    <td className="py-2 flex justify-center gap-2">
-                      <button onClick={() => setViewModal(a)} className="bg-blue-100 text-blue-600 px-2 py-1 rounded-lg text-xs hover:bg-blue-200">View</button>
-                      {user.role !== "admin" && a.date === todayDate && (
-                        <button disabled={!!a.logoutTime} onClick={() => handleSetLogout(a)}
-                          className={`px-2 py-1 rounded-lg text-xs ${a.logoutTime ? "bg-gray-200 text-gray-400" : "bg-green-100 text-green-700 hover:bg-green-200"}`}>
-                          {a.logoutTime ? "Logged Out" : "Logout"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
 
+{/* PAGINATION */}
+{totalPages > 1 && (
+  <div className="relative flex items-center mt-4 px-4">
+    {/* Previous Button */}
+    <button
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage(prev => prev - 1)}
+      className="absolute left-0 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-300"
+    >
+      Previous
+    </button>
+
+    {/* Page Info Centered */}
+    <span className="mx-auto text-sm font-medium">
+      Page {currentPage} of {totalPages}
+    </span>
+
+    {/* Next Button */}
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() => setCurrentPage(prev => prev + 1)}
+      className="absolute right-0 px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-gray-300"
+    >
+      Next
+    </button>
+  </div>
+)}
+
+    
         {/* MODAL */}
         {viewModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setViewModal(null)}>
-            <div className="bg-white w-[420px] p-6 rounded-2xl shadow-2xl relative" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setViewModal(null)} className="absolute top-3 right-4 text-slate-400 hover:text-slate-700">✕</button>
-              <h3 className="text-xl font-semibold mb-4">Attendance Details</h3>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setViewModal(null)}
+          >
+            <div
+              className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setViewModal(null)}
+                className="absolute top-3 right-4 text-slate-400 hover:text-slate-700"
+              >
+                ✕
+              </button>
+
+              <h3 className="text-xl font-semibold mb-4 text-center">
+                Attendance Details
+              </h3>
+
               <div className="space-y-3 text-sm text-slate-600">
                 <p><strong>Name:</strong> {viewModal.name}</p>
                 <p><strong>Role:</strong> {viewModal.role}</p>
@@ -251,7 +402,14 @@ const Attendance = () => {
                 <p><strong>Login:</strong> {formatTime12Hour(viewModal.loginTime)}</p>
                 <p><strong>Logout:</strong> {formatTime12Hour(viewModal.logoutTime)}</p>
               </div>
-              {viewModal.photo && <img src={viewModal.photo} alt="Attendance" className="w-32 h-32 rounded-xl mt-4 object-cover border shadow-sm mx-auto" />}
+
+              {viewModal.photo && (
+                <img
+                  src={viewModal.photo}
+                  alt="Attendance"
+                  className="w-32 h-32 rounded-xl mt-5 object-cover border shadow-sm mx-auto"
+                />
+              )}
             </div>
           </div>
         )}

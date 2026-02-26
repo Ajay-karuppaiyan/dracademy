@@ -7,7 +7,7 @@ const ParentManagement = () => {
   const [parents, setParents] = useState([]);
   const [loadingParents, setLoadingParents] = useState(true);
 
-  const [showForm, setShowForm] = useState(false); // toggle form visibility
+  const [showForm, setShowForm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",

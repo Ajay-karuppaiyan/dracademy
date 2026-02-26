@@ -15,7 +15,6 @@ const log = (msg) => {
 
 // @desc    Fetch all courses
 // @route   GET /api/courses
-// @access  Public
 router.get('/', async (req, res) => {
     try {
         const courses = await Course.find({}).populate('instructor', 'name');
@@ -27,7 +26,6 @@ router.get('/', async (req, res) => {
 
 // @desc    Fetch courses enrolled by current user
 // @route   GET /api/courses/mine
-// @access  Private
 router.get('/mine', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).populate({
@@ -42,7 +40,6 @@ router.get('/mine', protect, async (req, res) => {
 
 // @desc    Fetch courses available for enrollment (excluding already enrolled)
 // @route   GET /api/courses/available
-// @access  Private
 router.get('/available', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -77,7 +74,6 @@ router.get('/:id', async (req, res) => {
 
 // @desc    Enroll in a course
 // @route   POST /api/courses/:id/enroll
-// @access  Private
 router.post('/:id/enroll', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -110,7 +106,6 @@ router.post('/:id/enroll', protect, async (req, res) => {
 
 // @desc    Create a course
 // @route   POST /api/courses
-// @access  Private/Admin
 router.post('/', (req, res, next) => {
     upload.single('thumbnail')(req, res, (err) => {
         if (err) {
@@ -174,7 +169,6 @@ router.post('/', (req, res, next) => {
 
 // @desc    Update a course
 // @route   PUT /api/courses/:id
-// @access  Private/Admin
 router.put('/:id', upload.single('thumbnail'), async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
@@ -232,11 +226,10 @@ router.patch('/:id/status', async (req, res) => {
 
 // @desc    Delete a course
 // @route   DELETE /api/courses/:id
-// @access  Private/Admin
 router.delete('/:id', async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
-
+ 
         if (course) {
             await course.deleteOne();
             res.json({ message: 'Course removed' });
