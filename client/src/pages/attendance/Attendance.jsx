@@ -82,33 +82,36 @@ const Attendance = () => {
     }
   }, [showForm]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const date = new Date().toISOString().slice(0, 10);
-      const loginTime = new Date().toLocaleTimeString();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-      const res = await api.post(
-        `${API_URL}/attendance`,
-        { name: user.name, role: user.role, date, loginTime, photo },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const loginTime = new Date().toTimeString().slice(0, 8);
 
-      setAttendanceList([res.data, ...attendanceList]);
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null;
-      }
-      setPhoto(null);
-      setCameraActive(false);
-      setShowForm(false);
-    } catch (err) {
-      if (err.response?.status === 400) alert(err.response.data.message);
-      else console.error(err);
+    const res = await api.post(
+      `${API_URL}/attendance`,
+      { loginTime, photo }, // ✅ only send required fields
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setAttendanceList([res.data, ...attendanceList]);
+
+    if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
-    setLoading(false);
-  };
+
+    setPhoto(null);
+    setCameraActive(false);
+    setShowForm(false);
+
+  } catch (err) {
+    console.error("Attendance submit error:", err.response?.data || err.message);
+  }
+
+  setLoading(false);
+};
 
   const handleSetLogout = async (record) => {
     try {
@@ -131,20 +134,25 @@ const Attendance = () => {
   };
 
   // FILTERED ATTENDANCE
-const filteredAttendance = useMemo(() => {
-  return (user.role === "admin" ? attendanceList : attendanceList.filter(a => a.name === user.name))
-    .filter(a => {
-      const matchSearch = user.role === "admin"
-        ? (a.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           a.role?.toLowerCase().includes(searchTerm.toLowerCase()))
-        : true;
+  const filteredAttendance = useMemo(() => {
+    return attendanceList
+      .filter(a => {
+        // SEARCH: match name or role
+        const matchSearch = searchTerm
+          ? a.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.role?.toLowerCase().includes(searchTerm.toLowerCase())
+          : true;
 
-      const matchFrom = filterFrom ? new Date(a.date) >= new Date(filterFrom) : true;
-      const matchTo = filterTo ? new Date(a.date) <= new Date(filterTo) : true;
+        // DATE FILTER
+        const matchFrom = filterFrom ? new Date(a.date) >= new Date(filterFrom) : true;
+        const matchTo = filterTo ? new Date(a.date) <= new Date(filterTo) : true;
 
-      return matchSearch && matchFrom && matchTo;
-    });
-}, [attendanceList, searchTerm, filterFrom, filterTo, user]);
+        // NON-ADMIN: show only self
+        const matchUser = user.role !== "admin" ? a.name === user.name : true;
+
+        return matchSearch && matchFrom && matchTo && matchUser;
+      });
+  }, [attendanceList, searchTerm, filterFrom, filterTo, user]);
 
   // PAGINATION
   const totalPages = Math.ceil(filteredAttendance.length / recordsPerPage);
@@ -196,6 +204,11 @@ const filteredAttendance = useMemo(() => {
     };
   }, []);
 
+
+  const hasMarkedToday = attendanceList.some(
+    (a) => new Date(a.date).toISOString().slice(0, 10) === todayDate
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -210,9 +223,12 @@ const filteredAttendance = useMemo(() => {
           {user.role !== "admin" && !showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto"
+              disabled={hasMarkedToday}
+              className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${
+                hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              + Mark Attendance
+              {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
             </button>
           )}
         </div>
@@ -299,50 +315,67 @@ const filteredAttendance = useMemo(() => {
               <th className="py-3 px-4 text-left">Date</th>
               <th className="py-3 px-4 text-left">Login</th>
               <th className="py-3 px-4 text-left">Logout</th>
+              <th>Hours</th>
               <th className="py-3 px-4 text-center">Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {currentRecords.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-14 text-center text-slate-400">
-                  No attendance records found
-                </td>
-              </tr>
-            ) : (
-              currentRecords.map((a, idx) => (
-                <tr key={a._id || idx} className="border-b hover:bg-indigo-50 transition">
-                  <td className="py-3 px-4">{indexOfFirst + idx + 1}</td>
-                  <td className="py-3 px-4 font-medium text-slate-800">{a.name}</td>
-                  <td className="py-3 px-4">{a.date}</td>
-                  <td className="py-3 px-4">{formatTime12Hour(a.loginTime)}</td>
-                  <td className="py-3 px-4">{formatTime12Hour(a.logoutTime)}</td>
-                  <td className="py-3 px-4 flex justify-center gap-2">
-                    <button
-                      onClick={() => setViewModal(a)}
-                      className="bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-indigo-600 transition"
-                    >
-                      View
-                    </button>
-                    {user.role !== "admin" && a.date === todayDate && (
-                      <button
-                        disabled={!!a.logoutTime}
-                        onClick={() => handleSetLogout(a)}
-                        className={`px-3 py-1 rounded-lg text-xs transition ${
-                          a.logoutTime
-                            ? "bg-gray-300 text-gray-500"
-                            : "bg-green-500 text-white hover:bg-green-600"
-                        }`}
-                      >
-                        {a.logoutTime ? "Logged Out" : "Logout"}
-                      </button>
-                    )}
+              {currentRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-14 text-center text-slate-400">
+                    No attendance records found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
+              ) : (
+                currentRecords.map((a, idx) => {
+                  // Calculate working hours dynamically
+                  const calculateWorkingHours = (loginTime, logoutTime) => {
+                    if (!loginTime || !logoutTime) return "-";
+                    const start = new Date(`1970-01-01T${loginTime}`);
+                    const end = new Date(`1970-01-01T${logoutTime}`);
+                    const diffMs = end - start;
+                    if (diffMs < 0) return "-";
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                  };
+
+                  return (
+                    <tr key={a._id || idx} className="border-b hover:bg-indigo-50 transition">
+                      <td className="py-3 px-4">{indexOfFirst + idx + 1}</td>
+                      <td className="py-3 px-4 font-medium text-slate-800">{a.name}</td>
+                      <td className="py-3 px-4">{new Date(a.date).toISOString().slice(0, 10)}</td>
+                      <td className="py-3 px-4">{formatTime12Hour(a.loginTime)}</td>
+                      <td className="py-3 px-4">{formatTime12Hour(a.logoutTime)}</td>
+                      <td className="py-3 px-4">{calculateWorkingHours(a.loginTime, a.logoutTime)}</td>
+                      <td className="py-3 px-4 flex justify-center gap-2">
+                        <button
+                          onClick={() => setViewModal(a)}
+                          className="bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-indigo-600 transition"
+                        >
+                          View
+                        </button>
+                        {user.role !== "admin" &&
+                          new Date(a.date).toISOString().slice(0, 10) === todayDate && (
+                            <button
+                              disabled={!!a.logoutTime}
+                              onClick={() => handleSetLogout(a)}
+                              className={`px-3 py-1 rounded-lg text-xs transition ${
+                                a.logoutTime
+                                  ? "bg-gray-300 text-gray-500"
+                                  : "bg-green-500 text-white hover:bg-green-600"
+                              }`}
+                            >
+                              {a.logoutTime ? "Logged Out" : "Logout"}
+                            </button>
+                          )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
         </table>
 
 {/* PAGINATION */}
@@ -398,7 +431,10 @@ const filteredAttendance = useMemo(() => {
               <div className="space-y-3 text-sm text-slate-600">
                 <p><strong>Name:</strong> {viewModal.name}</p>
                 <p><strong>Role:</strong> {viewModal.role}</p>
-                <p><strong>Date:</strong> {viewModal.date}</p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(viewModal.date).toISOString().slice(0, 10)}
+                </p>
                 <p><strong>Login:</strong> {formatTime12Hour(viewModal.loginTime)}</p>
                 <p><strong>Logout:</strong> {formatTime12Hour(viewModal.logoutTime)}</p>
               </div>

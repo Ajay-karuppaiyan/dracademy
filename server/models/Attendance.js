@@ -4,10 +4,10 @@ const AttendanceSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },
   role: { type: String, required: true },
-  date: { type: String, required: true }, // YYYY-MM-DD
+  date: { type: Date, default: Date.now },
   loginTime: { type: String, required: true },
   logoutTime: { type: String },
-  photo: { type: String }, // store as base64 or file path
+  photo: { type: String },
 });
 
 module.exports = mongoose.model("Attendance", AttendanceSchema);

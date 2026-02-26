@@ -3,21 +3,40 @@ const mongoose = require("mongoose");
 const expenseSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    amount: { type: Number, required: true },
     category: { type: String, required: true },
-    description: { type: String },
+    amount: { type: Number, required: true },
+    description: String,
     date: { type: Date, default: Date.now },
-    receipt: { type: String }, // file path
-    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
-    submittedBy: {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      name: String,
-      role: String,
+    receipt: String,
+
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "reimbursed"],
+      default: "pending",
     },
+
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     approvedBy: {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      name: String,
-      role: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    approvedAt: Date,
+
+    reimbursement: {
+      status: {
+        type: String,
+        enum: ["not_paid", "paid"],
+        default: "not_paid",
+      },
+      paidAt: Date,
+      paymentMethod: String,
+      transactionId: String,
     },
   },
   { timestamps: true }

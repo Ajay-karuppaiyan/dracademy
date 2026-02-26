@@ -16,17 +16,10 @@ router.post("/register-child", protect, async (req, res) => {
       return res.status(403).json({ message: "Only parents can register children" });
     }
 
-    const {
-      firstName,
-      lastName,
-      email,
-      mobile,
-      password,
-      dob,
-      gender,
-      course,
-      year,
-    } = req.body;
+    let { firstName, lastName, email, mobile, password, dob, gender, course, year } = req.body;
+
+    // Normalize gender
+    if (gender) gender = gender.toLowerCase(); // must match schema ["male","female","other"]
 
     // Check existing user
     const existingUser = await User.findOne({ email });
@@ -60,7 +53,6 @@ router.post("/register-child", protect, async (req, res) => {
       message: "Child registered successfully",
       student,
     });
-
   } catch (error) {
     console.error("REGISTER CHILD ERROR:", error);
     res.status(500).json({ message: "Server Error" });
@@ -222,9 +214,7 @@ router.delete("/parent/:parentId", protect, async (req, res) => {
   }
 });
 
-// =======================================================
-// ✅ GET CHILD ATTENDANCE LIST
-// =======================================================
+// GET CHILD ATTENDANCE LIST (filter by userId)
 router.get("/child/:studentId/attendance", protect, async (req, res) => {
   try {
     if (req.user.role !== "parent") {
@@ -232,29 +222,32 @@ router.get("/child/:studentId/attendance", protect, async (req, res) => {
     }
 
     const { studentId } = req.params;
-    const { month } = req.query;
+    const { month } = req.query; // format: YYYY-MM
 
+    // Find the student and ensure it belongs to the parent
     const student = await Student.findOne({
       _id: studentId,
       parent: req.user._id,
-    });
+    }).populate("user", "email");
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    let query = {
-      userId: student.user,
-      role: "student",
-    };
+    // Build query using userId
+    let query = { userId: student.user._id };
 
-    // Month filter (YYYY-MM)
+    // Filter by month using Date ranges
     if (month) {
-      query.date = { $regex: `^${month}` };
+      const [year, mon] = month.split("-"); // "2026-02"
+      const startDate = new Date(year, mon - 1, 1); // first day of month
+      const endDate = new Date(year, mon, 0, 23, 59, 59); // last day of month
+      query.date = { $gte: startDate, $lte: endDate };
     }
 
     const attendance = await Attendance.find(query).sort({ date: -1 });
 
+    // Format data for frontend
     const formatted = attendance.map((a, index) => {
       let totalHours = "0h 0m";
       let status = "Absent";
@@ -265,7 +258,6 @@ router.get("/child/:studentId/attendance", protect, async (req, res) => {
         if (a.logoutTime) {
           const login = new Date(`1970-01-01T${a.loginTime}`);
           const logout = new Date(`1970-01-01T${a.logoutTime}`);
-
           const diffMs = logout - login;
 
           if (diffMs > 0) {
@@ -284,7 +276,7 @@ router.get("/child/:studentId/attendance", protect, async (req, res) => {
 
       return {
         sNo: index + 1,
-        date: a.date,
+        date: a.date.toISOString().slice(0, 10),
         day: dayName,
         loginTime: a.loginTime || "-",
         logoutTime: a.logoutTime || "-",
@@ -294,11 +286,11 @@ router.get("/child/:studentId/attendance", protect, async (req, res) => {
     });
 
     res.json(formatted);
-
   } catch (error) {
     console.error("ATTENDANCE ERROR:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 module.exports = router;

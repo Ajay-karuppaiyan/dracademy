@@ -4,7 +4,6 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 
 const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
-  const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
@@ -15,9 +14,8 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  /* ================= RESET FORM ================= */
+  /* ================= RESET ================= */
   const resetForm = () => {
-    setName("");
     setTitle("");
     setCategory("");
     setAmount("");
@@ -34,12 +32,12 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
     const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Only JPG, PNG, or PDF files are allowed");
+      toast.error("Only JPG, PNG or PDF allowed");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be under 5MB");
+      toast.error("File must be under 5MB");
       return;
     }
 
@@ -50,8 +48,8 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name.trim() || !title.trim() || !category.trim()) {
-      toast.error("Name, Title, and Category are required");
+    if (!title.trim() || !category.trim()) {
+      toast.error("Title and Category are required");
       return;
     }
 
@@ -64,7 +62,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
       setLoading(true);
 
       const formData = new FormData();
-      formData.append("name", name.trim());
       formData.append("title", title.trim());
       formData.append("category", category.trim());
       formData.append("amount", Number(amount));
@@ -82,10 +79,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
       resetForm();
       onClose();
     } catch (err) {
-      console.error(err);
-      toast.error(
-        err.response?.data?.message || "Failed to add expense"
-      );
+      toast.error(err.response?.data?.message || "Failed to add expense");
     } finally {
       setLoading(false);
     }
@@ -95,17 +89,17 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 z-50 flex justify-center items-center"
+      className="fixed inset-0 bg-black/40 z-50 flex justify-center items-center"
       onClick={() => {
         resetForm();
         onClose();
       }}
     >
       <div
-        className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-lg"
+        className="bg-white p-6 rounded-xl w-full max-w-md shadow-xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Icon */}
+        {/* Close */}
         <button
           onClick={() => {
             resetForm();
@@ -113,7 +107,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
           }}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
         >
-          <XCircle size={24} />
+          <XCircle size={22} />
         </button>
 
         <h2 className="text-lg font-bold mb-4 text-slate-800">
@@ -121,64 +115,73 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
         </h2>
 
         <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+          {/* Title */}
           <input
             type="text"
-            placeholder="Employee Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
-            required
-          />
-
-          <input
-            type="text"
-            placeholder="Title"
+            placeholder="Expense Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
 
-          <input
-            type="text"
-            placeholder="Category"
+          {/* Category */}
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
-          />
+          >
+            <option value="">Select Category</option>
+            <option value="Travel">Travel</option>
+            <option value="Food">Food</option>
+            <option value="Accommodation">Accommodation</option>
+            <option value="Office Supplies">Office Supplies</option>
+            <option value="Medical">Medical</option>
+            <option value="Other">Other</option>
+          </select>
 
+          {/* Amount */}
           <input
             type="number"
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
             min="1"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
 
+          {/* Date */}
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
+          {/* Description */}
           <textarea
             placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="border px-3 py-2 rounded-lg"
             rows="3"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
+          {/* Receipt */}
           <input
             type="file"
             onChange={handleFileChange}
             className="border px-3 py-2 rounded-lg"
             accept=".jpg,.jpeg,.png,.pdf"
           />
+
+          {receipt && (
+            <p className="text-xs text-slate-500">
+              Selected: {receipt.name}
+            </p>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 mt-2">
@@ -189,7 +192,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
                 onClose();
               }}
               disabled={loading}
-              className="w-full border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold hover:bg-slate-100 transition"
+              className="w-full border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold hover:bg-slate-100"
             >
               Cancel
             </button>
@@ -197,7 +200,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700 transition"
+              className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700"
             >
               <Plus size={16} />
               {loading ? "Adding..." : "Add Expense"}
