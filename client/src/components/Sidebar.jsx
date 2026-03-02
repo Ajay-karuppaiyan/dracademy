@@ -18,6 +18,7 @@ import {
   MonitorPlay,
   Megaphone,
   Receipt,
+  MessageSquare 
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -61,6 +62,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <CreditCard size={22} />, label: "Subscription", path: "/dashboard/subscription" },
     { icon: <Clock size={22} />, label: "Time Table", path: "/dashboard/timetable" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
   // ================= ADMIN / HR MENU =================
@@ -73,6 +75,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
   // ================= COACH MENU =================
@@ -85,9 +88,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   // ================= PARENT MENU =================
   const parentItems = [
     { icon: <Users size={22} />, label: "Dashboard", path: "/dashboard/parent-dashboard" },
-    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
-    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/parent/child-attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/parent/child-leave" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
   const employeeItems = [
@@ -95,6 +99,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
   const financeItems = [
@@ -104,6 +109,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
   // ================= ROLE BASED NAVIGATION ================

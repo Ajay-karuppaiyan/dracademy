@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 const Payroll = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(""); 
   const [showMonthGrid, setShowMonthGrid] = useState(false);
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [salaryEmployee, setSalaryEmployee] = useState(null);
@@ -14,19 +14,60 @@ const Payroll = () => {
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [attendanceEmployee, setAttendanceEmployee] = useState(null);
+  // 🔥 Payslip Modal State
+const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+const [selectedPayroll, setSelectedPayroll] = useState(null);
+
+
+ const downloadPayslip = async (payrollId, employeeName) => {
+  try {
+    const res = await api.get(`/payroll/payslip/${payrollId}`, {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `Payslip_${employeeName}.pdf`
+    );
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    toast.success("Payslip downloaded successfully");
+  } catch (err) {
+    console.error(err);
+    toast.error("Download failed");
+  }
+};
 
   const [salaryData, setSalaryData] = useState({
-    basic: 0, totalDays: 30, present: 0, absent: 0, lateDays: 0, lateTime: 0, advance: 0,
+    basic: 0,
+    totalDays: 30,
+    present: 0,
+    absent: 0,
+    lateDays: 0,
+    lateTime: 0,
+    advance: 0,
 
     allowances: {
-      hra: 0, medical: 0, bonus: 0,
+      hra: 0,
+      medical: 0,
+      bonus: 0,
     },
 
     deductions: {
-      pf: 0, tax: 0,
+      pf: 0,
+      tax: 0,
     },
 
-    totalAllowances: 0, totalDeductions: 0, netSalary: 0,
+    totalAllowances: 0,
+    totalDeductions: 0,
+    netSalary: 0,
   });
 
   const fetchEmployeeAttendance = async (employee) => {
@@ -96,17 +137,28 @@ const Payroll = () => {
       : 0;
 
     setSalaryData({
-      basic: employee.basicSalary || 0, totalDays: daysInMonth, present: employee.present || 0, absent: employee.absent || 0, lateDays: employee.lateDays || 0, lateTime: employee.lateTime || 0, advance: employee.advance || 0,
+      basic: employee.basicSalary || 0,
+      totalDays: daysInMonth,
+      present: employee.present || 0,
+      absent: employee.absent || 0,
+      lateDays: employee.lateDays || 0,
+      lateTime: employee.lateTime || 0,
+      advance: employee.advance || 0,
 
       allowances: employee.allowances || {
-        hra: 0, medical: 0, bonus: 0,
+        hra: 0,
+        medical: 0,
+        bonus: 0,
       },
 
       deductions: employee.deductions || {
-        pf: 0, tax: 0,
+        pf: 0,
+        tax: 0,
       },
 
-      totalAllowances: 0, totalDeductions: 0, netSalary: 0,
+      totalAllowances: 0,
+      totalDeductions: 0,
+      netSalary: 0,
     });
 
     setSalaryModalOpen(true);
@@ -128,11 +180,16 @@ const Payroll = () => {
 
     setSalaryData(prev => ({
       ...prev,
-      totalAllowances, totalDeductions, netSalary,
+      totalAllowances,
+      totalDeductions,
+      netSalary,
     }));
 
   }, [
-    salaryData.basic, salaryData.allowances, salaryData.deductions, salaryData.advance
+    salaryData.basic,
+    salaryData.allowances,
+    salaryData.deductions,
+    salaryData.advance
   ]);
 
   // Save payroll
@@ -283,6 +340,19 @@ const Payroll = () => {
                 >
                   📅 Attendance
                 </button>
+                <button
+  onClick={() => {
+    if (!p._id) {
+      toast.error("Save payroll first");
+      return;
+    }
+    setSelectedPayroll(p);
+    setConfirmModalOpen(true);
+  }}
+  className="px-2 py-1 text-blue-600 hover:text-blue-800"
+>
+  💰 Payslip
+</button>
               </td>
             </tr>
           ))
@@ -505,8 +575,46 @@ const Payroll = () => {
                 );
               })
             )}
+            
           </tbody>
+          
         </table>
+      </div>
+    </div>
+  </div>
+)}
+{/* ===== CONFIRM DOWNLOAD MODAL ===== */}
+{confirmModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-xl shadow-lg w-80">
+      <h2 className="text-lg font-semibold mb-3 text-gray-800">
+        Confirm Download
+      </h2>
+
+      <p className="mb-4 text-sm text-gray-600">
+        Download payslip for <b>{selectedPayroll?.name}</b>?
+      </p>
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setConfirmModalOpen(false)}
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            downloadPayslip(
+              selectedPayroll._id,
+              selectedPayroll.name
+            );
+            setConfirmModalOpen(false);
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+          Download
+        </button>
       </div>
     </div>
   </div>

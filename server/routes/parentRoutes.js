@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Student = require("../models/Student");
 const User = require("../models/User");
+const Leave = require("../models/Leave");
 const Attendance = require("../models/Attendance");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -292,5 +293,46 @@ router.get("/child/:studentId/attendance", protect, async (req, res) => {
   }
 });
 
+// GET CHILD LEAVE REQUESTS (Parent Only)
+router.get("/child/:studentId/leave-request", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "parent") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { studentId } = req.params;
+
+    // Find the student and ensure they belong to this parent
+    const student = await Student.findOne({
+      _id: studentId,
+      parent: req.user._id,
+    }).populate("user", "email name");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Fetch leave requests for this student (using student.user._id)
+    const leaves = await Leave.find({ userId: student.user._id }).sort({ startDate: -1 });
+
+    // Format response for frontend
+    const formatted = leaves.map((leave, index) => ({
+      sNo: index + 1,
+      employeeName: leave.employeeName,
+      leaveType: leave.leaveType,
+      reason: leave.reason,
+      startDate: leave.startDate.toISOString().slice(0, 10),
+      endDate: leave.endDate.toISOString().slice(0, 10),
+      numDays: leave.numDays,
+      status: leave.status,
+      fileUrl: leave.fileUrl || null,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("CHILD LEAVE REQUEST ERROR:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
 module.exports = router;

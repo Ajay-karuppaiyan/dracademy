@@ -30,11 +30,14 @@ import Settings from "./pages/dashboard/Settings";
 import Students from "./pages/dashboard/Students";
 import ParentManagement from "./pages/admin/ParentManagement";
 import ParentDashboard from "./pages/parent/ParentDashboard";
+import ChildAttendance from "./pages/parent/ChildAttendance";
+import ChildLeave from "./pages/parent/ChildLeave";
 import RegisterChild from "./pages/parent/RegisterChild";
 import Attendance from "./pages/attendance/Attendance";
 import Profile from "./pages/profile/Profile";
 import Finance from "./pages/Finance";
 import Announcement from "./pages/dashboard/Announcement";
+import DiscussionForum from "./pages/dashboard/DiscussionForum";
 import Expenses from "./pages/expenses/Expenses";
 
 // Leave
@@ -143,6 +146,7 @@ function App() {
 
             {/* Announcements */}
             <Route path="announcements" element={<Announcement />} />
+            <Route path="forum" element={<DiscussionForum />} />
 
             {/* LMS */}
             <Route path="lms" element={<MyLearning />} />
@@ -151,6 +155,8 @@ function App() {
 
             {/* Parent */}
             <Route path="parent-dashboard" element={<ParentDashboard />} />
+            <Route path="/dashboard/parent/child-attendance" element={<ChildAttendance />} />
+            <Route path="/dashboard/parent/child-leave" element={<ChildLeave />} />
             <Route
               path="parent/register-child"
               element={<RegisterChild />}

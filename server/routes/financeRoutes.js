@@ -1,22 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
 const Payment = require("../models/Payment");
 
-
-// =======================================
-// ✅ GET ALL PAYMENTS
-// =======================================
+////////////////////////////////////////////////////////////
+// ✅ GET ALL PAYMENTS (WITH TYPE FILTER SUPPORT)
+////////////////////////////////////////////////////////////
 router.get("/payments", async (req, res) => {
   try {
+    const { type } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const total = await Payment.countDocuments();
+    const filter = {};
+    if (type) filter.type = type;
 
-    const payments = await Payment.find()
-      .populate("user", "name")
+    const total = await Payment.countDocuments(filter);
+
+    const payments = await Payment.find(filter)
+      .populate("student", "name email")
       .populate("course", "title")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -34,14 +36,13 @@ router.get("/payments", async (req, res) => {
   }
 });
 
-
-// =======================================
-// ✅ GET PAYMENT BY ID
-// =======================================
+////////////////////////////////////////////////////////////
+// ✅ GET SINGLE PAYMENT
+////////////////////////////////////////////////////////////
 router.get("/payments/:id", async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
-      .populate("user", "name email")
+      .populate("student", "name email") // ✅ FIXED
       .populate("course", "title");
 
     if (!payment) {
@@ -55,16 +56,13 @@ router.get("/payments/:id", async (req, res) => {
   }
 });
 
-
-// =======================================
-// ✅ UPDATE PAYMENT (Status Update)
-// =======================================
+////////////////////////////////////////////////////////////
+// ✅ UPDATE PAYMENT
+////////////////////////////////////////////////////////////
 router.put("/payments/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-
     const updatedPayment = await Payment.findByIdAndUpdate(
-      id,
+      req.params.id,
       req.body,
       { new: true }
     );
@@ -80,15 +78,12 @@ router.put("/payments/:id", async (req, res) => {
   }
 });
 
-
-// =======================================
+////////////////////////////////////////////////////////////
 // ✅ DELETE PAYMENT
-// =======================================
+////////////////////////////////////////////////////////////
 router.delete("/payments/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const deletedPayment = await Payment.findByIdAndDelete(id);
+    const deletedPayment = await Payment.findByIdAndDelete(req.params.id);
 
     if (!deletedPayment) {
       return res.status(404).json({ message: "Payment Not Found" });
@@ -101,14 +96,18 @@ router.delete("/payments/:id", async (req, res) => {
   }
 });
 
-
-// =======================================
-// ✅ TOTAL REVENUE SUMMARY
-// =======================================
+////////////////////////////////////////////////////////////
+// ✅ TOTAL REVENUE (ONLY INWARD SUCCESS)
+////////////////////////////////////////////////////////////
 router.get("/summary/total-revenue", async (req, res) => {
   try {
     const result = await Payment.aggregate([
-      { $match: { status: "success" } },
+      {
+        $match: {
+          type: "inward",       // ✅ Important
+          status: "success",
+        },
+      },
       {
         $group: {
           _id: null,
@@ -123,6 +122,36 @@ router.get("/summary/total-revenue", async (req, res) => {
     );
   } catch (error) {
     console.error("Revenue Summary Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+////////////////////////////////////////////////////////////
+// ✅ TOTAL EXPENSE SUMMARY (OUTWARD PAID)
+////////////////////////////////////////////////////////////
+router.get("/summary/total-expense", async (req, res) => {
+  try {
+    const result = await Payment.aggregate([
+      {
+        $match: {
+          type: "outward",
+          status: "paid",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalExpense: { $sum: "$amount" },
+          totalTransactions: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.status(200).json(
+      result[0] || { totalExpense: 0, totalTransactions: 0 }
+    );
+  } catch (error) {
+    console.error("Expense Summary Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });

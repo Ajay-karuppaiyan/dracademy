@@ -18,6 +18,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
 const financeRoutes = require("./routes/financeRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const forumRoutes = require("./routes/forumRoutes");  
 const expenseRoutes = require("./routes/expenseRoutes");
 
 dotenv.config();
@@ -53,6 +54,7 @@ app.use("/api/password", passwordRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/forum", forumRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

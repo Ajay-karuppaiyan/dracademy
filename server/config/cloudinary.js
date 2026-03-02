@@ -13,16 +13,36 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
         console.log(`Cloudinary Upload starting for field: ${file.fieldname}`);
-        // Determine folder based on fieldname or general folder
+
         let folder = 'drrj-academy';
 
+        // =========================
+        // COURSES
+        // =========================
         if (file.fieldname === 'thumbnail') {
             folder += '/courses/thumbnails';
-        } else if (['profilePic', 'idFile', 'certificateFile', 'contractFile'].includes(file.fieldname)) {
+        }
+
+        // =========================
+        // EMPLOYEES
+        // =========================
+        else if (['profilePic', 'idFile', 'certificateFile', 'contractFile'].includes(file.fieldname)) {
             folder += '/employees';
             if (file.fieldname === 'profilePic') folder += '/profiles';
             else folder += '/documents';
-        } else {
+        }
+
+        // =========================
+        // FORUM POSTS (NEW)
+        // =========================
+        else if (file.fieldname === 'forumImage') {
+            folder += '/forum/posts';
+        }
+
+        // =========================
+        // DEFAULT
+        // =========================
+        else {
             folder += '/others';
         }
 
@@ -32,10 +52,19 @@ const storage = new CloudinaryStorage({
             public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
         };
 
-        // If it's a profile pic, add auto-cropping centered on the face
+        // Profile image transformation
         if (file.fieldname === 'profilePic') {
             options.transformation = [
                 { width: 500, height: 500, crop: 'fill', gravity: 'face' }
+            ];
+        }
+
+        // Forum image optimization (NEW)
+        if (file.fieldname === 'forumImage') {
+            options.transformation = [
+                { width: 1000, crop: 'limit' },  // prevent oversized images
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
             ];
         }
 
@@ -43,6 +72,6 @@ const storage = new CloudinaryStorage({
     },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 module.exports = { cloudinary, upload };
