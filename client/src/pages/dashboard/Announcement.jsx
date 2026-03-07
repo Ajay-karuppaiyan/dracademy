@@ -34,7 +34,7 @@ const Announcement = () => {
         `/announcements?page=${page}`
       );
 
-      // ✅ correct structure
+      // correct structure
       setAnnouncements(data.data || []);
       setTotalPages(data.pages || 1);
 

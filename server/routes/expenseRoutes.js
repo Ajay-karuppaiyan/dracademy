@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const fs = require("fs");
 const Expense = require("../models/Expenses");
+const Payment = require("../models/Payment");
 const { protect } = require("../middleware/authMiddleware");
 
 // =================================================
@@ -138,14 +139,22 @@ router.patch("/:id/reimburse", protect, async (req, res) => {
 
     const { paymentMethod, transactionId } = req.body;
 
-    const expense = await Expense.findById(req.params.id);
-    if (!expense) return res.status(404).json({ message: "Not found" });
+    const expense = await Expense.findById(req.params.id)
+      .populate("submittedBy", "name email");
+
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
 
     if (expense.status !== "approved") {
       return res
         .status(400)
         .json({ message: "Expense must be approved first" });
     }
+
+    // =========================
+    // UPDATE EXPENSE
+    // =========================
 
     expense.status = "reimbursed";
     expense.reimbursement.status = "paid";
@@ -155,11 +164,37 @@ router.patch("/:id/reimburse", protect, async (req, res) => {
 
     await expense.save();
 
+    // =========================
+    // CREATE OUTWARD PAYMENT
+    // =========================
+
+    const outwardPayment = await Payment.create({
+      type: "outward",
+
+      amount: expense.amount,
+
+      recipientName: expense.submittedBy?.name || "Employee",
+
+      recipientType: "employee",
+
+      category: "reimbursement",
+
+      paymentMethod: paymentMethod,
+
+      status: "paid",
+
+      notes: `Expense reimbursement for ${expense.title}`,
+
+      referenceInvoice: expense._id.toString(),
+    });
+
     res.json({
       success: true,
-      message: "Expense reimbursed successfully (Outward recorded)",
-      data: expense,
+      message: "Expense reimbursed and outward payment recorded",
+      expense,
+      outwardPayment,
     });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -263,6 +298,39 @@ router.get("/reports/summary", protect, async (req, res) => {
         totalPaidExpenses: 0,
         totalCount: 0,
       },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// =================================================
+// ============ GET ALL REIMBURSED EXPENSES ========
+// =================================================
+
+router.get("/reimbursed", protect, async (req, res) => {
+  try {
+    const role = req.user.role.toLowerCase();
+
+    let query = {
+      status: "reimbursed",
+      "reimbursement.status": "paid",
+    };
+
+    // Non-admin users can see only their reimbursed expenses
+    if (role !== "admin" && role !== "finance") {
+      query.submittedBy = req.user._id;
+    }
+
+    const expenses = await Expense.find(query)
+      .populate("submittedBy", "name email role")
+      .populate("approvedBy", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: expenses.length,
+      data: expenses,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

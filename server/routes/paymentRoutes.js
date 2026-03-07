@@ -4,68 +4,135 @@ const crypto = require("crypto");
 const Razorpay = require("razorpay");
 
 const { protect } = require("../middleware/authMiddleware");
+
 const Payment = require("../models/Payment");
 const Course = require("../models/Course");
-const User = require("../models/User");
+const Student = require("../models/Student");
 
-// 🔐 Razorpay Instance
+/////////////////////////////////////////////////////////////
+// Razorpay Instance
+/////////////////////////////////////////////////////////////
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 /////////////////////////////////////////////////////////////
-// 1️⃣ CREATE ORDER
+// CREATE ORDER
 /////////////////////////////////////////////////////////////
+
 router.post("/create-order", protect, async (req, res) => {
   try {
-    const { courseId } = req.body;
+    const { courseId, studentId } = req.body;
+
+    console.log("BODY:", req.body);
+    console.log("USER:", req.user.role);
+
+    /////////////////////////////////////////////////////////////
+    // FIND COURSE
+    /////////////////////////////////////////////////////////////
 
     const course = await Course.findById(courseId);
-    if (!course) return res.status(404).json({ message: "Course not found" });
 
-    const user = await User.findById(req.user._id);
-
-    if (user.enrolledCourses.includes(courseId)) {
-      return res.status(400).json({ message: "Already enrolled" });
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
     }
 
-    // ✅ Convert rupees → paise for Razorpay
-    const amountInPaise = course.price * 100;
+    /////////////////////////////////////////////////////////////
+    // FIND STUDENT
+    /////////////////////////////////////////////////////////////
+
+    let student;
+
+    // Parent enrolling child
+    if (req.user.role === "parent") {
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID required" });
+      }
+
+      student = await Student.findOne({
+        _id: studentId,
+        parent: req.user._id,
+      });
+    }
+
+    // Student enrolling self
+    else {
+      student = await Student.findOne({
+        user: req.user._id,
+      });
+    }
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    /////////////////////////////////////////////////////////////
+    // CHECK IF ALREADY ENROLLED
+    /////////////////////////////////////////////////////////////
+
+    if (!student.enrolledCourses) {
+      student.enrolledCourses = [];
+    }
+
+    const alreadyEnrolled = student.enrolledCourses.some(
+      (id) => id.toString() === courseId
+    );
+
+    if (alreadyEnrolled) {
+      return res
+        .status(400)
+        .json({ message: "Student already enrolled in this course" });
+    }
+
+    /////////////////////////////////////////////////////////////
+    // CREATE RAZORPAY ORDER
+    /////////////////////////////////////////////////////////////
 
     const order = await razorpay.orders.create({
-      amount: amountInPaise,
+      amount: course.price * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     });
 
-    // ✅ Store rupees in DB (not paise)
+    /////////////////////////////////////////////////////////////
+    // SAVE PAYMENT
+    /////////////////////////////////////////////////////////////
+
     await Payment.create({
-      user: user._id,
+      type: "inward",
+      student: student._id,
       course: course._id,
-      userName: user.name,
-      amount: course.price, // store ₹1000 (not 100000)
+      amount: course.price,
       currency: order.currency,
       razorpayOrderId: order.id,
       receipt: order.receipt,
       status: "created",
     });
 
+    /////////////////////////////////////////////////////////////
+    // RESPONSE
+    /////////////////////////////////////////////////////////////
+
     res.json({
       orderId: order.id,
-      amount: order.amount, // paise (needed for frontend)
+      amount: order.amount,
       currency: order.currency,
     });
-
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Order creation failed" });
+
+    res.status(500).json({
+      message: "Order creation failed",
+    });
   }
 });
 
 /////////////////////////////////////////////////////////////
-// 2️⃣ VERIFY PAYMENT
+// VERIFY PAYMENT
 /////////////////////////////////////////////////////////////
+
 router.post("/verify-payment", protect, async (req, res) => {
   try {
     const {
@@ -74,6 +141,10 @@ router.post("/verify-payment", protect, async (req, res) => {
       razorpay_signature,
       courseId,
     } = req.body;
+
+    /////////////////////////////////////////////////////////////
+    // VERIFY SIGNATURE
+    /////////////////////////////////////////////////////////////
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -86,6 +157,10 @@ router.post("/verify-payment", protect, async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
+    /////////////////////////////////////////////////////////////
+    // FIND PAYMENT
+    /////////////////////////////////////////////////////////////
+
     const payment = await Payment.findOne({
       razorpayOrderId: razorpay_order_id,
     });
@@ -93,6 +168,10 @@ router.post("/verify-payment", protect, async (req, res) => {
     if (!payment) {
       return res.status(404).json({ message: "Payment record not found" });
     }
+
+    /////////////////////////////////////////////////////////////
+    // FETCH PAYMENT DETAILS
+    /////////////////////////////////////////////////////////////
 
     const paymentDetails = await razorpay.payments.fetch(
       razorpay_payment_id
@@ -106,37 +185,74 @@ router.post("/verify-payment", protect, async (req, res) => {
 
     await payment.save();
 
-    const user = await User.findById(req.user._id);
+    /////////////////////////////////////////////////////////////
+    // FIND STUDENT
+    /////////////////////////////////////////////////////////////
 
-    if (!user.enrolledCourses.includes(courseId)) {
-      user.enrolledCourses.push(courseId);
-      await user.save();
+    const student = await Student.findById(payment.student);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
     }
 
-    res.json({ message: "Payment verified & enrolled successfully" });
+    /////////////////////////////////////////////////////////////
+    // ENROLL STUDENT
+    /////////////////////////////////////////////////////////////
 
+    if (!student.enrolledCourses) {
+      student.enrolledCourses = [];
+    }
+
+    const alreadyEnrolled = student.enrolledCourses.some(
+      (id) => id.toString() === payment.course.toString()
+    );
+
+    if (!alreadyEnrolled) {
+      student.enrolledCourses.push(payment.course);
+      await student.save();
+    }
+
+    /////////////////////////////////////////////////////////////
+    // RESPONSE
+    /////////////////////////////////////////////////////////////
+
+    res.json({
+      message: "Payment verified and student enrolled successfully",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Verification failed" });
+
+    res.status(500).json({
+      message: "Payment verification failed",
+    });
   }
 });
 
 /////////////////////////////////////////////////////////////
-// 3️⃣ WEBHOOK (Industry Must-Have)
+// WEBHOOK
 /////////////////////////////////////////////////////////////
+
 router.post("/webhook", async (req, res) => {
   try {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
     const shasum = crypto.createHmac("sha256", secret);
+
     shasum.update(JSON.stringify(req.body));
+
     const digest = shasum.digest("hex");
 
     if (digest !== req.headers["x-razorpay-signature"]) {
-      return res.status(400).json({ message: "Invalid webhook signature" });
+      return res.status(400).json({
+        message: "Invalid webhook signature",
+      });
     }
 
     const event = req.body;
+
+    /////////////////////////////////////////////////////////////
+    // PAYMENT SUCCESS
+    /////////////////////////////////////////////////////////////
 
     if (event.event === "payment.captured") {
       const paymentId = event.payload.payment.entity.id;
@@ -147,6 +263,10 @@ router.post("/webhook", async (req, res) => {
       );
     }
 
+    /////////////////////////////////////////////////////////////
+    // PAYMENT FAILED
+    /////////////////////////////////////////////////////////////
+
     if (event.event === "payment.failed") {
       const paymentId = event.payload.payment.entity.id;
 
@@ -156,11 +276,15 @@ router.post("/webhook", async (req, res) => {
       );
     }
 
-    res.json({ status: "Webhook received" });
-
+    res.json({
+      status: "Webhook received",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Webhook error" });
+
+    res.status(500).json({
+      message: "Webhook error",
+    });
   }
 });
 

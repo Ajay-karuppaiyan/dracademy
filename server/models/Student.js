@@ -29,6 +29,13 @@ const studentSchema = new mongoose.Schema({
   unique: true
   },
 
+  enrolledCourses: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course"
+    }
+  ],
+
   phone: String,
   dob: Date,
   gender: String,

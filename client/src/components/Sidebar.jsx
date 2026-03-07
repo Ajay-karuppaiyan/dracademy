@@ -90,6 +90,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <Users size={22} />, label: "Dashboard", path: "/dashboard/parent-dashboard" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/parent/child-attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/parent/child-leave" },
+    { icon: <MonitorPlay size={22} />, label: "Enroll Class", path: "/dashboard/enroll" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];

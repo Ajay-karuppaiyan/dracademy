@@ -335,4 +335,36 @@ router.get("/child/:studentId/leave-request", protect, async (req, res) => {
   }
 });
 
+/////////////////////////////////////////////////////////////
+// GET PARENT CHILDREN WITH COURSES
+/////////////////////////////////////////////////////////////
+
+router.get("/children-with-courses", protect, async (req, res) => {
+
+  try {
+
+    if (req.user.role !== "parent") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const children = await Student.find({ parent: req.user._id })
+      .populate({
+        path: "enrolledCourses",
+        select: "title price category thumbnail duration durationUnit",
+      });
+
+    res.json(children);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to fetch children courses",
+    });
+
+  }
+
+});
+
 module.exports = router;

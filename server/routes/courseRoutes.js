@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../models/Course');
+const Student = require('../models/Student');
 const { upload } = require('../config/cloudinary');
 const fs = require('fs');
 const path = require('path');
@@ -27,33 +28,108 @@ router.get('/', async (req, res) => {
 // @desc    Fetch courses enrolled by current user
 // @route   GET /api/courses/mine
 router.get('/mine', protect, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).populate({
-            path: 'enrolledCourses',
-            populate: { path: 'instructor', select: 'name' }
-        });
-        res.json(user.enrolledCourses || []);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+
+  try {
+
+    let student;
+
+    //////////////////////////////////////
+    // STUDENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "student") {
+
+      student = await Student.findOne({
+        user: req.user._id
+      }).populate({
+        path: "enrolledCourses",
+        populate: {
+          path: "instructor",
+          select: "name"
+        }
+      });
+
     }
+
+    //////////////////////////////////////
+    // PARENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "parent") {
+
+      const { studentId } = req.query;
+
+      student = await Student.findById(studentId).populate({
+        path: "enrolledCourses",
+        populate: {
+          path: "instructor",
+          select: "name"
+        }
+      });
+
+    }
+
+    res.json(student?.enrolledCourses || []);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
 });
 
 // @desc    Fetch courses available for enrollment (excluding already enrolled)
 // @route   GET /api/courses/available
 router.get('/available', protect, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        const enrolledIds = user.enrolledCourses || [];
 
-        const courses = await Course.find({
-            _id: { $nin: enrolledIds },
-            isActive: true
-        }).populate('instructor', 'name');
+  try {
 
-        res.json(courses);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    let student;
+
+    //////////////////////////////////////
+    // STUDENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "student") {
+
+      student = await Student.findOne({
+        user: req.user._id
+      });
+
     }
+
+    //////////////////////////////////////
+    // PARENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "parent") {
+
+      const { studentId } = req.query;
+
+      student = await Student.findById(studentId);
+
+    }
+
+    const enrolledIds = student?.enrolledCourses || [];
+
+    const courses = await Course.find({
+      _id: { $nin: enrolledIds },
+      isActive: true
+    }).populate("instructor", "name");
+
+    res.json(courses);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
 });
 
 // @desc    Fetch single course
@@ -75,33 +151,78 @@ router.get('/:id', async (req, res) => {
 // @desc    Enroll in a course
 // @route   POST /api/courses/:id/enroll
 router.post('/:id/enroll', protect, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        const course = await Course.findById(req.params.id);
 
-        if (!course) {
-            return res.status(404).json({ message: 'Course not found' });
-        }
+  try {
 
-        if (!user.enrolledCourses) {
-            user.enrolledCourses = [];
-        }
+    const { studentId } = req.body;
 
-        const isAlreadyEnrolled = user.enrolledCourses.some(
-            (id) => id.toString() === course._id.toString()
-        );
+    const course = await Course.findById(req.params.id);
 
-        if (isAlreadyEnrolled) {
-            return res.status(400).json({ message: 'Already enrolled in this course' });
-        }
-
-        user.enrolledCourses.push(course._id);
-        await user.save();
-
-        res.json({ message: 'Successfully enrolled', courseId: course._id });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found"
+      });
     }
+
+    let student;
+
+    //////////////////////////////////////
+    // STUDENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "student") {
+
+      student = await Student.findOne({
+        user: req.user._id
+      });
+
+    }
+
+    //////////////////////////////////////
+    // PARENT LOGIN
+    //////////////////////////////////////
+
+    if (req.user.role === "parent") {
+
+      student = await Student.findById(studentId);
+
+    }
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found"
+      });
+    }
+
+    const alreadyEnrolled = student.enrolledCourses.some(
+      id => id.toString() === course._id.toString()
+    );
+
+    if (alreadyEnrolled) {
+
+      return res.status(400).json({
+        message: "Already enrolled"
+      });
+
+    }
+
+    student.enrolledCourses.push(course._id);
+
+    await student.save();
+
+    res.json({
+      message: "Successfully enrolled",
+      courseId: course._id
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
 });
 
 // @desc    Create a course

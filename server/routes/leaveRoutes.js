@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Leave = require("../models/Leave");
+const Notification = require("../models/Notification");
 const multer = require("multer");
 const path = require("path");
 const { protect, admin } = require("../middleware/authMiddleware"); 
@@ -131,18 +132,31 @@ router.patch("/:id/status", protect, admin, async (req, res) => {
   try {
     const { status } = req.body;
 
-    // Allow admin to set pending, approved, or rejected
-    if (!["pending", "approved", "rejected"].includes(status)) {
+    if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
     const leave = await Leave.findById(req.params.id);
-    if (!leave) return res.status(404).json({ message: "Leave not found" });
+    if (!leave) {
+      return res.status(404).json({ message: "Leave not found" });
+    }
 
     leave.status = status;
     await leave.save();
 
-    res.json({ message: `Leave status updated to ${status}`, leave });
+    // 🔥 CREATE NOTIFICATION
+    await Notification.create({
+      recipient: leave.userId,   // ✅ IMPORTANT FIX
+      sender: req.user._id,
+      type: status === "approved" ? "leave_approved" : "leave_rejected",
+      title: status === "approved" ? "Leave Approved" : "Leave Rejected",
+      message: `Your leave request has been ${status}.`,
+      link: "/dashboard/hr",
+      entityId: leave._id,
+    });
+
+    res.json({ message: `Leave ${status} successfully` });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
