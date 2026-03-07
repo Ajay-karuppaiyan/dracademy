@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Attendance = require("../models/Attendance");
+const Leave = require("../models/Leave");
 const { protect } = require("../middleware/authMiddleware");
 
 
@@ -200,6 +201,120 @@ router.get("/monthly-chart", protect, async (req, res) => {
     ]);
 
     res.json(data);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================
+// GET - Employee Attendance Details
+// ============================
+router.get("/employee/:employeeId", protect, async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ message: "Month and year required" });
+    }
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    // Total days in month
+    const totalDays = endDate.getDate();
+
+    // Attendance records
+    const attendance = await Attendance.find({
+      userId: employeeId,
+      date: { $gte: startDate, $lte: endDate },
+    }).sort({ date: 1 });
+
+    const present = attendance.length;
+
+    // Leave applications
+    const leaves = await Leave.find({
+      employee: employeeId,
+      status: "approved",
+      startDate: { $lte: endDate },
+      endDate: { $gte: startDate },
+    });
+
+    let leaveCount = 0;
+
+    leaves.forEach((leave) => {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+
+      const diff =
+        Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+      leaveCount += diff;
+    });
+
+    const remainingDays = totalDays - present - leaveCount;
+
+    res.json({
+      summary: {
+        totalDays,
+        present,
+        leaveCount,
+        remainingDays,
+      },
+      attendance,
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================
+// GET - Payroll Attendance
+// ============================
+router.get("/:employeeId", protect, async (req, res) => {
+  try {
+
+    const { employeeId } = req.params;
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ message: "Month and year required" });
+    }
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    // Present days from attendance
+    const present = await Attendance.countDocuments({
+      userId: employeeId,
+      date: { $gte: startDate, $lte: endDate }
+    });
+
+    // Approved leave applications
+    const leaves = await Leave.find({
+      employee: employeeId,
+      status: "approved",
+      startDate: { $lte: endDate },
+      endDate: { $gte: startDate }
+    });
+
+    let absent = 0;
+
+    leaves.forEach(leave => {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+
+      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+      absent += diff;
+    });
+
+    res.json({
+      present,
+      absent
+    });
 
   } catch (err) {
     res.status(500).json({ message: err.message });

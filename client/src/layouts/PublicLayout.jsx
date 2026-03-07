@@ -51,7 +51,7 @@ const PublicLayout = () => {
                 <BookOpen size={24} strokeWidth={2} />
               </div>
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                DRRJ Academy
+                DRRG Academy
               </span>
             </Link>
 
@@ -181,11 +181,11 @@ const PublicLayout = () => {
                   <BookOpen size={16} />
                 </div>
                 <span className="text-lg font-bold text-slate-900">
-                  DRRJ Academy
+                  DRRG Academy
                 </span>
               </div>
               <p className="mb-6 max-w-xs leading-relaxed">
-                DRRJ Academy provides universal access to the world's best
+                DRRG Academy provides universal access to the world's best
                 education, collaborating with top universities and
                 organizations.
               </p>
@@ -264,7 +264,7 @@ const PublicLayout = () => {
             </div>
           </div>
           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-            <p>© 2026 DRRJ Academy Inc. All rights reserved.</p>
+            <p>© 2026 DRRG Academy Inc. All rights reserved.</p>
             <div className="flex gap-6">
               <Link to="#" className="hover:text-brand-700">
                 Privacy Policy

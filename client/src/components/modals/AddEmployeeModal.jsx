@@ -308,7 +308,7 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
                     type="email"
                     required
                     className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                    placeholder="john.doe@drrj.edu"
+                    placeholder="john.doe@drrg.edu"
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })

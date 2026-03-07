@@ -38,7 +38,7 @@ const Home = () => {
                   to="/enterprise"
                   className="px-8 py-4 bg-white border border-brand-700 text-brand-700 rounded font-bold text-lg hover:bg-brand-50 transition-colors"
                 >
-                  Try DRRJ for Business
+                  Try DRRG for Business
                 </Link>
               </div>
             </div>
@@ -322,7 +322,7 @@ const Home = () => {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-slate-900 mb-6">
             Take the next step toward your personal and professional goals with
-            DRRJ Academy.
+            DRRG Academy.
           </h2>
           <p className="text-slate-500 mb-10 text-lg">
             Join now to receive personalized recommendations from the full

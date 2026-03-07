@@ -108,7 +108,7 @@ const TopNavigation = () => {
               <BookOpen size={20} />
             </div>
             <span className="text-xl font-bold text-slate-900 tracking-tight hidden md:block">
-              DRRJ Academy
+              DRRG Academy
             </span>
           </div>
 

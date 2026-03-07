@@ -165,7 +165,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
               <div className="bg-brand-600 p-1.5 rounded-lg">
                 <BookOpen size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight">DRRJ</span>
+              <span className="text-xl font-bold tracking-tight">DRRG</span>
             </div>
           ) : (
             <div className="mx-auto bg-brand-600 p-2 rounded-lg">
