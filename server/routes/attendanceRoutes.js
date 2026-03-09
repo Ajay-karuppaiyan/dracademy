@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
 const { protect } = require("../middleware/authMiddleware");
@@ -207,63 +208,46 @@ router.get("/monthly-chart", protect, async (req, res) => {
   }
 });
 
-// ============================
-// GET - Employee Attendance Details
-// ============================
-router.get("/employee/:employeeId", protect, async (req, res) => {
+router.get("/employee/:userId/monthly", protect, async (req, res) => {
   try {
-    const { employeeId } = req.params;
-    const { month, year } = req.query;
+    const { userId } = req.params;
+    let { month, year } = req.query;
 
-    if (!month || !year) {
-      return res.status(400).json({ message: "Month and year required" });
+    // Convert to numbers
+    month = Number(month);
+    year = Number(year);
+
+    // Validate month/year
+    if (!month || !year || month < 1 || month > 12) {
+      return res.status(400).json({ message: "Invalid month or year" });
     }
 
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // Total days in month
-    const totalDays = endDate.getDate();
+    const [attendance, leaves] = await Promise.all([
+      Attendance.find({
+        userId: new mongoose.Types.ObjectId(userId),
+        date: { $gte: startDate, $lte: endDate }
+      }),
+      Leave.find({
+        $or: [
+          { userId: userId.toString() },
+          { userId: new mongoose.Types.ObjectId(userId) }
+        ],
+        status: "approved",
+        startDate: { $lte: endDate },
+        endDate: { $gte: startDate }
+      })
+    ]);
 
-    // Attendance records
-    const attendance = await Attendance.find({
-      userId: employeeId,
-      date: { $gte: startDate, $lte: endDate },
-    }).sort({ date: 1 });
+    // Combine results
+    const history = [
+      ...attendance.map(a => ({ ...a.toObject(), type: "attendance" })),
+      ...leaves.map(l => ({ ...l.toObject(), type: "leave" }))
+    ].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
 
-    const present = attendance.length;
-
-    // Leave applications
-    const leaves = await Leave.find({
-      employee: employeeId,
-      status: "approved",
-      startDate: { $lte: endDate },
-      endDate: { $gte: startDate },
-    });
-
-    let leaveCount = 0;
-
-    leaves.forEach((leave) => {
-      const start = new Date(leave.startDate);
-      const end = new Date(leave.endDate);
-
-      const diff =
-        Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-      leaveCount += diff;
-    });
-
-    const remainingDays = totalDays - present - leaveCount;
-
-    res.json({
-      summary: {
-        totalDays,
-        present,
-        leaveCount,
-        remainingDays,
-      },
-      attendance,
-    });
+    res.json(history);
 
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -271,12 +255,12 @@ router.get("/employee/:employeeId", protect, async (req, res) => {
 });
 
 // ============================
-// GET - Payroll Attendance
+// GET - Payroll Attendance Summary
 // ============================
-router.get("/:employeeId", protect, async (req, res) => {
+router.get("/payroll-summary/:userId", protect, async (req, res) => {
   try {
 
-    const { employeeId } = req.params;
+    const { userId } = req.params;
     const { month, year } = req.query;
 
     if (!month || !year) {
@@ -286,34 +270,81 @@ router.get("/:employeeId", protect, async (req, res) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    // Present days from attendance
-    const present = await Attendance.countDocuments({
-      userId: employeeId,
+    const totalDays = endDate.getDate();
+
+    // ==========================
+    // Attendance
+    // ==========================
+
+    const attendance = await Attendance.find({
+      userId,
       date: { $gte: startDate, $lte: endDate }
     });
 
-    // Approved leave applications
+    const present = attendance.length;
+
+    // ==========================
+    // Approved Leaves
+    // ==========================
+
     const leaves = await Leave.find({
-      employee: employeeId,
+      userId,
       status: "approved",
       startDate: { $lte: endDate },
       endDate: { $gte: startDate }
     });
 
-    let absent = 0;
+    const absent = leaves.length;
 
-    leaves.forEach(leave => {
-      const start = new Date(leave.startDate);
-      const end = new Date(leave.endDate);
+    // ==========================
+    // Remaining Days
+    // ==========================
 
-      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const remainingDays = totalDays - present;
 
-      absent += diff;
+    // ==========================
+    // Late Calculation
+    // ==========================
+
+    const shiftStart = "09:30:00"; // shift start time
+    const shift = new Date(`1970-01-01T${shiftStart}`);
+
+    let lateDays = 0;
+    let totalLateMinutes = 0;
+
+    attendance.forEach((record) => {
+
+      if (!record.loginTime) return;
+
+      const login = new Date(`1970-01-01T${record.loginTime}`);
+
+      if (login > shift) {
+
+        lateDays++;
+
+        const diffMinutes = Math.floor((login - shift) / (1000 * 60));
+
+        totalLateMinutes += diffMinutes;
+      }
+
     });
 
+    const lateHours = Math.floor(totalLateMinutes / 60);
+    const lateMins = totalLateMinutes % 60;
+
+    const lateTime = `${lateHours}h ${lateMins}m`;
+
+    // ==========================
+    // Response
+    // ==========================
+
     res.json({
+      totalDays,
       present,
-      absent
+      absent,
+      remainingDays,
+      lateDays,
+      lateTime
     });
 
   } catch (err) {

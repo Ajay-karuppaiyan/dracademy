@@ -1,216 +1,213 @@
 import React, { useState } from "react";
 import api from "../../services/api";
-import { UserPlus, Loader2, Calendar, BookOpen, Mail, Phone, Lock, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 const RegisterChild = () => {
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-    // Form State
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        mobile: "",
-        password: "",
-        dob: "",
-        gender: "Male",
-        course: "Science",
-        year: "1st Year"
+  const [formData, setFormData] = useState({
+    studentNameEnglish: "",
+    studentNameMotherTongue: "",
+    dob: "",
+    age: "",
+    fatherName: "",
+    gender: "",
+    nationality: "",
+    aadharNo: "",
+    kcetRegNo: "",
+    neetRegNo: "",
+    apaarId: "",
+    debId: "",
+    abcId: "",
+    religion: "",
+    community: "",
+    maritalStatus: "",
+    village: "",
+    post: "",
+    taluk: "",
+    district: "",
+    pin: "",
+    whatsapp: "",
+    email: "",
+    englishFluency: "",
+    language1: "",
+    language2: "",
+    language3: "",
+    accountHolderName: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankNameBranch: ""
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? value : value,
     });
+  };
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+  // ✅ EMAIL VALIDATION HERE
+  if (!formData.email || formData.email.trim() === "") {
+    toast.error("Email is required");
+    return;
+  }
 
-        try {
-            await api.post("/parent/register-child", formData);
-            toast.success("Child registered successfully!");
-            navigate("/dashboard/parent-dashboard");
-        } catch (err) {
-            toast.error(err?.response?.data?.message || "Failed to register child");
-        } finally {
-            setLoading(false);
-        }
-    };
+  // Optional: Proper email format check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.email)) {
+    toast.error("Enter valid email address");
+    return;
+  }
 
-    return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Register New Child</h1>
+  setLoading(true);
 
-            <div className="bg-white p-8 rounded-xl shadow-sm border request-form">
-                <form onSubmit={handleSubmit} className="space-y-6">
-
-                    {/* Personal Details */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Student Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        required
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                <input
-                                    type="text"
-                                    name="lastName"
-                                    required
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input
-                                        type="date"
-                                        name="dob"
-                                        required
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.dob}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                                <select
-                                    name="gender"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                    value={formData.gender}
-                                    onChange={handleChange}
-                                >
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Login & Contact */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Login & Contact</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Student Email</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        required
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        required
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <input
-                                        type="tel"
-                                        name="mobile"
-                                        required
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.mobile}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Academic Info */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Academic Information</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Course/Stream</label>
-                                <div className="relative">
-                                    <BookOpen className="absolute left-3 top-3 text-gray-400" size={18} />
-                                    <select
-                                        name="course"
-                                        className="w-full pl-10 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        value={formData.course}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="Science">Science (PCM/PCB)</option>
-                                        <option value="Commerce">Commerce</option>
-                                        <option value="Arts">Arts/Humanities</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Year/Grade</label>
-                                <select
-                                    name="year"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                    value={formData.year}
-                                    onChange={handleChange}
-                                >
-                                    <option value="1st Year">1st Year / 11th</option>
-                                    <option value="2nd Year">2nd Year / 12th</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4 gap-4">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/dashboard/parent-dashboard")}
-                            className="px-6 py-2 rounded-lg border hover:bg-gray-50 text-gray-700"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
-                        >
-                            {loading ? <Loader2 className="animate-spin" size={20} /> : <UserPlus size={20} />}
-                            Register Child
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
+  try {
+    await api.post("/parent/register-child", formData);
+    toast.success("Child Registered Successfully");
+    navigate("/dashboard/parent-dashboard");
+  } catch (err) {
+    toast.error("Registration Failed");
+  } finally {
+    setLoading(false);
+  }
 };
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Student Registration Form</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-xl shadow">
+
+        {/* PERSONAL DETAILS */}
+        <div>
+          <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+            1. Personal Details
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+
+            <Input label="Name of Student (English)" name="studentNameEnglish" value={formData.studentNameEnglish} onChange={handleChange} />
+            <Input label="Name of Student (Mother Tongue)" name="studentNameMotherTongue" value={formData.studentNameMotherTongue} onChange={handleChange} />
+
+            <Input label="Date of Birth" type="date" name="dob" value={formData.dob} onChange={handleChange} />
+            <Input label="Age" name="age" value={formData.age} onChange={handleChange} />
+
+            <Input label="Father / Mother Name" name="fatherName" value={formData.fatherName} onChange={handleChange} />
+
+            <Select label="Gender" name="gender" value={formData.gender} onChange={handleChange}
+              options={["Male", "Female", "Other"]} />
+
+            <Input label="Nationality" name="nationality" value={formData.nationality} onChange={handleChange} />
+            <Input label="Aadhar No" name="aadharNo" value={formData.aadharNo} onChange={handleChange} />
+
+            <Input label="KCET Reg No" name="kcetRegNo" value={formData.kcetRegNo} onChange={handleChange} />
+            <Input label="NEET Reg No" name="neetRegNo" value={formData.neetRegNo} onChange={handleChange} />
+            <Input label="APAAR ID Reg No" name="apaarId" value={formData.apaarId} onChange={handleChange} />
+            <Input label="DEB Unique ID No" name="debId" value={formData.debId} onChange={handleChange} />
+            <Input label="ABC ID No" name="abcId" value={formData.abcId} onChange={handleChange} />
+
+            <Select label="Religion" name="religion" value={formData.religion} onChange={handleChange}
+              options={["Hindu", "Muslim", "Christian", "Others"]} />
+
+            <Select label="Community" name="community" value={formData.community} onChange={handleChange}
+              options={["MBC", "OC", "OBC", "BC", "SC", "ST", "Others"]} />
+
+            <Select label="Marital Status" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange}
+              options={["Married", "Unmarried"]} />
+
+          </div>
+        </div>
+
+        {/* ADDRESS */}
+        <div>
+          <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+            Address for Correspondence
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="Village" name="village" value={formData.village} onChange={handleChange} />
+            <Input label="Post" name="post" value={formData.post} onChange={handleChange} />
+            <Input label="Taluk" name="taluk" value={formData.taluk} onChange={handleChange} />
+            <Input label="District" name="district" value={formData.district} onChange={handleChange} />
+            <Input label="PIN Code" name="pin" value={formData.pin} onChange={handleChange} />
+            <Input label="Whatsapp Number" name="whatsapp" value={formData.whatsapp} onChange={handleChange} />
+            <Input label="Email Address" name="email" value={formData.email} onChange={handleChange} />
+          </div>
+        </div>
+
+        {/* LANGUAGE */}
+        <div>
+          <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+            Language Details
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Select label="Fluency in English" name="englishFluency" value={formData.englishFluency}
+              onChange={handleChange}
+              options={["Excellent", "Average", "Below Average"]} />
+
+            <Input label="Language 1" name="language1" value={formData.language1} onChange={handleChange} />
+            <Input label="Language 2" name="language2" value={formData.language2} onChange={handleChange} />
+            <Input label="Language 3" name="language3" value={formData.language3} onChange={handleChange} />
+          </div>
+        </div>
+
+        {/* BANK DETAILS */}
+        <div>
+          <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+            Bank Account Details
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="Account Holder Name" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} />
+            <Input label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+            <Input label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleChange} />
+            <Input label="Bank Name & Branch" name="bankNameBranch" value={formData.bankNameBranch} onChange={handleChange} />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-4">
+          <button type="button" onClick={() => navigate(-1)}
+            className="px-6 py-2 border rounded-lg">
+            Cancel
+          </button>
+
+          <button type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  );
+};
+
+// Reusable Components
+const Input = ({ label, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium mb-1">{label}</label>
+    <input {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+  </div>
+);
+
+const Select = ({ label, options, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium mb-1">{label}</label>
+    <select {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+      <option value="">Select</option>
+      {options.map((opt, i) => (
+        <option key={i} value={opt}>{opt}</option>
+      ))}
+    </select>
+  </div>
+);
 
 export default RegisterChild;

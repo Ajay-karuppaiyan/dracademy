@@ -16,19 +16,41 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const {
-        firstName,
-        lastName,
-        email,
-        phone,
-        dob,
-        gender,
-        studentId,
-        course,
-        department,
-        year,
-        role,
-      } = req.body;
+     const {
+  studentNameEnglish,
+  studentNameMotherTongue,
+  fatherName,
+  dob,
+  age,
+  gender,
+  nationality,
+  aadharNo,
+  kcetRegNo,
+  neetRegNo,
+  apaarId,
+  debId,
+  abcId,
+  religion,
+  community,
+  maritalStatus,
+  email,
+  phone,
+  whatsapp,
+  village,
+  post,
+  taluk,
+  district,
+  pin,
+  englishFluency,
+  language1,
+  language2,
+  language3,
+  accountHolderName,
+  accountNumber,
+  ifscCode,
+  bankNameBranch,
+  role,
+} = req.body;
 
       // Check if email already exists
       const existingUser = await User.findOne({ email });
@@ -42,7 +64,7 @@ router.post(
 
       // 1️⃣ Create User
       const user = await User.create({
-        name: `${firstName} ${lastName}`,
+       name: studentNameEnglish,
         email,
         password: defaultPassword,
         role: role || 'student',
@@ -63,20 +85,49 @@ router.post(
 
       // 2️⃣ Create Student
       const student = await Student.create({
-        user: user._id,
-        firstName,
-        lastName,
-        phone,
-        dob,
-        gender,
-        studentId,
-        course,
-        department,
-        year,
-        profilePic: getFileData('profilePic'),
-        idFile: getFileData('idFile'),
-        certificateFile: getFileData('certificateFile'),
-      });
+  user: user._id,
+
+  studentNameEnglish,
+  studentNameMotherTongue,
+  fatherName,
+  dob,
+  age,
+  gender,
+  nationality,
+
+  aadharNo,
+  kcetRegNo,
+  neetRegNo,
+  apaarId,
+  debId,
+  abcId,
+
+  religion,
+  community,
+  maritalStatus,
+
+  email,
+  phone,
+  whatsapp,
+
+  address: {
+    village,
+    post,
+    taluk,
+    district,
+    pin,
+  },
+
+  englishFluency,
+  languagesKnown: [language1, language2, language3],
+
+  bankDetails: {
+    accountHolderName,
+    accountNumber,
+    ifscCode,
+    bankNameBranch,
+  },
+});
 
       // 3️⃣ Link Student to User
       user.studentProfile = student._id;

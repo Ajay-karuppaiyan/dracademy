@@ -30,7 +30,10 @@ const employeeSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-
+    shift: {
+      start: String,
+      end: String
+    },
     profilePic: documentSchema,
     idFile: documentSchema,
     certificateFile: documentSchema,

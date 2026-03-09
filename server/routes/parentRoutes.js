@@ -13,53 +13,125 @@ const { protect } = require("../middleware/authMiddleware");
 // =======================================================
 router.post("/register-child", protect, async (req, res) => {
   try {
+
+    console.log("REQ BODY:", req.body);
     if (req.user.role !== "parent") {
       return res.status(403).json({ message: "Only parents can register children" });
     }
 
-    let { firstName, lastName, email, mobile, password, dob, gender, course, year } = req.body;
+    const {
+      studentNameEnglish,
+      studentNameMotherTongue,
+      fatherName,
+      dob,
+      age,
+      gender,
+      nationality,
+      aadharNo,
+      kcetRegNo,
+      neetRegNo,
+      apaarId,
+      debId,
+      abcId,
+      religion,
+      community,
+      maritalStatus,
+      email,
+      phone,
+      whatsapp,
+      village,
+      post,
+      taluk,
+      district,
+      pin,
+      englishFluency,
+      language1,
+      language2,
+      language3,
+      accountHolderName,
+      accountNumber,
+      ifscCode,
+      bankNameBranch,
+      year,
+      department
+    } = req.body;
 
-    // Normalize gender
-    if (gender) gender = gender.toLowerCase(); // must match schema ["male","female","other"]
-
-    // Check existing user
+    // 🔎 check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create login account for student
+    const defaultPassword = "Student@123";
+
+    // 1️⃣ Create Login Account
     const newUser = await User.create({
-      name: `${firstName} ${lastName}`,
+      name: studentNameEnglish,
       email,
-      password,
+      password: defaultPassword,
       role: "student",
     });
 
-    // Create student profile
+    // 2️⃣ Create Student Profile
     const student = await Student.create({
       user: newUser._id,
       parent: req.user._id,
-      firstName,
-      lastName,
-      phone: mobile,
-      email,
+
+      studentNameEnglish,
+      studentNameMotherTongue,
+      fatherName,
       dob,
+      age,
       gender,
-      course,
+      nationality,
+
+      aadharNo,
+      kcetRegNo,
+      neetRegNo,
+      apaarId,
+      debId,
+      abcId,
+
+      religion,
+      community,
+      maritalStatus,
+
+      email,
+      phone,
+      whatsapp,
+
+      address: {
+        village,
+        post,
+        taluk,
+        district,
+        pin,
+      },
+
+      englishFluency,
+      languagesKnown: [language1, language2, language3],
+
+      bankDetails: {
+        accountHolderName,
+        accountNumber,
+        ifscCode,
+        bankNameBranch,
+      },
+
       year,
+      department,
     });
 
     res.status(201).json({
       message: "Child registered successfully",
       student,
     });
+
   } catch (error) {
     console.error("REGISTER CHILD ERROR:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: error.message });
   }
 });
-
 
 // =======================================================
 // ✅ GET CHILDREN OF LOGGED-IN PARENT
@@ -121,7 +193,7 @@ router.get("/child/:studentId/overview", protect, async (req, res) => {
 
     res.json({
       student: {
-        name: `${student.firstName} ${student.lastName}`,
+       studentNameEnglish: student.studentNameEnglish,
         id: student._id,
         class: `${student.course} - ${student.year}`,
       },

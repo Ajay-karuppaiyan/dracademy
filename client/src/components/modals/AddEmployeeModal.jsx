@@ -22,25 +22,27 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
   const [designations, setDesignations] = useState([]);
   const [preview, setPreview] = useState(null);
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: " ",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-    employeeId: "",
-    joiningDate: "",
-    department: "",
-    designation: "",
-    role: "employee",
-    employmentType: "full-time",
-    salary: "",
-    profilePic: null,
-    idFile: null,
-    certificateFile: null,
-    contractFile: null,
-  });
+const [formData, setFormData] = useState({
+  firstName: "",
+  lastName: " ",
+  email: "",
+  phone: "",
+  dob: "",
+  gender: "",
+  employeeId: "",
+  joiningDate: "",
+  department: "",
+  designation: "",
+  role: "employee",
+  employmentType: "full-time",
+  salary: "",
+  shiftStart: "",
+  shiftEnd: "",
+  profilePic: null,
+  idFile: null,
+  certificateFile: null,
+  contractFile: null,
+});
 
   const fetchConfigs = async () => {
     try {
@@ -85,6 +87,8 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
           role: employee.user?.role || "employee",
           employmentType: employee.employmentType || "full-time",
           salary: employee.salary || "",
+          shiftStart: employee.shift?.start || "",
+          shiftEnd: employee.shift?.end || "",
           profilePic: null,
           idFile: null,
           certificateFile: null,
@@ -106,6 +110,8 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
           role: "employee",
           employmentType: "full-time",
           salary: "",
+          shiftStart: "",
+          shiftEnd: "",
           profilePic: null,
           idFile: null,
           certificateFile: null,
@@ -496,6 +502,33 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
                   />
                 </div>
               </div>
+              <div>
+  <label className="block text-xs font-semibold text-slate-500 mb-1">
+    Shift Start
+  </label>
+  <input
+    type="time"
+    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+    value={formData.shiftStart}
+    onChange={(e) =>
+      setFormData({ ...formData, shiftStart: e.target.value })
+    }
+  />
+</div>
+
+<div>
+  <label className="block text-xs font-semibold text-slate-500 mb-1">
+    Shift End
+  </label>
+  <input
+    type="time"
+    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+    value={formData.shiftEnd}
+    onChange={(e) =>
+      setFormData({ ...formData, shiftEnd: e.target.value })
+    }
+  />
+</div>
             </div>
           </div>
 

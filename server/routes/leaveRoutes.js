@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Leave = require("../models/Leave");
+
 const Notification = require("../models/Notification");
 const multer = require("multer");
 const path = require("path");
@@ -23,8 +24,8 @@ router.post("/apply", protect, upload.single("file"), async (req, res) => {
     }
 
     const leave = new Leave({
-      userId: req.user._id,               // ✅ From token
-      employeeName: req.user.name,        // ✅ From token
+      userId: req.user._id,        
+      employeeName: req.user.name,       
       leaveType,
       reason,
       startDate: new Date(startDate),

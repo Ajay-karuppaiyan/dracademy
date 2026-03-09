@@ -106,9 +106,11 @@ const ParentDashboard = () => {
   };
 
   // Filter children based on search
-  const filteredChildren = children.filter((c) =>
-    c.firstName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+ const filteredChildren = children.filter((c) =>
+  c.studentNameEnglish
+    ?.toLowerCase()
+    .includes(searchTerm?.toLowerCase() || "")
+);
 
   // Loading Screen
   if (loading && !children.length) {
@@ -183,7 +185,7 @@ const ParentDashboard = () => {
                   : "bg-gray-200 text-gray-700"
               }`}
             >
-              {child.firstName}
+             {child.studentNameEnglish}
             </button>
           ))}
           <a
@@ -282,7 +284,7 @@ const ParentDashboard = () => {
                   <User className="text-blue-600" size={28} />
                 </div>
                 <div>
-                  <h2 className="font-bold text-lg">{overview.student.name}</h2>
+                 <h2 className="font-bold text-lg">{overview.student.studentNameEnglish}</h2>
                   <p className="text-xs text-gray-500">
                     Class: {overview.student.class}
                   </p>

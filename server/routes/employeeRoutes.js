@@ -3,7 +3,7 @@ const router = express.Router();
 const { upload } = require("../config/cloudinary");
 const Employee = require("../models/Employee");
 const User = require("../models/User");
-const { protect, admin } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 //////////////////////////////////////////////////////
 // CREATE EMPLOYEE
@@ -30,33 +30,54 @@ router.post(
         joiningDate,
         department,
         designation,
-        role, 
+        role,
         employmentType,
         salary,
+        shiftStart,
+        shiftEnd,
       } = req.body;
 
-      // ✅ Role validation and conversion
+      //////////////////////////////////////////////////////
+      // ROLE VALIDATION
+      //////////////////////////////////////////////////////
       const roleLower = role ? role.toLowerCase() : "employee";
-      const allowedRoles = ["student", "admin", "employee", "parent", "coach", "hr", "finance"];
+
+      const allowedRoles = [
+        "student",
+        "admin",
+        "employee",
+        "parent",
+        "coach",
+        "hr",
+        "finance",
+      ];
+
       if (!allowedRoles.includes(roleLower)) {
         return res.status(400).json({ message: "Invalid role selected" });
       }
 
-      // ✅ Check if user already exists
+      //////////////////////////////////////////////////////
+      // CHECK USER EXIST
+      //////////////////////////////////////////////////////
       const existingUser = await User.findOne({ email });
+
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // ✅ Create User
+      //////////////////////////////////////////////////////
+      // CREATE USER
+      //////////////////////////////////////////////////////
       const user = await User.create({
         name: `${firstName} ${lastName}`,
         email,
         password: "Employee@123",
-        role: roleLower, // validated and lowercase
+        role: roleLower,
       });
 
-      // ✅ Create Employee
+      //////////////////////////////////////////////////////
+      // CREATE EMPLOYEE
+      //////////////////////////////////////////////////////
       const employee = await Employee.create({
         user: user._id,
         firstName,
@@ -69,19 +90,42 @@ router.post(
         department,
         designation,
         employmentType,
-        salary: salary !== undefined && salary !== ""
-        ? Number(salary)
-        : undefined,
-        profilePic: req.files['profilePic'] ? req.files['profilePic'][0].path : null,
-        idFile: req.files['idFile'] ? req.files['idFile'][0].path : null,
-        certificateFile: req.files['certificateFile'] ? req.files['certificateFile'][0].path : null,
-        contractFile: req.files['contractFile'] ? req.files['contractFile'][0].path : null,
+
+        salary:
+          salary !== undefined && salary !== ""
+            ? Number(salary)
+            : undefined,
+
+        // SHIFT OBJECT
+        shift: {
+          start: shiftStart,
+          end: shiftEnd,
+        },
+
+        profilePic: req.files?.profilePic
+          ? req.files.profilePic[0]
+          : null,
+
+        idFile: req.files?.idFile
+          ? req.files.idFile[0]
+          : null,
+
+        certificateFile: req.files?.certificateFile
+          ? req.files.certificateFile[0]
+          : null,
+
+        contractFile: req.files?.contractFile
+          ? req.files.contractFile[0]
+          : null,
       });
 
       user.employeeProfile = employee._id;
       await user.save();
 
-      res.status(201).json({ message: "Employee created", employee });
+      res.status(201).json({
+        message: "Employee created successfully",
+        employee,
+      });
     } catch (err) {
       console.error("Error creating employee:", err);
       res.status(500).json({ message: err.message });
@@ -90,31 +134,43 @@ router.post(
 );
 
 //////////////////////////////////////////////////////
-// ✅ GET ALL EMPLOYEES
+// GET ALL EMPLOYEES
 //////////////////////////////////////////////////////
 router.get("/", protect, async (req, res) => {
-  const employees = await Employee.find().populate("user", "name email role");
-  res.json(employees);
+  try {
+    const employees = await Employee.find().populate(
+      "user",
+      "name email role"
+    );
+
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-
 //////////////////////////////////////////////////////
-// ✅ DELETE EMPLOYEE
+// DELETE EMPLOYEE
 //////////////////////////////////////////////////////
 router.delete("/:id", protect, async (req, res) => {
-  const employee = await Employee.findById(req.params.id);
-  if (!employee)
-    return res.status(404).json({ message: "Employee not found" });
+  try {
+    const employee = await Employee.findById(req.params.id);
 
-  await User.findByIdAndDelete(employee.user);
-  await employee.deleteOne();
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
-  res.json({ message: "Employee deleted" });
+    await User.findByIdAndDelete(employee.user);
+    await employee.deleteOne();
+
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-
 //////////////////////////////////////////////////////
-// ✅ UPDATE EMPLOYEE
+// UPDATE EMPLOYEE
 //////////////////////////////////////////////////////
 router.put(
   "/:id",
@@ -144,12 +200,15 @@ router.put(
         joiningDate,
         department,
         designation,
+        role,
         employmentType,
         salary,
+        shiftStart,
+        shiftEnd,
       } = req.body;
 
       //////////////////////////////////////////////////////
-      // ✅ UPDATE USER
+      // UPDATE USER
       //////////////////////////////////////////////////////
       const user = await User.findById(employee.user);
 
@@ -157,26 +216,47 @@ router.put(
         return res.status(404).json({ message: "Associated user not found" });
       }
 
-      // Update email safely
       if (email && email !== user.email) {
         const emailExists = await User.findOne({ email });
+
         if (emailExists) {
           return res.status(400).json({ message: "Email already exists" });
         }
+
         user.email = email;
       }
 
-      // Update name
       if (firstName || lastName) {
         user.name = `${firstName || employee.firstName} ${
           lastName || employee.lastName
         }`;
       }
 
+      // ROLE UPDATE
+      if (role) {
+        const roleLower = role.toLowerCase();
+
+        const allowedRoles = [
+          "student",
+          "admin",
+          "employee",
+          "parent",
+          "coach",
+          "hr",
+          "finance",
+        ];
+
+        if (!allowedRoles.includes(roleLower)) {
+          return res.status(400).json({ message: "Invalid role selected" });
+        }
+
+        user.role = roleLower;
+      }
+
       await user.save();
 
       //////////////////////////////////////////////////////
-      // ✅ UPDATE EMPLOYEE FIELDS (only if provided)
+      // UPDATE EMPLOYEE DATA
       //////////////////////////////////////////////////////
       if (firstName) employee.firstName = firstName;
       if (lastName) employee.lastName = lastName;
@@ -190,7 +270,24 @@ router.put(
       if (employmentType) employee.employmentType = employmentType;
 
       //////////////////////////////////////////////////////
-      // ✅ SALARY FIX (very important)
+      // SHIFT UPDATE
+      //////////////////////////////////////////////////////
+      if (shiftStart !== undefined || shiftEnd !== undefined) {
+        if (!employee.shift) {
+          employee.shift = {};
+        }
+
+        if (shiftStart) {
+          employee.shift.start = shiftStart;
+        }
+
+        if (shiftEnd) {
+          employee.shift.end = shiftEnd;
+        }
+      }
+
+      //////////////////////////////////////////////////////
+      // SALARY UPDATE
       //////////////////////////////////////////////////////
       if (salary !== undefined) {
         const parsedSalary = Number(salary);
@@ -203,22 +300,20 @@ router.put(
       }
 
       //////////////////////////////////////////////////////
-      // ✅ UPDATE FILES (safe check)
+      // FILE UPDATE
       //////////////////////////////////////////////////////
       if (req.files) {
         if (req.files.profilePic)
-          employee.profilePic = req.files.profilePic[0].path;
+          employee.profilePic = req.files.profilePic[0];
 
         if (req.files.idFile)
-          employee.idFile = req.files.idFile[0].path;
+          employee.idFile = req.files.idFile[0];
 
         if (req.files.certificateFile)
-          employee.certificateFile =
-            req.files.certificateFile[0].path;
+          employee.certificateFile = req.files.certificateFile[0];
 
         if (req.files.contractFile)
-          employee.contractFile =
-            req.files.contractFile[0].path;
+          employee.contractFile = req.files.contractFile[0];
       }
 
       await employee.save();

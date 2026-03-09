@@ -40,22 +40,23 @@ const [selectedAttendanceEmployee, setSelectedAttendanceEmployee] = useState(nul
 const tableRef = useRef(null);
 
 const [highlightedRow, setHighlightedRow] = useState(null);
+const [attendanceData, setAttendanceData] = useState({});
 
-
+// fetchAttendanceSummary logic moved to backend payroll controller for performance and reliability
 
 /* ==============================
 FETCH EMPLOYEES
 ================================ */
 useEffect(() => {
 
-if (user.role === "admin") {
+if (user.role === "admin" || user.role === "Hr") {
 
 api.get("/employees")
 .then(res => {
+  console.log(res.data);
 setEmployees(res.data);
 })
 .catch(() => toast.error("Failed to fetch employees"));
-
 } else {
 
 setSelectedEmployee({
@@ -93,36 +94,27 @@ return options.reverse();
 
 };
 
-
-
 /* ==============================
 FETCH PAYROLLS
 ================================ */
 const fetchPayrolls = async () => {
+  if (!selectedMonth) return;
 
-if (!selectedMonth) return;
+  const [year, month] = selectedMonth.split("-");
 
-const [year, month] = selectedMonth.split("-");
+  setLoading(true);
 
-setLoading(true);
+  try {
+    const res = await api.get(`/payroll/salary/all?month=${month}&year=${year}`);
+    setPayrolls(res.data);
+    console.log("Fetched Payrolls with attendance:", res.data);
+  } catch (err) {
+    console.error("Failed to load payroll", err);
+    toast.error("Failed to load payroll");
+  }
 
-try {
-
-const res = await api.get(`/payroll/salary/all?month=${month}&year=${year}`);
-
-setPayrolls(res.data);
-
-} catch {
-
-toast.error("Failed to load payroll");
-
-}
-
-setLoading(false);
-
+  setLoading(false);
 };
-
-
 
 /* ==============================
 DEFAULT MONTH
@@ -231,52 +223,35 @@ toast.error("Failed to save adjustment");
 
 };
 
-
-
 /* ==============================
 FETCH ATTENDANCE SUMMARY
 ================================ */
 const fetchAttendance = async (employee) => {
-console.log(employee);
-if (!selectedMonth) return;
+  if (!selectedMonth) return;
 
-const [year, month] = selectedMonth.split("-");
+  const [year, month] = selectedMonth.split("-");
 
-setAttendanceLoading(true);
+  setAttendanceLoading(true);
+  setSelectedAttendanceEmployee(employee);
 
-setSelectedAttendanceEmployee(employee);
+  try {
+    // Fetch daily attendance for the employee
+    const res = await api.get(
+      `/attendance/employee/${employee.userId}/monthly?month=${Number(month)}&year=${Number(year)}`
+    );
 
-try {
+    // res.data is an array of attendance records
+    setAttendanceSummary(res.data || []);
 
-const res = await api.get(
-`/attendance/${employee.employeeId || employee._id}?month=${month}&year=${year}`
-);
+    setAttendanceModalOpen(true);
 
-const { present, absent } = res.data;
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to fetch attendance");
+  }
 
-const totalDays = new Date(year, month, 0).getDate();
-
-const remainingDays = totalDays - (present + absent);
-
-setAttendanceSummary({
-present,
-absent,
-remainingDays
-});
-
-setAttendanceModalOpen(true);
-
-} catch {
-
-toast.error("Failed to fetch attendance");
-
-}
-
-setAttendanceLoading(false);
-
+  setAttendanceLoading(false);
 };
-
-
 
 /* ==============================
 UI
@@ -378,7 +353,12 @@ className="bg-white border rounded-xl shadow-sm overflow-x-auto max-h-[500px]"
 
 <th className="border px-3 py-2">S.No</th>
 <th className="border px-3 py-2">Name</th>
-<th className="border px-3 py-2">Basic</th>
+<th className="border px-3 py-2">Basic Salary</th>
+<th className="border px-3 py-2">Total Days</th>
+<th className="border px-3 py-2">Present</th>
+<th className="border px-3 py-2">Leave</th>
+<th className="border px-3 py-2">Late Days</th>
+<th className="border px-3 py-2">Late Time</th>
 <th className="border px-3 py-2">Allowances</th>
 <th className="border px-3 py-2">Deductions</th>
 <th className="border px-3 py-2">Advance</th>
@@ -393,48 +373,50 @@ className="bg-white border rounded-xl shadow-sm overflow-x-auto max-h-[500px]"
 {payrolls.length === 0 ? (
 
 <tr>
-<td colSpan={7} className="py-6 text-gray-500">
+<td colSpan={12} className="py-6 text-gray-500">
 No payroll found
 </td>
 </tr>
 
 ) : (
 
-payrolls.map((p, i) => (
+          payrolls.map((p, i) => {
+            console.log("Rendering Item:", p);
+            return (
+              <tr
+                key={p.employeeId}
+                id={`row-${p.employeeId}`}
+                className={`${
+                  highlightedRow === p.employeeId ? "bg-yellow-100" : ""
+                }`}
+              >
+                <td className="border px-3 py-2">{i + 1}</td>
 
-<tr
-key={p.employeeId}
-id={`row-${p.employeeId}`}
-className={`${
-highlightedRow === p.employeeId
-? "bg-yellow-100"
-: ""
-}`}
->
+                <td
+                  className="border px-3 py-2 text-blue-600 cursor-pointer underline"
+                  onClick={() => fetchAttendance(p)}
+                >
+                  {p.name}
+                </td>
 
-<td className="border px-3 py-2">{i + 1}</td>
+                <td className="border px-3 py-2">₹{p.basic}</td>
+                <td className="border px-3 py-2">{p.totalDays || "-"}</td>
 
-<td
-className="border px-3 py-2 text-blue-600 cursor-pointer underline"
-onClick={() => fetchAttendance(p)}
->
+                <td className="border px-3 py-2">{p.present ?? "-"}</td>
+                <td className="border px-3 py-2">{p.absent ?? "-"}</td>
+                <td className="border px-3 py-2">{p.lateDays ?? "-"}</td>
+                <td className="border px-3 py-2">{p.lateTime ?? "-"}</td>
 
-{p.name}
+                <td className="border px-3 py-2">₹{p.allowances}</td>
+                <td className="border px-3 py-2">₹{p.deductions}</td>
+                <td className="border px-3 py-2">₹{p.advance}</td>
 
-</td>
-
-<td className="border px-3 py-2">₹{p.basic}</td>
-<td className="border px-3 py-2">₹{p.allowances}</td>
-<td className="border px-3 py-2">₹{p.deductions}</td>
-<td className="border px-3 py-2">₹{p.advance}</td>
-
-<td className="border px-3 py-2 font-bold text-green-600">
-₹{p.netSalary}
-</td>
-
-</tr>
-
-))
+                <td className="border px-3 py-2 font-bold text-green-600">
+                  ₹{p.netSalary}
+                </td>
+              </tr>
+            );
+          })
 
 )}
 
@@ -448,67 +430,160 @@ onClick={() => fetchAttendance(p)}
 
 
 
-{/* ATTENDANCE MODAL */}
 {attendanceModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl p-6 w-96 shadow-lg max-h-[80vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">
+          Attendance - {selectedAttendanceEmployee?.firstName || selectedAttendanceEmployee?.name}
+        </h2>
+        <button
+          onClick={() => setAttendanceModalOpen(false)}
+          className="text-xl font-bold"
+        >
+          ×
+        </button>
+      </div>
 
-<div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-
-<div className="bg-white rounded-xl p-6 w-96 shadow-lg">
-
-<div className="flex justify-between items-center mb-4">
-
-<h2 className="text-lg font-semibold">
-Attendance Summary
-</h2>
-
-<button
-onClick={() => setAttendanceModalOpen(false)}
-className="text-xl font-bold"
->
-×
-</button>
-
-</div>
-
-{attendanceLoading ? (
-
-<div className="flex justify-center py-6">
-<Loader2 className="animate-spin" />
-</div>
-
-) : (
-
-<div className="grid grid-cols-3 gap-4 text-center">
-
-<div className="bg-green-100 p-3 rounded">
-<p className="text-sm text-gray-600">Present</p>
-<p className="text-lg font-bold">
-{attendanceSummary.present}
-</p>
-</div>
-
-<div className="bg-red-100 p-3 rounded">
-<p className="text-sm text-gray-600">Leave</p>
-<p className="text-lg font-bold">
-{attendanceSummary.absent}
-</p>
-</div>
-
-<div className="bg-blue-100 p-3 rounded">
-<p className="text-sm text-gray-600">Remaining</p>
-<p className="text-lg font-bold">
-{attendanceSummary.remainingDays}
-</p>
-</div>
-
-</div>
-
+      {attendanceLoading ? (
+        <div className="flex justify-center py-6">
+          <Loader2 className="animate-spin" />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-center border-collapse">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="border px-2 py-1">Date</th>
+                <th className="border px-2 py-1">Status</th>
+                <th className="border px-2 py-1">Login</th>
+                <th className="border px-2 py-1">Logout</th>
+                <th className="border px-2 py-1">Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendanceSummary.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-4 text-gray-500 text-center">
+                    No attendance records for this month
+                  </td>
+                </tr>
+              ) : (
+                attendanceSummary.map((record, index) => (
+                  <tr key={record._id} className={record.type === "leave" ? "bg-red-50" : ""}>
+                    <td className="border px-2 py-1">
+                      {new Date(record.date || record.startDate).toLocaleDateString()}
+                    </td>
+                    <td className="border px-2 py-1">
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                        record.type === "leave" ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
+                      }`}>
+                        {record.type === "leave" ? "Leave" : "Present"}
+                      </span>
+                    </td>
+                    <td className="border px-2 py-1">{record.loginTime || "-"}</td>
+                    <td className="border px-2 py-1">{record.logoutTime || "-"}</td>
+                    <td className="border px-2 py-1 text-center font-mono">
+                      {record.type === "attendance" ? record.workingHours || "-" : "-"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </div>
 )}
 
-</div>
+{/* ADJUSTMENT MODAL */}
+{payrollFormOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl p-6 w-[420px] shadow-lg space-y-4">
 
-</div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Payroll Adjustment</h2>
+        <button
+          onClick={() => setPayrollFormOpen(false)}
+          className="text-xl font-bold"
+        >
+          ×
+        </button>
+      </div>
 
+      {/* EMPLOYEE */}
+
+      <select
+        className="w-full border p-2 rounded"
+        value={selectedEmployee?._id || ""}
+        onChange={(e) =>
+          setSelectedEmployee(
+            employees.find((emp) => emp._id === e.target.value)
+          )
+        }
+      >
+        <option value="">Select Employee</option>
+        {employees.map((emp) => (
+          <option key={emp._id} value={emp._id}>
+            {emp.firstName} {emp.lastName}
+          </option>
+        ))}
+      </select>
+
+      {/* TYPE */}
+      <select
+        className="w-full border p-2 rounded"
+        value={salaryData.adjustmentType}
+        onChange={(e) =>
+          setSalaryData({
+            ...salaryData,
+            adjustmentType: e.target.value
+          })
+        }
+      >
+        <option value="">Select Type</option>
+        <option value="allowance">Allowance</option>
+        <option value="deduction">Deduction</option>
+        <option value="advance">Advance</option>
+      </select>
+
+      {/* AMOUNT */}
+      <input
+        type="number"
+        placeholder="Amount"
+        className="w-full border p-2 rounded"
+        value={salaryData.adjustmentAmount}
+        onChange={(e) =>
+          setSalaryData({
+            ...salaryData,
+            adjustmentAmount: e.target.value
+          })
+        }
+      />
+
+      {/* NOTE */}
+      <textarea
+        placeholder="Note (optional)"
+        className="w-full border p-2 rounded"
+        value={salaryData.adjustmentNote}
+        onChange={(e) =>
+          setSalaryData({
+            ...salaryData,
+            adjustmentNote: e.target.value
+          })
+        }
+      />
+
+      <button
+        onClick={handleSavePayroll}
+        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+      >
+        Save Adjustment
+      </button>
+
+    </div>
+  </div>
 )}
 
 </div>
