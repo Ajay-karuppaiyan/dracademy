@@ -18,7 +18,7 @@ router.get("/payments", async (req, res) => {
     const total = await Payment.countDocuments(filter);
 
     const payments = await Payment.find(filter)
-      .populate("student", "name email")
+      .populate("student", "studentNameEnglish email")
       .populate("course", "title")
       .sort({ createdAt: -1 })
       .skip(skip)

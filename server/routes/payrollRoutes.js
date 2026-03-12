@@ -96,14 +96,14 @@ router.get("/salary/all", protect, async (req, res) => {
         const lateMins = totalLateMinutes % 60;
         const lateTimeDisplay = `${lateHours}h ${lateMins}m`;
 
-        if (index < 2) {
-          console.log(`[DEBUG] Emp: ${emp.firstName}, UserId: ${userId}`);
-          console.log(`[DEBUG] Start: ${startDate.toISOString()}, End: ${endDate.toISOString()}`);
-          console.log(`[DEBUG] Attendance records found: ${attendance.length}`);
-          console.log(`[DEBUG] Leaves found: ${leaves.length}`);
-        }
+        // if (index < 2) {
+        //   console.log(`[DEBUG] Emp: ${emp.firstName}, UserId: ${userId}`);
+        //   console.log(`[DEBUG] Start: ${startDate.toISOString()}, End: ${endDate.toISOString()}`);
+        //   console.log(`[DEBUG] Attendance records found: ${attendance.length}`);
+        //   console.log(`[DEBUG] Leaves found: ${leaves.length}`);
+        // }
 
-        console.log(`Employee: ${emp.firstName}, UserId: ${userId}, Present: ${present}, Absent: ${absent}`);
+        // console.log(`Employee: ${emp.firstName}, UserId: ${userId}, Present: ${present}, Absent: ${absent}`);
 
 
         // 5. Calculate Salary

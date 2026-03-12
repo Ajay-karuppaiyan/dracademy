@@ -13,47 +13,60 @@ const { protect } = require("../middleware/authMiddleware");
 // =======================================================
 router.post("/register-child", protect, async (req, res) => {
   try {
-
-    console.log("REQ BODY:", req.body);
+    
     if (req.user.role !== "parent") {
       return res.status(403).json({ message: "Only parents can register children" });
     }
 
     const {
-      studentNameEnglish,
-      studentNameMotherTongue,
-      fatherName,
-      dob,
-      age,
-      gender,
-      nationality,
-      aadharNo,
-      kcetRegNo,
-      neetRegNo,
-      apaarId,
-      debId,
-      abcId,
-      religion,
-      community,
-      maritalStatus,
-      email,
-      phone,
-      whatsapp,
-      village,
-      post,
-      taluk,
-      district,
-      pin,
-      englishFluency,
-      language1,
-      language2,
-      language3,
-      accountHolderName,
-      accountNumber,
-      ifscCode,
-      bankNameBranch,
-      year,
-      department
+    studentNameEnglish,
+    studentNameMotherTongue,
+    fatherName,
+    dob,
+    age,
+    gender,
+    nationality,
+    aadharNo,
+    kcetRegNo,
+    neetRegNo,
+    apaarId,
+    debId,
+    abcId,
+    religion,
+    community,
+    maritalStatus,
+    email,
+    phone,
+    whatsapp,
+    village,
+    post,
+    taluk,
+    district,
+    pin,
+    englishFluency,
+    language1,
+    language2,
+    language3,
+    accountHolderName,
+    accountNumber,
+    ifscCode,
+    bankNameBranch,
+    year,
+    department,
+
+    // NEW DATA FROM STEP 2
+    educationBackground,
+    sslcSubjects,
+    sslcDetails,
+    hscSubjects,
+    hscDetails,
+
+    // STEP 3
+    familyBackground,
+
+    // STEP 4
+    references
+
     } = req.body;
 
     // 🔎 check existing user
@@ -74,52 +87,62 @@ router.post("/register-child", protect, async (req, res) => {
 
     // 2️⃣ Create Student Profile
     const student = await Student.create({
-      user: newUser._id,
-      parent: req.user._id,
+    user: newUser._id,
+    parent: req.user._id,
 
-      studentNameEnglish,
-      studentNameMotherTongue,
-      fatherName,
-      dob,
-      age,
-      gender,
-      nationality,
+    studentNameEnglish,
+    studentNameMotherTongue,
+    fatherName,
+    dob,
+    age,
+    gender,
+    nationality,
 
-      aadharNo,
-      kcetRegNo,
-      neetRegNo,
-      apaarId,
-      debId,
-      abcId,
+    aadharNo,
+    kcetRegNo,
+    neetRegNo,
+    apaarId,
+    debId,
+    abcId,
 
-      religion,
-      community,
-      maritalStatus,
+    religion,
+    community,
+    maritalStatus,
 
-      email,
-      phone,
-      whatsapp,
+    email,
+    phone,
+    whatsapp,
 
-      address: {
-        village,
-        post,
-        taluk,
-        district,
-        pin,
-      },
+    address: {
+    village,
+    post,
+    taluk,
+    district,
+    pin,
+    },
 
-      englishFluency,
-      languagesKnown: [language1, language2, language3],
+    englishFluency,
+    languagesKnown: [language1, language2, language3],
 
-      bankDetails: {
-        accountHolderName,
-        accountNumber,
-        ifscCode,
-        bankNameBranch,
-      },
+    bankDetails: {
+    accountHolderName,
+    accountNumber,
+    ifscCode,
+    bankNameBranch,
+    },
 
-      year,
-      department,
+    year,
+    department,
+
+    // NEW DATA
+    educationBackground,
+    sslcSubjects,
+    sslcDetails,
+    hscSubjects,
+    hscDetails,
+    familyBackground,
+    references
+
     });
 
     res.status(201).json({

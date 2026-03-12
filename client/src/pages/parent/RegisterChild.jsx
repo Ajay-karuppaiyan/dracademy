@@ -6,8 +6,10 @@ import { useNavigate } from "react-router-dom";
 const RegisterChild = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
+    // Personal Details
     studentNameEnglish: "",
     studentNameMotherTongue: "",
     dob: "",
@@ -38,7 +40,26 @@ const RegisterChild = () => {
     accountHolderName: "",
     accountNumber: "",
     ifscCode: "",
-    bankNameBranch: ""
+    bankNameBranch: "",
+
+    // Educational Background
+    sslcRegNo: "",
+    sslcYear: "",
+    sslcSchool: "",
+    sslcPlace: "",
+    sslcBoard: "",
+    sslcTotal: "",
+    sslcMarks: "",
+    sslcPercentage: "",
+
+    hscRegNo: "",
+    hscYear: "",
+    hscSchool: "",
+    hscPlace: "",
+    hscBoard: "",
+    hscTotal: "",
+    hscMarks: "",
+    hscPercentage: "",
   });
 
   const handleChange = (e) => {
@@ -52,13 +73,11 @@ const RegisterChild = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // ✅ EMAIL VALIDATION HERE
   if (!formData.email || formData.email.trim() === "") {
     toast.error("Email is required");
     return;
   }
 
-  // Optional: Proper email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(formData.email)) {
     toast.error("Enter valid email address");
@@ -68,11 +87,101 @@ const handleSubmit = async (e) => {
   setLoading(true);
 
   try {
-    await api.post("/parent/register-child", formData);
+
+    // -------------------------
+    // EDUCATION BACKGROUND
+    // -------------------------
+    const educationBackground = [1,2,3].map(i => ({
+      examinationPassed: formData[`exam${i}`],
+      instituteName: formData[`school${i}`],
+      group: formData[`group${i}`],
+      yearOfPassing: formData[`year${i}`],
+      marksPercentage: formData[`percentage${i}`],
+      remarks: formData[`remarks${i}`],
+    }));
+
+
+    // -------------------------
+    // SSLC SUBJECTS
+    // -------------------------
+    const sslcSubjects = [1,2,3,4,5,6].map(i => ({
+      subject: formData[`sslcSubject${i}`],
+      totalMark: formData[`sslcTotal${i}`],
+      securedMark: formData[`sslcMark${i}`],
+    }));
+
+
+    const sslcDetails = {
+      registerNo: formData.sslcRegNo,
+      yearOfPassing: formData.sslcYear,
+      schoolName: formData.sslcSchool,
+      placeOfSchool: formData.sslcPlace,
+      boardOfExamination: formData.sslcBoard,
+    };
+
+
+    // -------------------------
+    // HSC SUBJECTS
+    // -------------------------
+    const hscSubjects = [1,2,3,4,5,6,7].map(i => ({
+      subject: formData[`hscSubject${i}`],
+      totalMark: formData[`hscTotal${i}`],
+      securedMark: formData[`hscMark${i}`],
+    }));
+
+
+    const hscDetails = {
+      registerNo: formData.hscRegNo,
+      yearOfPassing: formData.hscYear,
+      schoolName: formData.hscSchool,
+      placeOfSchool: formData.hscPlace,
+      boardOfExamination: formData.hscBoard,
+    };
+
+
+    // -------------------------
+    // FAMILY BACKGROUND
+    // -------------------------
+    const relations = ["Father","Mother","Brother / Sister","Brother / Sister","Brother / Sister"];
+
+    const familyBackground = relations.map((rel,i) => ({
+      relationship: rel,
+      name: formData[`familyName${i}`],
+      occupation: formData[`familyOccupation${i}`],
+      phone: formData[`familyPhone${i}`],
+    }));
+
+
+    // -------------------------
+    // REFERENCES
+    // -------------------------
+    const references = [1,2,3,4,5].map(i => ({
+      name: formData[`refName${i}`],
+      mobile: formData[`refMobile${i}`],
+    }));
+
+
+    // FINAL DATA
+    const payload = {
+      ...formData,
+      educationBackground,
+      sslcSubjects,
+      sslcDetails,
+      hscSubjects,
+      hscDetails,
+      familyBackground,
+      references,
+    };
+
+
+    await api.post("/parent/register-child", payload);
+
     toast.success("Child Registered Successfully");
     navigate("/dashboard/parent-dashboard");
+
   } catch (err) {
-    toast.error("Registration Failed");
+    console.error("Registration error:", err.response?.data || err.message);
+    toast.error(err.response?.data?.message || "Registration Failed");
   } finally {
     setLoading(false);
   }
@@ -83,7 +192,8 @@ const handleSubmit = async (e) => {
       <h1 className="text-2xl font-bold mb-6">Student Registration Form</h1>
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-xl shadow">
-
+        {step === 1 && (
+        <>
         {/* PERSONAL DETAILS */}
         <div>
           <h2 className="text-lg font-semibold border-b pb-2 mb-4">
@@ -171,20 +281,332 @@ const handleSubmit = async (e) => {
             <Input label="Bank Name & Branch" name="bankNameBranch" value={formData.bankNameBranch} onChange={handleChange} />
           </div>
         </div>
+        </>
+    )}
 
-        <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => navigate(-1)}
-            className="px-6 py-2 border rounded-lg">
-            Cancel
-          </button>
+        {step === 2 && (
+        <div>
+        <h2 className="text-lg font-semibold border-b pb-2 mb-6">
+        II. EDUCATIONAL BACKGROUND
+        </h2>
 
-          <button type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg">
-            {loading ? "Submitting..." : "Submit"}
-          </button>
+        {/* EDUCATIONAL BACKGROUND TABLE */}
+        <div className="overflow-x-auto mb-8">
+        <table className="w-full border border-gray-400 text-sm">
+        <thead className="bg-gray-100">
+        <tr>
+        <th className="border p-2">Examination Passed</th>
+        <th className="border p-2">Name of Institute / School</th>
+        <th className="border p-2">Group</th>
+        <th className="border p-2">Year of Passing</th>
+        <th className="border p-2">Marks Percentage</th>
+        <th className="border p-2">Remarks</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {[1,2,3].map((i)=>(
+        <tr key={i}>
+        <td className="border p-2">
+        <input name={`exam${i}`} value={formData[`exam${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`school${i}`} value={formData[`school${i}`] || ""}  onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`group${i}`} value={formData[`group${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`year${i}`} value={formData[`year${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`percentage${i}`} value={formData[`percentage${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`remarks${i}`} value={formData[`remarks${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        </tr>
+        ))}
+        </tbody>
+        </table>
         </div>
 
+        {/* SSLC SECTION */}
+
+        <h3 className="font-semibold mb-2">Student SSLC Details</h3>
+        <div className="flex gap-8 mb-6">
+        {/* SSLC SUBJECT TABLE */}
+
+        <table className="border border-gray-400 text-sm">
+        <thead className="bg-gray-100">
+        <tr>
+        <th className="border p-2">S.No</th>
+        <th className="border p-2">Subject</th>
+        <th className="border p-2">Total Mark</th>
+        <th className="border p-2">Secured Mark</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {[1,2,3,4,5,6].map((i)=>(
+        <tr key={i}>
+        <td className="border p-2">{i}</td>
+
+        <td className="border p-2">
+        <input name={`sslcSubject${i}`} value={formData[`sslcSubject${i}`] || ""} onChange={handleChange}/>
+        </td>
+
+        <td className="border p-2">
+        <input name={`sslcTotal${i}`} value={formData[`sslcTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+
+        <td className="border p-2">
+        <input name={`sslcMark${i}`} value={formData[`sslcMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        </tr>
+        ))}
+
+        <tr>
+        <td colSpan="2" className="border p-2 font-semibold">Total</td>
+
+        <td className="border p-2">
+        <input name="sslcTotalMarks" value={formData.sslcTotalMarks || ""} onChange={handleChange}/>
+        </td>
+
+        <td className="border p-2">
+        <input name="sslcSecuredMarks" value={formData.sslcSecuredMarks || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        </tr>
+
+        <tr>
+        <td colSpan="2" className="border p-2 font-semibold">
+        Percentage / Class
+        </td>
+
+        <td colSpan="2" className="border p-2">
+        <input name="sslcPercentage" value={formData.sslcPercentage || ""} onChange={handleChange} className="w-full outline-none" />
+        </td>
+        </tr>
+
+        </tbody>
+        </table>
+
+        {/* SSLC TEXTBOXES */}
+
+        <div className="flex flex-col gap-3">
+        <Input label="Registered No" name="sslcRegNo" value={formData.sslcRegNo} onChange={handleChange} />
+        <Input label="Year of Passing" name="sslcYear" value={formData.sslcYear} onChange={handleChange} />
+        <Input label="School Name" name="sslcSchool" value={formData.sslcSchool} onChange={handleChange} />
+        <Input label="Place of School" name="sslcPlace" value={formData.sslcPlace} onChange={handleChange} />
+        <Input label="Board of Examination" name="sslcBoard" value={formData.sslcBoard} onChange={handleChange} />
+        </div>
+        </div>
+
+        {/* HSC SECTION */}
+        <h3 className="font-semibold mb-2">Student HSC / PU Details</h3>
+        <div className="flex gap-8">
+        {/* HSC SUBJECT TABLE */}
+
+        <table className="border border-gray-400 text-sm">
+        <thead className="bg-gray-100">
+        <tr>
+        <th className="border p-2">S.No</th>
+        <th className="border p-2">Subject</th>
+        <th className="border p-2">Total Mark</th>
+        <th className="border p-2">Secured Mark</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {[1,2,3,4,5,6,7].map((i)=>(
+        <tr key={i}>
+        <td className="border p-2">{i}</td>
+
+        <td className="border p-2">
+        <input name={`hscSubject${i}`} value={formData[`hscSubject${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+
+        <td className="border p-2">
+        <input name={`hscTotal${i}`} value={formData[`hscTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        <td className="border p-2">
+        <input name={`hscMark${i}`} value={formData[`hscMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+        </tr>
+        ))}
+        <tr>
+        <td colSpan="2" className="border p-2 font-semibold">Total</td>
+
+        <td className="border p-2">
+        <input name="hscTotalMarks" value={formData.hscTotalMarks || ""} onChange={handleChange} className="w-full outline-none"/>
+        </td>
+
+        <td className="border p-2">
+        <input
+        name="hscSecuredMarks"
+        value={formData.hscSecuredMarks || ""} onChange={handleChange}
+        className="w-full outline-none"
+        />
+        </td>
+        </tr>
+
+        <tr>
+        <td colSpan="2" className="border p-2 font-semibold">
+        Percentage / Class
+        </td>
+
+        <td colSpan="2" className="border p-2">
+        <input
+        name="hscPercentage"
+        value={formData.hscPercentage || ""} 
+        onChange={handleChange}
+        className="w-full outline-none"
+        />
+        </td>
+        </tr>
+        </tbody>
+        </table>
+
+        {/* HSC TEXTBOXES */}
+
+        <div className="flex flex-col gap-3">
+        <Input label="Registered No" name="hscRegNo" value={formData.hscRegNo} onChange={handleChange} />
+        <Input label="Year of Passing" name="hscYear" value={formData.hscYear} onChange={handleChange} />
+        <Input label="School Name" name="hscSchool" value={formData.hscSchool} onChange={handleChange} />
+        <Input label="Place of School" name="hscPlace" value={formData.hscPlace} onChange={handleChange} />
+        <Input label="Board of Examination" name="hscBoard" value={formData.hscBoard} onChange={handleChange} />
+        </div>
+        </div>
+        </div>
+        )}
+
+        {step === 3 && (
+<div>
+<h2 className="text-lg font-semibold border-b pb-2 mb-6">
+III. FAMILY BACKGROUND
+</h2>
+
+<div className="overflow-x-auto">
+<table className="w-full border border-gray-400 text-sm">
+<thead className="bg-gray-100">
+<tr>
+<th className="border p-2">Relationship</th>
+<th className="border p-2">Name</th>
+<th className="border p-2">Occupation & Designation</th>
+<th className="border p-2">Contact Phone Number</th>
+</tr>
+</thead>
+
+<tbody>
+{["Father","Mother","Brother / Sister","Brother / Sister","Brother / Sister"].map((rel,i)=>(
+<tr key={i}>
+
+<td className="border p-2 font-medium">{rel}</td>
+
+<td className="border p-2">
+<input
+name={`familyName${i}`}
+onChange={handleChange}
+value={formData[`familyName${i}`] || ""}
+className="w-full outline-none"
+/>
+</td>
+
+<td className="border p-2">
+<input
+name={`familyOccupation${i}`}
+onChange={handleChange}
+value={formData[`familyOccupation${i}`] || ""}
+className="w-full outline-none"
+/>
+</td>
+
+<td className="border p-2">
+<input
+name={`familyPhone${i}`}
+onChange={handleChange}
+value={formData[`familyPhone${i}`] || ""}
+className="w-full outline-none"
+/>
+</td>
+</tr>
+))}
+</tbody>
+</table>
+</div>
+</div>
+)}
+
+{step === 4 && (
+<div>
+<h2 className="text-lg font-semibold border-b pb-2 mb-6">
+VI. REFERENCE CLASS MATE 5 BEST FRIENDS NAME & MOBILE NUMBER
+</h2>
+
+<div className="grid grid-cols-3 gap-6">
+{[1,2,3,4,5].map((i)=>(
+
+<div key={i} className="border p-4 rounded-lg bg-gray-50">
+
+<div className="mb-3">
+<label className="text-sm font-medium">Name</label>
+<input
+name={`refName${i}`}
+onChange={handleChange}
+value={formData[`refName${i}`] || ""}
+className="w-full border p-2 rounded"
+/>
+</div>
+
+<div>
+<label className="text-sm font-medium">Mobile Number</label>
+<input
+name={`refMobile${i}`}
+onChange={handleChange}
+value={formData[`refMobile${i}`] || ""}
+className="w-full border p-2 rounded"
+/>
+</div>
+</div>
+))}
+</div>
+</div>
+)}
+
+<div className="flex justify-end gap-4">
+  {/* BACK BUTTON */}
+  {step > 1 && (
+    <button
+      type="button"
+      onClick={() => setStep(step - 1)}
+      className="px-6 py-2 border rounded-lg"
+    >
+      Back
+    </button>
+  )}
+
+  {/* NEXT BUTTON */}
+  {step < 4 && (
+    <button
+      type="button"
+      onClick={() => setStep(step + 1)}
+      className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+    >
+      Next
+    </button>
+  )}
+
+  {/* SUBMIT BUTTON */}
+  {step === 4 && (
+    <button
+      type="submit"
+      disabled={loading}
+      className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+    >
+      {loading ? "Submitting..." : "Submit"}
+    </button>
+  )}
+</div>
       </form>
     </div>
   );

@@ -386,4 +386,21 @@ router.delete("/:id", protect, async (req, res) => {
   }
 });
 
+router.get("/payments", async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate("student", "studentNameEnglish email")
+      .populate("course", "title")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      payments
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

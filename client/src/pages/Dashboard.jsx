@@ -18,7 +18,54 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
-  const { user } = useAuth(); // Assuming useAuth provides a user object with a 'role' and 'name'
+  const { user } = useAuth();
+  const [students, setStudents] = React.useState([]);
+
+const [stats, setStats] = React.useState({
+  totalStudents: 0,
+  activeCourses: 0,
+  totalRevenue: 0,
+  loading: true,
+});
+
+React.useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/dashboard-stats");
+
+      if (!res.ok) {
+        throw new Error("API error");
+      }
+
+      const data = await res.json();
+
+      setStats({
+        totalStudents: data.totalStudents,
+        activeCourses: data.activeCourses,
+        totalRevenue: data.totalRevenue,
+        loading: false,
+      });
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+      setStats((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const fetchStudents = async () => {
+  try {
+    const res = await fetch("http://localhost:5000/api/dashboard-stats/recent-students");
+    const data = await res.json();
+    setStudents(data);
+  } catch (err) {
+    console.error("Failed to fetch students", err);
+  }
+};
+
+  fetchStats();
+  fetchStudents();
+}, []);
+
+
 
   if (user && user.role === "student") {
     return (
@@ -368,7 +415,7 @@ const Dashboard = () => {
         {[
           {
             label: "Total Students",
-            value: "2,543",
+            value: stats.loading ? "..." : stats.totalStudents.toLocaleString(),
             icon: Users,
             change: "+12.5%",
             trend: "up",
@@ -376,7 +423,7 @@ const Dashboard = () => {
           },
           {
             label: "Total Revenue",
-            value: "$45,200",
+            value: stats.loading ? "..." : `$${stats.totalRevenue.toLocaleString()}`,
             icon: DollarSign,
             change: "+8.2%",
             trend: "up",
@@ -384,19 +431,11 @@ const Dashboard = () => {
           },
           {
             label: "Active Courses",
-            value: "34",
+            value: stats.loading ? "..." : stats.activeCourses,
             icon: BookOpen,
             change: "0%",
             trend: "neutral",
             color: "purple",
-          },
-          {
-            label: "Pending Issues",
-            value: "12",
-            icon: AlertCircle,
-            change: "-2.4%",
-            trend: "down",
-            color: "red",
           },
         ].map((stat, idx) => (
           <div
@@ -456,65 +495,54 @@ const Dashboard = () => {
                 <thead className="bg-slate-50 text-slate-500 font-semibold">
                   <tr>
                     <th className="px-6 py-4">Student Name</th>
-                    <th className="px-6 py-4">Course</th>
-                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Email</th>
+                    <th className="px-6 py-4">phone</th>
+                    <th className="px-6 py-4"> Joining Date</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[
-                    {
-                      name: "Alice Johnson",
-                      course: "UI/UX Design",
-                      date: "Oct 24, 2026",
-                      status: "Verified",
-                    },
-                    {
-                      name: "Robert Smith",
-                      course: "Full Stack Dev",
-                      date: "Oct 23, 2026",
-                      status: "Pending",
-                    },
-                    {
-                      name: "Karen Wills",
-                      course: "Data Science",
-                      date: "Oct 22, 2026",
-                      status: "Verified",
-                    },
-                    {
-                      name: "Mike Jones",
-                      course: "Cyber Security",
-                      date: "Oct 21, 2026",
-                      status: "Rejected",
-                    },
-                  ].map((row, i) => (
-                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        {row.name}
-                      </td>
-                      <td className="px-6 py-4 text-slate-500">{row.course}</td>
-                      <td className="px-6 py-4 text-slate-500">{row.date}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            row.status === "Verified"
-                              ? "bg-green-100 text-green-800"
-                              : row.status === "Pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-slate-400 hover:text-slate-600">
-                          <MoreHorizontal size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+
+               <tbody className="divide-y divide-slate-100">
+                {students.map((row, i) => (
+                <tr key={row._id} className="hover:bg-slate-50">
+
+                <td className="px-6 py-4 font-medium text-slate-900">
+                {row.studentNameEnglish}
+                </td>
+
+                <td className="px-6 py-4 text-slate-500">
+                {row.email}
+                </td>
+
+                <td className="px-6 py-4 text-slate-500">
+                {row.whatsapp || row.phone || "N/A"}
+                </td>
+
+                <td className="px-6 py-4 text-slate-500">
+                {new Date(row.createdAt).toLocaleDateString()}
+                </td>
+
+                <td className="px-6 py-4">
+                <span
+                className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                row.status === "active"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+                }`}
+                >
+                {row.status}
+                </span>
+                </td>
+
+                <td className="px-6 py-4 text-right">
+                <button className="text-slate-400 hover:text-slate-600">
+                <MoreHorizontal size={18} />
+                </button>
+                </td>
+
+                </tr>
+                ))}
                 </tbody>
               </table>
             </div>

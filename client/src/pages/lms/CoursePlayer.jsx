@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   PlayCircle,
   FileText,
@@ -13,6 +13,7 @@ const CoursePlayer = () => {
   const [course, setCourse] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -55,13 +56,13 @@ const CoursePlayer = () => {
       <div className="flex-1 flex flex-col space-y-4">
         
         {/* Back Button */}
-        <Link
-          to="/lms"
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 transition"
         >
           <ChevronLeft size={16} className="mr-1" />
           Back to Catalog
-        </Link>
+        </button>
 
         {/* Video / Document Section */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">

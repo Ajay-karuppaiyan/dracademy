@@ -21,6 +21,7 @@ const announcementRoutes = require("./routes/announcementRoutes");
 const forumRoutes = require("./routes/forumRoutes");  
 const expenseRoutes = require("./routes/expenseRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 dotenv.config();
 connectDB();
@@ -57,6 +58,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard-stats", dashboardRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

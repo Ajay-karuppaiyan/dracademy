@@ -4,161 +4,169 @@ const { upload } = require('../config/cloudinary');
 const Student = require('../models/Student');
 const User = require('../models/User');
 
-// ======================================================
-// CREATE STUDENT (Creates User + Student)
-// ======================================================
-router.post(
-  '/',
-  upload.fields([
-    { name: 'profilePic', maxCount: 1 },
-    { name: 'idFile', maxCount: 1 },
-    { name: 'certificateFile', maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-     const {
-  studentNameEnglish,
-  studentNameMotherTongue,
-  fatherName,
-  dob,
-  age,
-  gender,
-  nationality,
-  aadharNo,
-  kcetRegNo,
-  neetRegNo,
-  apaarId,
-  debId,
-  abcId,
-  religion,
-  community,
-  maritalStatus,
-  email,
-  phone,
-  whatsapp,
-  village,
-  post,
-  taluk,
-  district,
-  pin,
-  englishFluency,
-  language1,
-  language2,
-  language3,
-  accountHolderName,
-  accountNumber,
-  ifscCode,
-  bankNameBranch,
-  role,
-} = req.body;
+// // ======================================================
+// // CREATE STUDENT (Creates User + Student)
+// // ======================================================
+// router.post(
+//   '/',
+//   upload.fields([
+//     { name: 'profilePic', maxCount: 1 },
+//     { name: 'idFile', maxCount: 1 },
+//     { name: 'certificateFile', maxCount: 1 },
+//   ]),
+//   async (req, res) => {
+//     try {
+//      const {
+//   studentNameEnglish,
+//   studentNameMotherTongue,
+//   fatherName,
+//   dob,
+//   age,
+//   gender,
+//   nationality,
+//   aadharNo,
+//   kcetRegNo,
+//   neetRegNo,
+//   apaarId,
+//   debId,
+//   abcId,
+//   religion,
+//   community,
+//   maritalStatus,
+//   email,
+//   phone,
+//   whatsapp,
+//   village,
+//   post,
+//   taluk,
+//   district,
+//   pin,
+//   englishFluency,
+//   language1,
+//   language2,
+//   language3,
+//   accountHolderName,
+//   accountNumber,
+//   ifscCode,
+//   bankNameBranch,
+//   role,
+// } = req.body;
 
-      // Check if email already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({
-          message: 'User with this email already exists',
-        });
-      }
+//       // Check if email already exists
+//       const existingUser = await User.findOne({ email });
+//       if (existingUser) {
+//         return res.status(400).json({
+//           message: 'User with this email already exists',
+//         });
+//       }
 
-      const defaultPassword = "Student@123";
+//       const defaultPassword = "Student@123";
 
-      // 1️⃣ Create User
-      const user = await User.create({
-       name: studentNameEnglish,
-        email,
-        password: defaultPassword,
-        role: role || 'student',
-      });
+//       // 1️⃣ Create User
+//       const user = await User.create({
+//        name: studentNameEnglish,
+//         email,
+//         password: defaultPassword,
+//         role: role || 'student',
+//       });
 
-      // Helper function for file
-      const getFileData = (fieldName) => {
-        if (req.files && req.files[fieldName]) {
-          const file = req.files[fieldName][0];
-          return {
-            url: file.path,
-            public_id: file.filename,
-            name: file.originalname,
-          };
-        }
-        return null;
-      };
+//       // Helper function for file
+//       const getFileData = (fieldName) => {
+//         if (req.files && req.files[fieldName]) {
+//           const file = req.files[fieldName][0];
+//           return {
+//             url: file.path,
+//             public_id: file.filename,
+//             name: file.originalname,
+//           };
+//         }
+//         return null;
+//       };
 
-      // 2️⃣ Create Student
-      const student = await Student.create({
-  user: user._id,
+//       // 2️⃣ Create Student
+//       const student = await Student.create({
+//   user: user._id,
 
-  studentNameEnglish,
-  studentNameMotherTongue,
-  fatherName,
-  dob,
-  age,
-  gender,
-  nationality,
+//   studentNameEnglish,
+//   studentNameMotherTongue,
+//   fatherName,
+//   dob,
+//   age,
+//   gender,
+//   nationality,
 
-  aadharNo,
-  kcetRegNo,
-  neetRegNo,
-  apaarId,
-  debId,
-  abcId,
+//   aadharNo,
+//   kcetRegNo,
+//   neetRegNo,
+//   apaarId,
+//   debId,
+//   abcId,
 
-  religion,
-  community,
-  maritalStatus,
+//   religion,
+//   community,
+//   maritalStatus,
 
-  email,
-  phone,
-  whatsapp,
+//   email,
+//   phone,
+//   whatsapp,
 
-  address: {
-    village,
-    post,
-    taluk,
-    district,
-    pin,
-  },
+//   address: {
+//     village,
+//     post,
+//     taluk,
+//     district,
+//     pin,
+//   },
 
-  englishFluency,
-  languagesKnown: [language1, language2, language3],
+//   englishFluency,
+//   languagesKnown: [language1, language2, language3],
 
-  bankDetails: {
-    accountHolderName,
-    accountNumber,
-    ifscCode,
-    bankNameBranch,
-  },
-});
+//   bankDetails: {
+//     accountHolderName,
+//     accountNumber,
+//     ifscCode,
+//     bankNameBranch,
+//   },
+// });
 
-      // 3️⃣ Link Student to User
-      user.studentProfile = student._id;
-      await user.save();
+//       // 3️⃣ Link Student to User
+//       user.studentProfile = student._id;
+//       await user.save();
 
-      res.status(201).json({
-        message: 'Student created successfully',
-        student,
-      });
+//       res.status(201).json({
+//         message: 'Student created successfully',
+//         student,
+//       });
 
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
+//     } catch (error) {
+//       res.status(500).json({ message: error.message });
+//     }
+//   }
+// );
 
 // ======================================================
 // GET ALL STUDENTS (From Users Collection)
 // ======================================================
+// ======================================================
+// GET ALL STUDENTS (FULL DATA)
+// ======================================================
 router.get("/", async (req, res) => {
   try {
     const students = await Student.find()
-      .populate("user", "-password"); // populate linked login account
+      .populate("user", "-password")
+      .populate("parent", "name email")
+      .populate("enrolledCourses", "title price category duration");
 
-    res.json(students);
+    res.json({
+      count: students.length,
+      students,
+    });
+
   } catch (error) {
+    console.error("GET STUDENTS ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 });
-
 
 // ======================================================
 // GET STUDENT BY USER _ID
@@ -185,7 +193,6 @@ router.get('/user/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 // ======================================================
 // UPDATE STUDENT (Updates BOTH User + Student)
@@ -265,7 +272,6 @@ router.put(
   }
 );
 
-
 // ======================================================
 // DELETE STUDENT (Deletes BOTH User + Student)
 // ======================================================
@@ -292,9 +298,6 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-
-
 
 // ======================================================
 // TOGGLE STATUS

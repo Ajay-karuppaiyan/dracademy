@@ -120,7 +120,7 @@ const [formData, setFormData] = useState({
         setPreview(null);
       }
     }
-  }, [isOpen, employee]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, employee]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -187,7 +187,7 @@ const [formData, setFormData] = useState({
         },
       );
       onClose();
-      // Optional: Refresh employee list if parent provides a refresh function
+
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to create employee";
