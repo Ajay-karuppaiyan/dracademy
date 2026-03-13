@@ -78,22 +78,31 @@ const Students = () => {
     XLSX.writeFile(workbook, "Students.xlsx");
   };
 
-  const handleUpdate = async () => {
-    try {
-      await fetch(`${API_URL}/students/${editStudent._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editStudent),
-      });
-      setStudents((prev) =>
-        prev.map((s) => (s._id === editStudent._id ? editStudent : s))
-      );
-      setEditStudent(null);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update student.");
-    }
-  };
+const handleUpdate = async () => {
+  try {
+    const res = await fetch(`${API_URL}/students/${editStudent._id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editStudent),
+    });
+
+    const data = await res.json();
+
+    setStudents((prev) =>
+      prev.map((s) => (s._id === editStudent._id ? data.student : s))
+    );
+
+    setFiltered((prev) =>
+      prev.map((s) => (s._id === editStudent._id ? data.student : s))
+    );
+
+    setEditStudent(null);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update student.");
+  }
+};
 
   const updateField = (field, value) => {
     setEditStudent({ ...editStudent, [field]: value });
@@ -164,8 +173,16 @@ const Students = () => {
                 <td className="p-3 border">{s.user?.name}</td>
                 <td className="p-3 border">{s.user?.email}</td>
                 <td className="p-3 border">{s.whatsapp || "-"}</td>
-                <td className="p-3 border">
-                  {s.status === "active" ? "Active" : "Inactive"}
+                <td className="p-3 border text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      s.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {s.status === "active" ? "Active" : "Inactive"}
+                  </span>
                 </td>
                 <td className="p-3 border">
                   <div className="flex flex-wrap justify-center gap-2">
@@ -177,7 +194,12 @@ const Students = () => {
                       <Eye size={18} className="text-blue-600" />
                     </button>
                     <button
-                      onClick={() => setEditStudent(JSON.parse(JSON.stringify(s)))}
+                      onClick={() =>
+                        setEditStudent({
+                          ...JSON.parse(JSON.stringify(s)),
+                          email: s.user?.email || ""
+                        })
+                      }
                       className="p-2 rounded hover:bg-yellow-100 transition"
                       title="Edit"
                     >
@@ -535,7 +557,7 @@ Close
 
       <div>
       <label className="font-semibold">Father Name</label>
-      <input className="border p-2 w-full" value={editStudent.fatherName || ""} onChange={(e)=>setEditStudent({...editStudent,fatherName:e.target.value})}
+      <input className="border p-2 w-full" value={editStudent.fatherName || ""} onChange={(e)=>updateField("fatherName", e.target.value)}
       />
       </div>
 
@@ -635,18 +657,16 @@ Close
       />
       </div>
 
+      <div>
       <label className="font-semibold">Languages Known</label>
-      <input
-        className="border p-2 w-full"
-        value={editStudent.languagesKnown?.join(", ") || ""}
-        onChange={(e) =>
+      <input className="border p-2 w-full" value={editStudent.languagesKnown?.join(", ") || ""} onChange={(e) =>
           setEditStudent({
             ...editStudent,
             languagesKnown: e.target.value.split(",").map((l) => l.trim())
           })
         }
       />
-
+      </div>
       </div>
 
       {/* ADDRESS */}
@@ -657,40 +677,50 @@ Close
 
       <div className="grid md:grid-cols-2 gap-3">
 
-      <input className="border p-2" value={editStudent.address?.village || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Village</label>
+      <input className="border p-2 w-full" value={editStudent.address?.village || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       address:{...editStudent.address,village:e.target.value}
       })}
-      placeholder="Village"
       />
+      </div>
 
-      <input className="border p-2" value={editStudent.address?.post || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Post</label>
+      <input className="border p-2 w-full" value={editStudent.address?.post || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       address:{...editStudent.address,post:e.target.value}
       })}
-      placeholder="Post"
       />
+      </div>
 
-      <input className="border p-2" value={editStudent.address?.taluk || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Taluk</label>
+      <input className="border p-2 w-full" value={editStudent.address?.taluk || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       address:{...editStudent.address,taluk:e.target.value}
       })}
-      placeholder="Taluk"
       />
+      </div>
 
-      <input className="border p-2" value={editStudent.address?.district || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">District</label>
+      <input className="border p-2 w-full" value={editStudent.address?.district || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       address:{...editStudent.address,district:e.target.value}
       })}
-      placeholder="District"
       />
+      </div>
 
-      <input className="border p-2" value={editStudent.address?.pin || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">PIN</label>
+      <input className="border p-2 w-full" value={editStudent.address?.pin || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       address:{...editStudent.address,pin:e.target.value}
       })}
-      placeholder="PIN"
       />
+      </div>
 
       </div>
       
@@ -701,7 +731,9 @@ Close
 
       <div className="grid md:grid-cols-2 gap-3">
 
-      <input className="border p-2" placeholder="Account Holder Name" value={editStudent.bankDetails?.accountHolderName || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Account Holder Name</label>
+      <input className="border p-2 w-full" value={editStudent.bankDetails?.accountHolderName || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       bankDetails:{
       ...editStudent.bankDetails,
@@ -709,8 +741,11 @@ Close
       }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Account Number" value={editStudent.bankDetails?.accountNumber || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Account Number</label>
+      <input className="border p-2 w-full" value={editStudent.bankDetails?.accountNumber || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       bankDetails:{
       ...editStudent.bankDetails,
@@ -718,8 +753,11 @@ Close
       }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="IFSC Code" value={editStudent.bankDetails?.ifscCode || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">IFSC Code</label>
+      <input className="border p-2 w-full" value={editStudent.bankDetails?.ifscCode || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       bankDetails:{
       ...editStudent.bankDetails,
@@ -727,8 +765,11 @@ Close
       }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Bank Name & Branch" value={editStudent.bankDetails?.bankNameBranch || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Bank Name & Branch</label>
+      <input className="border p-2 w-full" value={editStudent.bankDetails?.bankNameBranch || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
       bankDetails:{
       ...editStudent.bankDetails,
@@ -736,6 +777,7 @@ Close
       }
       })}
       />
+      </div>
       </div>
 
       {/* STEP 2 EDUCATION */}
@@ -826,35 +868,65 @@ Close
       </h3>
 
       <div className="grid md:grid-cols-2 gap-3">
-      <input className="border p-2" placeholder="Register No" value={editStudent.sslcDetails?.registerNo || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Register No</label>
+      <input className="border p-2 w-full" value={editStudent.sslcDetails?.registerNo || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      sslcDetails:{...editStudent.sslcDetails,registerNo:e.target.value}
+      sslcDetails:{
+      ...editStudent.sslcDetails,
+      registerNo:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Year Of Passing" value={editStudent.sslcDetails?.yearOfPassing || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Year Of Passing</label>
+      <input className="border p-2 w-full" value={editStudent.sslcDetails?.yearOfPassing || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      sslcDetails:{...editStudent.sslcDetails,yearOfPassing:e.target.value}
+      sslcDetails:{
+      ...editStudent.sslcDetails,
+      yearOfPassing:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="School Name" value={editStudent.sslcDetails?.schoolName || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">School Name</label>
+      <input className="border p-2 w-full" value={editStudent.sslcDetails?.schoolName || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      sslcDetails:{...editStudent.sslcDetails,schoolName:e.target.value}
+      sslcDetails:{
+      ...editStudent.sslcDetails,
+      schoolName:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Place Of School" value={editStudent.sslcDetails?.placeOfSchool || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Place Of School</label>
+      <input className="border p-2 w-full" value={editStudent.sslcDetails?.placeOfSchool || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      sslcDetails:{...editStudent.sslcDetails,placeOfSchool:e.target.value}
+      sslcDetails:{
+      ...editStudent.sslcDetails,
+      placeOfSchool:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Board Of Examination" value={editStudent.sslcDetails?.boardOfExamination || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Board Of Examination</label>
+      <input className="border p-2 w-full" value={editStudent.sslcDetails?.boardOfExamination || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      sslcDetails:{...editStudent.sslcDetails,boardOfExamination:e.target.value}
+      sslcDetails:{
+      ...editStudent.sslcDetails,
+      boardOfExamination:e.target.value
+      }
       })}
       />
+      </div>
 
       {/*SSLC Subjects*/}
       </div>
@@ -911,35 +983,65 @@ Close
 
       <div className="grid md:grid-cols-2 gap-3">
 
-      <input className="border p-2" placeholder="Register No" value={editStudent.hscDetails?.registerNo || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Register No</label>
+      <input className="border p-2 w-full" value={editStudent.hscDetails?.registerNo || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      hscDetails:{...editStudent.hscDetails,registerNo:e.target.value}
+      hscDetails:{
+      ...editStudent.hscDetails,
+      registerNo:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Year Of Passing" value={editStudent.hscDetails?.yearOfPassing || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Year Of Passing</label>
+      <input className="border p-2 w-full" value={editStudent.hscDetails?.yearOfPassing || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      hscDetails:{...editStudent.hscDetails,yearOfPassing:e.target.value}
+      hscDetails:{
+      ...editStudent.hscDetails,
+      yearOfPassing:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="School Name" value={editStudent.hscDetails?.schoolName || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">School Name</label>
+      <input className="border p-2 w-full" value={editStudent.hscDetails?.schoolName || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      hscDetails:{...editStudent.hscDetails,schoolName:e.target.value}
+      hscDetails:{
+      ...editStudent.hscDetails,
+      schoolName:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Place" value={editStudent.hscDetails?.placeOfSchool || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Place</label>
+      <input className="border p-2 w-full" value={editStudent.hscDetails?.placeOfSchool || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      hscDetails:{...editStudent.hscDetails,placeOfSchool:e.target.value}
+      hscDetails:{
+      ...editStudent.hscDetails,
+      placeOfSchool:e.target.value
+      }
       })}
       />
+      </div>
 
-      <input className="border p-2" placeholder="Board" value={editStudent.hscDetails?.boardOfExamination || ""} onChange={(e)=>setEditStudent({
+      <div>
+      <label className="font-semibold">Board Of Examination</label>
+      <input className="border p-2 w-full" value={editStudent.hscDetails?.boardOfExamination || ""} onChange={(e)=>setEditStudent({
       ...editStudent,
-      hscDetails:{...editStudent.hscDetails,boardOfExamination:e.target.value}
+      hscDetails:{
+      ...editStudent.hscDetails,
+      boardOfExamination:e.target.value
+      }
       })}
       />
+      </div>
 
       </div>
 

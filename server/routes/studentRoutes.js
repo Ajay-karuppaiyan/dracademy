@@ -198,75 +198,81 @@ router.get('/user/:id', async (req, res) => {
 // UPDATE STUDENT (Updates BOTH User + Student)
 // ======================================================
 router.put(
-  '/:id',
+  "/:id",
   upload.fields([
-    { name: 'profilePic', maxCount: 1 },
-    { name: 'idFile', maxCount: 1 },
-    { name: 'certificateFile', maxCount: 1 },
+    { name: "profilePic", maxCount: 1 },
+    { name: "idFile", maxCount: 1 },
+    { name: "certificateFile", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
-      const student = await Student.findById(req.params.id).populate('user');
+
+      const student = await Student.findById(req.params.id).populate("user");
 
       if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
+        return res.status(404).json({ message: "Student not found" });
       }
 
-      const {
-        firstName,
-        lastName,
-        email,
-        role,
-        ...otherUpdates
-      } = req.body;
+      const data = req.body;
 
-      // Update Student fields
-      Object.keys(otherUpdates).forEach((key) => {
-        student[key] = otherUpdates[key];
-      });
+      // =========================
+      // UPDATE STUDENT FIELDS
+      // =========================
 
-      // Update files if uploaded
-      const updateFileData = (fieldName, existingFile) => {
-        if (req.files && req.files[fieldName]) {
-          const file = req.files[fieldName][0];
+      Object.assign(student, data);
+
+      // =========================
+      // UPDATE FILES (IF PROVIDED)
+      // =========================
+
+      const updateFile = (field, existing) => {
+        if (req.files && req.files[field]) {
+          const file = req.files[field][0];
           return {
             url: file.path,
             public_id: file.filename,
             name: file.originalname,
           };
         }
-        return existingFile;
+        return existing;
       };
 
-      student.profilePic = updateFileData('profilePic', student.profilePic);
-      student.idFile = updateFileData('idFile', student.idFile);
-      student.certificateFile = updateFileData(
-        'certificateFile',
+      student.profilePic = updateFile("profilePic", student.profilePic);
+      student.idFile = updateFile("idFile", student.idFile);
+      student.certificateFile = updateFile(
+        "certificateFile",
         student.certificateFile
       );
 
       await student.save();
 
-      // Update User fields
+      // =========================
+      // UPDATE USER DATA
+      // =========================
+
       if (student.user) {
-        if (email) student.user.email = email;
-        if (role) student.user.role = role;
-
-        if (firstName || lastName) {
-          student.user.name = `${firstName || student.firstName} ${
-            lastName || student.lastName
-          }`;
-        }
-
-        await student.user.save();
+        await User.findByIdAndUpdate(
+          student.user._id,
+          {
+            ...(data.email && { email: data.email }),
+            ...(data.studentNameEnglish && { name: data.studentNameEnglish }),
+          },
+          { new: true }
+        );
       }
 
+      const updatedStudent = await Student.findById(student._id)
+      .populate("user", "-password")
+      .populate("parent", "name email")
+      .populate("enrolledCourses", "title price category duration");
+
       res.json({
-        message: 'Student updated successfully',
-        student,
+        message: "Student updated successfully",
+        student: updatedStudent,
       });
 
     } catch (error) {
+      console.error("UPDATE STUDENT ERROR:", error);
       res.status(500).json({ message: error.message });
     }
   }

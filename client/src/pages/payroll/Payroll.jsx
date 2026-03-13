@@ -297,7 +297,7 @@ No payroll found
                 <td className="border px-3 py-2">{i + 1}</td>
 
                 <td
-                  className="border px-3 py-2 text-blue-600 cursor-pointer underline"
+                  className="border px-3 py-2 text-black cursor-pointer"
                   onClick={() => fetchAttendance(p)}
                 >
                   {p.name}
