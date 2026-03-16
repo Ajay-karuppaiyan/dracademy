@@ -191,7 +191,11 @@ const handleSubmit = async (e) => {
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Student Registration Form</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-xl shadow">
+      <form 
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="space-y-8 bg-white p-8 rounded-xl shadow"
+      >
         {step === 1 && (
         <>
         {/* PERSONAL DETAILS */}
@@ -206,7 +210,7 @@ const handleSubmit = async (e) => {
             <Input label="Name of Student (Mother Tongue)" name="studentNameMotherTongue" value={formData.studentNameMotherTongue} onChange={handleChange} />
 
             <Input label="Date of Birth" type="date" name="dob" value={formData.dob} onChange={handleChange} />
-            <Input label="Age" name="age" value={formData.age} onChange={handleChange} />
+            <Input autoComplete="off" label="Age" name="age" value={formData.age} onChange={handleChange} />
 
             <Input label="Father / Mother Name" name="fatherName" value={formData.fatherName} onChange={handleChange} />
 
@@ -247,7 +251,7 @@ const handleSubmit = async (e) => {
             <Input label="District" name="district" value={formData.district} onChange={handleChange} />
             <Input label="PIN Code" name="pin" value={formData.pin} onChange={handleChange} />
             <Input label="Whatsapp Number" name="whatsapp" value={formData.whatsapp} onChange={handleChange} />
-            <Input label="Email Address" name="email" value={formData.email} onChange={handleChange} />
+            <Input autoComplete="off" label="Email Address" name="email" value={formData.email} onChange={handleChange} />
           </div>
         </div>
 
@@ -308,22 +312,21 @@ const handleSubmit = async (e) => {
         {[1,2,3].map((i)=>(
         <tr key={i}>
         <td className="border p-2">
-        <input name={`exam${i}`} value={formData[`exam${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`exam${i}`} value={formData[`exam${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>        </td>
+        <td className="border p-2">
+        <input autoComplete="off" name={`school${i}`} value={formData[`school${i}`] || ""}  onChange={handleChange} className="w-full outline-none"/>
         </td>
         <td className="border p-2">
-        <input name={`school${i}`} value={formData[`school${i}`] || ""}  onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`group${i}`} value={formData[`group${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         <td className="border p-2">
-        <input name={`group${i}`} value={formData[`group${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`year${i}`} value={formData[`year${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         <td className="border p-2">
-        <input name={`year${i}`} value={formData[`year${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`percentage${i}`} value={formData[`percentage${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         <td className="border p-2">
-        <input name={`percentage${i}`} value={formData[`percentage${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
-        </td>
-        <td className="border p-2">
-        <input name={`remarks${i}`} value={formData[`remarks${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`remarks${i}`} value={formData[`remarks${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         </tr>
         ))}
@@ -353,15 +356,15 @@ const handleSubmit = async (e) => {
         <td className="border p-2">{i}</td>
 
         <td className="border p-2">
-        <input name={`sslcSubject${i}`} value={formData[`sslcSubject${i}`] || ""} onChange={handleChange}/>
+        <input autoComplete="off" name={`sslcSubject${i}`} value={formData[`sslcSubject${i}`] || ""} onChange={handleChange}/>
         </td>
 
         <td className="border p-2">
-        <input name={`sslcTotal${i}`} value={formData[`sslcTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`sslcTotal${i}`} value={formData[`sslcTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
 
         <td className="border p-2">
-        <input name={`sslcMark${i}`} value={formData[`sslcMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`sslcMark${i}`} value={formData[`sslcMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         </tr>
         ))}
@@ -370,11 +373,11 @@ const handleSubmit = async (e) => {
         <td colSpan="2" className="border p-2 font-semibold">Total</td>
 
         <td className="border p-2">
-        <input name="sslcTotalMarks" value={formData.sslcTotalMarks || ""} onChange={handleChange}/>
+        <input autoComplete="off" name="sslcTotalMarks" value={formData.sslcTotalMarks || ""} onChange={handleChange}/>
         </td>
 
         <td className="border p-2">
-        <input name="sslcSecuredMarks" value={formData.sslcSecuredMarks || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name="sslcSecuredMarks" value={formData.sslcSecuredMarks || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         </tr>
 
@@ -384,7 +387,7 @@ const handleSubmit = async (e) => {
         </td>
 
         <td colSpan="2" className="border p-2">
-        <input name="sslcPercentage" value={formData.sslcPercentage || ""} onChange={handleChange} className="w-full outline-none" />
+        <input autoComplete="off" name="sslcPercentage" value={formData.sslcPercentage || ""} onChange={handleChange} className="w-full outline-none" />
         </td>
         </tr>
 
@@ -394,11 +397,11 @@ const handleSubmit = async (e) => {
         {/* SSLC TEXTBOXES */}
 
         <div className="flex flex-col gap-3">
-        <Input label="Registered No" name="sslcRegNo" value={formData.sslcRegNo} onChange={handleChange} />
-        <Input label="Year of Passing" name="sslcYear" value={formData.sslcYear} onChange={handleChange} />
-        <Input label="School Name" name="sslcSchool" value={formData.sslcSchool} onChange={handleChange} />
-        <Input label="Place of School" name="sslcPlace" value={formData.sslcPlace} onChange={handleChange} />
-        <Input label="Board of Examination" name="sslcBoard" value={formData.sslcBoard} onChange={handleChange} />
+        <Input autoComplete="off" label="Registered No" name="sslcRegNo" value={formData.sslcRegNo} onChange={handleChange} />
+        <Input autoComplete="off" label="Year of Passing" name="sslcYear" value={formData.sslcYear} onChange={handleChange} />
+        <Input autoComplete="off" label="School Name" name="sslcSchool" value={formData.sslcSchool} onChange={handleChange} />
+        <Input autoComplete="off" label="Place of School" name="sslcPlace" value={formData.sslcPlace} onChange={handleChange} />
+        <Input autoComplete="off" label="Board of Examination" name="sslcBoard" value={formData.sslcBoard} onChange={handleChange} />
         </div>
         </div>
 
@@ -423,14 +426,14 @@ const handleSubmit = async (e) => {
         <td className="border p-2">{i}</td>
 
         <td className="border p-2">
-        <input name={`hscSubject${i}`} value={formData[`hscSubject${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`hscSubject${i}`} value={formData[`hscSubject${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
 
         <td className="border p-2">
-        <input name={`hscTotal${i}`} value={formData[`hscTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`hscTotal${i}`} value={formData[`hscTotal${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         <td className="border p-2">
-        <input name={`hscMark${i}`} value={formData[`hscMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name={`hscMark${i}`} value={formData[`hscMark${i}`] || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
         </tr>
         ))}
@@ -438,11 +441,11 @@ const handleSubmit = async (e) => {
         <td colSpan="2" className="border p-2 font-semibold">Total</td>
 
         <td className="border p-2">
-        <input name="hscTotalMarks" value={formData.hscTotalMarks || ""} onChange={handleChange} className="w-full outline-none"/>
+        <input autoComplete="off" name="hscTotalMarks" value={formData.hscTotalMarks || ""} onChange={handleChange} className="w-full outline-none"/>
         </td>
 
         <td className="border p-2">
-        <input
+        <input autoComplete="off"
         name="hscSecuredMarks"
         value={formData.hscSecuredMarks || ""} onChange={handleChange}
         className="w-full outline-none"
@@ -456,7 +459,7 @@ const handleSubmit = async (e) => {
         </td>
 
         <td colSpan="2" className="border p-2">
-        <input
+        <input autoComplete="off"
         name="hscPercentage"
         value={formData.hscPercentage || ""} 
         onChange={handleChange}
@@ -616,14 +619,18 @@ className="w-full border p-2 rounded"
 const Input = ({ label, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
-    <input {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+    <input
+      autoComplete="new-password"
+      {...props}
+      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+    />
   </div>
 );
 
 const Select = ({ label, options, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
-    <select {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+    <select autoComplete="off" {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
       <option value="">Select</option>
       {options.map((opt, i) => (
         <option key={i} value={opt}>{opt}</option>

@@ -32,6 +32,19 @@ const [selectedAttendanceEmployee, setSelectedAttendanceEmployee] = useState(nul
 const tableRef = useRef(null);
 const [highlightedRow, setHighlightedRow] = useState(null);
 const [attendanceData, setAttendanceData] = useState({});
+const [attendanceFilter, setAttendanceFilter] = useState("all");
+const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+const [selectedAdjustmentData, setSelectedAdjustmentData] = useState([]);
+const [selectedAdjustmentType, setSelectedAdjustmentType] = useState("");
+const [selectedAdjustmentEmployee, setSelectedAdjustmentEmployee] = useState(null);
+
+const viewAdjustments = (employee, type) => {
+  const data = (employee.adjustments || []).filter(a => a.type === type);
+  setSelectedAdjustmentData(data);
+  setSelectedAdjustmentType(type);
+  setSelectedAdjustmentEmployee(employee);
+  setAdjustmentModalOpen(true);
+};
 
 // fetchAttendanceSummary logic moved to backend payroll controller for performance and reliability
 
@@ -163,11 +176,12 @@ toast.error("Failed to save adjustment");
 /* ==============================
 FETCH ATTENDANCE SUMMARY
 ================================ */
-const fetchAttendance = async (employee) => {
+const fetchAttendance = async (employee, filter = "all") => {
   if (!selectedMonth) return;
   const [year, month] = selectedMonth.split("-");
   setAttendanceLoading(true);
   setSelectedAttendanceEmployee(employee);
+  setAttendanceFilter(filter);
 
   try {
     // Fetch daily attendance for the employee
@@ -182,6 +196,17 @@ const fetchAttendance = async (employee) => {
     toast.error("Failed to fetch attendance");
   }
   setAttendanceLoading(false);
+};
+
+const calculateHours = (login, logout) => {
+  const start = new Date(`1970-01-01T${login}`);
+  const end = new Date(`1970-01-01T${logout}`);
+
+  const diffMs = end - start;
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  return `${hours}h ${minutes}m`;
 };
 
 /* ==============================
@@ -297,8 +322,9 @@ No payroll found
                 <td className="border px-3 py-2">{i + 1}</td>
 
                 <td
-                  className="border px-3 py-2 text-black cursor-pointer"
-                  onClick={() => fetchAttendance(p)}
+                  className="border px-3 py-2 text-black cursor-pointer hover:bg-gray-100 font-medium"
+                  onClick={() => fetchAttendance(p, 'all')}
+                  title="View full attendance"
                 >
                   {p.name}
                 </td>
@@ -306,14 +332,14 @@ No payroll found
                 <td className="border px-3 py-2">₹{p.basic}</td>
                 <td className="border px-3 py-2">{p.totalDays || "-"}</td>
 
-                <td className="border px-3 py-2">{p.present ?? "-"}</td>
-                <td className="border px-3 py-2">{p.absent ?? "-"}</td>
-                <td className="border px-3 py-2">{p.lateDays ?? "-"}</td>
-                <td className="border px-3 py-2">{p.lateTime ?? "-"}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600 " onClick={() => fetchAttendance(p, 'present')} title="View Present Days">{p.present ?? "-"}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-red-600 " onClick={() => fetchAttendance(p, 'leave')} title="View Leaves">{p.absent ?? "-"}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => fetchAttendance(p, 'all')} title="View Attendance details">{p.lateDays ?? "-"}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => fetchAttendance(p, 'all')} title="View Attendance details">{p.lateTime ?? "-"}</td>
 
-                <td className="border px-3 py-2">₹{p.allowances}</td>
-                <td className="border px-3 py-2">₹{p.deductions}</td>
-                <td className="border px-3 py-2">₹{p.advance}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600 " onClick={() => viewAdjustments(p, 'allowance')} title="View Allowances">₹{p.allowances}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-red-600 " onClick={() => viewAdjustments(p, 'deduction')} title="View Deductions">₹{p.deductions}</td>
+                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => viewAdjustments(p, 'advance')} title="View Advances">₹{p.advance}</td>
 
                 <td className="border px-3 py-2 font-bold text-green-600">
                   ₹{p.netSalary}
@@ -329,7 +355,7 @@ No payroll found
 
 {attendanceModalOpen && (
   <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-xl p-6 w-96 shadow-lg max-h-[80vh] overflow-y-auto">
+    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">
           Attendance - {selectedAttendanceEmployee?.firstName || selectedAttendanceEmployee?.name}
@@ -346,50 +372,145 @@ No payroll found
         <div className="flex justify-center py-6">
           <Loader2 className="animate-spin" />
         </div>
-      ) : (
+        ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-center border-collapse">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                <th className="border px-2 py-1">Date</th>
-                <th className="border px-2 py-1">Status</th>
-                <th className="border px-2 py-1">Login</th>
-                <th className="border px-2 py-1">Logout</th>
-                <th className="border px-2 py-1">Hours</th>
-              </tr>
-            </thead>
+          <div className="overflow-y-auto max-h-[350px] border rounded">
+          <table className="w-full table-fixed text-sm text-center border-collapse [&_td]:text-center [&_th]:text-center">
+          <thead className="bg-gray-50 sticky top-0">
+          <tr>
+            {attendanceFilter === 'leave' ? (
+              <>
+                <th className="border px-2 py-2 w-[80px]">S.No</th>
+                <th className="border px-2 py-2 w-[120px]">Leave Type</th>
+                <th className="border px-2 py-2 w-[150px]">Reason</th>
+                <th className="border px-2 py-2 w-[120px]">Applied Date</th>
+                <th className="border px-2 py-2 w-[100px]">Status</th>
+              </>
+            ) : (
+              <>
+                <th className="border px-2 py-2 w-[80px]">S.no</th>
+                <th className="border px-2 py-2 w-[120px]">Date</th>
+                <th className="border px-2 py-2 w-[120px]">Status</th>
+                <th className="border px-2 py-2 w-[120px]">Login</th>
+                <th className="border px-2 py-2 w-[120px]">Logout</th>
+                <th className="border px-2 py-2 w-[140px]">Working Hours</th>
+              </>
+            )}
+          </tr>
+          </thead>
             <tbody>
-              {attendanceSummary.length === 0 ? (
+              {attendanceSummary.filter(record => {
+                if (attendanceFilter === 'present') return record.type !== 'leave';
+                if (attendanceFilter === 'leave') return record.type === 'leave';
+                return true;
+              }).length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-4 text-gray-500 text-center">
-                    No attendance records for this month
+                  <td colSpan={attendanceFilter === 'leave' ? 5 : 6} className="py-4 text-gray-500 text-center">
+                    No records found
                   </td>
                 </tr>
               ) : (
-                attendanceSummary.map((record, index) => (
+                attendanceSummary.filter(record => {
+                  if (attendanceFilter === 'present') return record.type !== 'leave';
+                  if (attendanceFilter === 'leave') return record.type === 'leave';
+                  return true;
+                }).map((record, index) => (
                   <tr key={record._id} className={record.type === "leave" ? "bg-red-50" : ""}>
-                    <td className="border px-2 py-1">
-                      {new Date(record.date || record.startDate).toLocaleDateString()}
-                    </td>
-                    <td className="border px-2 py-1">
-                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                        record.type === "leave" ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
-                      }`}>
-                        {record.type === "leave" ? "Leave" : "Present"}
-                      </span>
-                    </td>
-                    <td className="border px-2 py-1">{record.loginTime || "-"}</td>
-                    <td className="border px-2 py-1">{record.logoutTime || "-"}</td>
-                    <td className="border px-2 py-1 text-center font-mono">
-                      {record.type === "attendance" ? record.workingHours || "-" : "-"}
-                    </td>
+                    {attendanceFilter === 'leave' ? (
+                      <>
+                        <td className="border px-2 py-1">{index + 1}</td>
+                        <td className="border px-2 py-1 capitalize">{record.leaveType || "-"}</td>
+                        <td className="border px-2 py-1">{record.reason || "-"}</td>
+                        <td className="border px-2 py-1">
+                          {record.createdAt ? new Date(record.createdAt).toLocaleDateString() : "-"}
+                        </td>
+                        <td className="border px-2 py-1">
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-green-200 text-green-700`}>
+                            {record.status || "Approved"}
+                          </span>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="border px-2 py-1">{index + 1}</td>
+                        <td className="border px-2 py-1">
+                          {new Date(record.date || record.startDate).toLocaleDateString()}
+                        </td>
+                        <td className="border px-2 py-1">
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                            record.type === "leave" ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
+                          }`}>
+                            {record.type === "leave" ? "Leave" : "Present"}
+                          </span>
+                        </td>
+                        <td className="border px-2 py-1">{record.loginTime || "-"}</td>
+                        <td className="border px-2 py-1">{record.logoutTime || "-"}</td>
+                        <td className="border px-2 py-1 text-center font-mono">
+                          {record.type !== "leave" && record.loginTime && record.logoutTime
+                            ? calculateHours(record.loginTime, record.logoutTime)
+                            : "-"}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
+    </div>
+  </div>
+)}
+
+{adjustmentModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold capitalize">
+          {selectedAdjustmentType}s - {selectedAdjustmentEmployee?.name}
+        </h2>
+        <button
+          onClick={() => setAdjustmentModalOpen(false)}
+          className="text-xl font-bold"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="overflow-y-auto max-h-[350px] border rounded">
+        <table className="w-full table-fixed text-sm text-center border-collapse [&_td]:text-center [&_th]:text-center">
+        <thead className="bg-gray-50 sticky top-0">
+        <tr>
+        <th className="border px-2 py-2 w-[80px]">S.No</th>
+        <th className="border px-2 py-2 w-[120px]">Amount</th>
+        <th className="border px-2 py-2 w-[150px]">Date</th>
+        <th className="border px-2 py-2">Note</th>
+        </tr>
+        </thead>
+          <tbody>
+            {selectedAdjustmentData.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="py-4 text-gray-500 text-center">
+                  No {selectedAdjustmentType}s found
+                </td>
+              </tr>
+            ) : (
+              selectedAdjustmentData.map((record, index) => (
+                <tr key={index}>
+                  <td className="border px-2 py-1">{index + 1}</td>
+                  <td className="border px-2 py-1 font-medium text-gray-800">₹{record.amount}</td>
+                  <td className="border px-2 py-1 text-center">{record.createdAt.slice(0, 10)}</td>
+                  <td className="border px-2 py-1 text-center">{record.note || "-"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        </div>
+      </div>
     </div>
   </div>
 )}
@@ -450,18 +571,18 @@ No payroll found
         type="number"
         placeholder="Amount"
         className="w-full border p-2 rounded"
-        value={salaryData.adjustmentAmount}
+        value={salaryData.adjustmentAmount || ""}
         onChange={(e) =>
           setSalaryData({
             ...salaryData,
-            adjustmentAmount: e.target.value
+            adjustmentAmount: e.target.value === "" ? "" : Number(e.target.value)
           })
         }
       />
 
       {/* NOTE */}
       <textarea
-        placeholder="Note (optional)"
+        placeholder="Note"
         className="w-full border p-2 rounded"
         value={salaryData.adjustmentNote}
         onChange={(e) =>

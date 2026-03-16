@@ -127,6 +127,13 @@ router.get("/salary/all", protect, async (req, res) => {
           allowances,
           deductions,
           advance,
+          adjustments: payroll && payroll.adjustments ? payroll.adjustments.map(a => ({
+            type: a.type,
+            amount: a.amount,
+            note: a.note || "",
+            createdAt: a.createdAt,
+            _id: a._id
+          })) : [],
           totalDays: totalDaysInMonth,
           present,
           absent,

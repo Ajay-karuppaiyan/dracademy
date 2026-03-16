@@ -190,40 +190,60 @@ router.put('/password', protect, async (req, res) => {
     }
 });
 
-// @desc    Register a new user
+// @desc    Register a new user (student or parent)
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { name, email, mobile, password, role } = req.body;
+    const { name, email, mobile, password, role, children } = req.body;
 
     try {
+        // Check if user already exists
         const userExists = await User.findOne({ email });
-
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const user = await User.create({
+        // Create user object safely
+        const userData = {
             name,
             email,
             mobile,
             password,
-            role: role || 'student', // Default to student
-        });
+            role: role || 'student',
+        };
 
-        if (user) {
-            res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                mobile: user.mobile,
-                role: user.role,
-                token: generateToken(user._id, user.role),
-            });
-        } else {
-            res.status(400).json({ message: 'Invalid user data' });
+        // Only add children array if role is parent
+        if (role === 'parent') {
+            userData.children = Array.isArray(children) ? children : [];
         }
+
+        const user = await User.create(userData);
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid user data' });
+        }
+
+        // If parent and children provided, update students to link to this parent
+        if (role === 'parent' && children && children.length > 0) {
+            const Student = require('../models/Student');
+            await Student.updateMany(
+                { _id: { $in: children } },
+                { $set: { parent: user._id } }
+            );
+        }
+
+        // Return user info and token
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            mobile: user.mobile,
+            role: user.role,
+            children: user.children || [],
+            token: generateToken(user._id, user.role),
+        });
     } catch (error) {
+        console.error('REGISTER ERROR:', error);
         res.status(500).json({ message: error.message });
     }
 });

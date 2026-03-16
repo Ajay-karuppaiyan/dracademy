@@ -286,9 +286,6 @@ const ParentDashboard = () => {
                 <div>
                  <h2 className="font-bold text-lg">{overview.student.studentNameEnglish}</h2>
                   <p className="text-xs text-gray-500">
-                    Class: {overview.student.class}
-                  </p>
-                  <p className="text-xs text-gray-500">
                     Email: {selectedChild?.user?.email}
                   </p>
                 </div>

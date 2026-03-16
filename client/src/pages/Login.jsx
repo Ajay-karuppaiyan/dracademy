@@ -19,6 +19,7 @@ const Login = () => {
     email: "",
     mobile: "",
     password: "",
+    role: "parent",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -46,45 +47,48 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    try {
-      if (isLogin) {
-        const result = await login(formData.email, formData.password);
-        if (result.success) {
-          if (result.requiresTwoFactor) {
-            setTempUserId(result.userId);
-            setShowTwoFactor(true);
-            toast.success("Please enter your 2FA code");
-          } else {
-            toast.success("Login successful!");
-            navigate("/dashboard");
-          }
+  try {
+    if (isLogin) {
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
+        if (result.requiresTwoFactor) {
+          setTempUserId(result.userId);
+          setShowTwoFactor(true);
+          toast.success("Please enter your 2FA code");
         } else {
-          toast.error(result.error);
+          toast.success("Login successful!");
+          navigate("/dashboard");
         }
       } else {
-        const result = await register(
-          formData.name,
-          formData.email,
-          formData.mobile,
-          formData.password,
-        );
-        if (result.success) {
-          toast.success("Account created successfully!");
-          navigate("/dashboard");
-        } else {
-          toast.error(result.error);
-        }
+        toast.error(result.error);
       }
-    } catch {
-      toast.error("An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
+    } else {
+      // SIGN UP (always parent)
+      const result = await register(
+        formData.name,
+        formData.email,
+        formData.mobile,
+        formData.password,
+        formData.role // pass role as well
+      );
+
+      if (result.success) {
+        toast.success("Parent account created successfully!");
+        navigate("/dashboard");
+      } else {
+        toast.error(result.error);
+      }
     }
-  };
+  } catch {
+    toast.error("An unexpected error occurred.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 bg-brand-900 overflow-hidden font-sans">

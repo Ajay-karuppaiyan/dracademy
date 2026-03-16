@@ -1,0 +1,49 @@
+{
+  "_id": "69b7d82289334ad7073d5076",
+  "employee": "6993ff61934af8b0d5b23040",
+  "month": 3,
+  "year": 2026,
+  "basicSalary": 20500,
+  "totalAllowances": 8000,
+  "totalDeductions": 500,
+  "advance": 5000,
+  "totalDays": 30,
+  "present": 0,
+  "absent": 0,
+  "lateDays": 0,
+  "lateTime": 0,
+  "netSalary": 23000,
+  "adjustments": [
+    {
+      "type": "allowance",
+      "amount": 5000,
+      "note": "bonus",
+      "_id": "69b7d82389334ad7073d5077",
+      "createdAt": "2026-03-16T10:14:59.005Z"
+    },
+    {
+      "type": "deduction",
+      "amount": 500,
+      "note": "late charge",
+      "_id": "69b7d87a89334ad7073d509a",
+      "createdAt": "2026-03-16T10:16:26.281Z"
+    },
+    {
+      "type": "advance",
+      "amount": 5000,
+      "note": "advance",
+      "_id": "69b7d8af89334ad7073d50bf",
+      "createdAt": "2026-03-16T10:17:19.442Z"
+    },
+    {
+      "type": "allowance",
+      "amount": 3000,
+      "note": "increament",
+      "_id": "69b7d95f89334ad7073d50f8",
+      "createdAt": "2026-03-16T10:20:15.073Z"
+    }
+  ],
+  "createdAt": "2026-03-16T10:14:59.013Z",
+  "updatedAt": "2026-03-16T10:20:15.074Z",
+  "__v": 3
+}
