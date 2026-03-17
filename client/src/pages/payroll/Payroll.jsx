@@ -383,7 +383,7 @@ No payroll found
                 <th className="border px-2 py-2 w-[80px]">S.No</th>
                 <th className="border px-2 py-2 w-[120px]">Leave Type</th>
                 <th className="border px-2 py-2 w-[150px]">Reason</th>
-                <th className="border px-2 py-2 w-[120px]">Applied Date</th>
+                <th className="border px-2 py-2 w-[120px]">Date</th>
                 <th className="border px-2 py-2 w-[100px]">Status</th>
               </>
             ) : (
@@ -422,7 +422,7 @@ No payroll found
                         <td className="border px-2 py-1 capitalize">{record.leaveType || "-"}</td>
                         <td className="border px-2 py-1">{record.reason || "-"}</td>
                         <td className="border px-2 py-1">
-                          {record.createdAt ? new Date(record.createdAt).toLocaleDateString() : "-"}
+                          {record.createdAt ? new Date(record.startDate).toLocaleDateString() : "-"}
                         </td>
                         <td className="border px-2 py-1">
                           <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-green-200 text-green-700`}>

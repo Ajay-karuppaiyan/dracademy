@@ -153,9 +153,11 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
                   <tr>
                     <th className="px-6 py-4 text-left">S.No</th>
                     <th className="px-6 py-4 text-left">Employee</th>
+                    <th className="px-6 py-4 text-left">Category</th>
                     <th className="px-6 py-4 text-left">Type</th>
                     <th className="px-6 py-4 text-left">Reason</th>
-                    <th className="px-6 py-4 text-left">Dates</th>
+                    <th className="px-6 py-4 text-left">Applied date</th>
+                    <th className="px-6 py-4 text-left">Range</th>
                     <th className="px-6 py-4 text-left">Status</th>
                     <th className="px-6 py-4 text-center">Action</th>
                   </tr>
@@ -165,11 +167,31 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
                     <tr key={req._id} className="border-t hover:bg-slate-50 transition">
                       <td className="px-6 py-4 text-slate-600">{indexOfFirst + index + 1}</td>
                       <td className="px-6 py-4 font-medium text-slate-700">{req.employeeName || "Unknown"}</td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {req.mode === "permission" ? "Permission" : "Leave"}
+                      </td>
                       <td className="px-6 py-4">{req.leaveType}</td>
                       <td className="px-6 py-4 text-slate-600">{req.reason}</td>
+                      <td className="px-6 py-4 text-slate-600"> {new Date(req.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-slate-600">
-                        {new Date(req.startDate).toLocaleDateString()} -{" "}
-                        {new Date(req.endDate).toLocaleDateString()}
+                        {req.mode === "permission" ? (
+                          <div>
+                            <p>{new Date(req.permissionDate).toLocaleDateString()}</p>
+                            <p className="text-xs text-slate-500">
+                              {req.startTime} - {req.endTime}
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p>
+                              {new Date(req.startDate).toLocaleDateString()} -{" "}
+                              {new Date(req.endDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {req.numDays} day(s)
+                            </p>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {user?.role === "admin" ? (
@@ -244,9 +266,12 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
             className="bg-white w-[500px] p-6 rounded-2xl shadow-xl relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-semibold mb-4 text-slate-800">Apply for Leave</h2>
             <LeaveApplicationForm
-              onSuccess={() => { fetchRequests(user.role); setShowForm(false); }}
+              onSuccess={() => {
+                fetchRequests(user.role);
+                setShowForm(false);
+              }}
+              onCancel={() => setShowForm(false)}
             />
             <button
               onClick={() => setShowForm(false)}

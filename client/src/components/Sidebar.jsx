@@ -68,9 +68,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   // ================= ADMIN / HR MENU =================
   const adminItems = [
     { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
-    { icon: <BookOpen size={22} />, label: "LMS Portal", path: "/dashboard/lms" },
     { icon: <Users size={22} />, label: "Employee Management", path: "/dashboard/hr" },
     { icon: <DollarSign size={22} />, label: "Finance", path: "/dashboard/finance" },
+    { icon: <Receipt size={22} />, label: "Expenses", path: "/dashboard/expenses" },
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
@@ -82,7 +82,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   const coachItems = adminItems.filter(
     (item) =>
       item.label !== "Employee Management" &&
-      item.label !== "Finance"
+      item.label !== "Finance" &&
+      item.label !== "Expenses"
   );
 
   // ================= PARENT MENU =================

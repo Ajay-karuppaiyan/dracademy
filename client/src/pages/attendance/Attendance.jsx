@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import Payroll from "../../pages/payroll/Payroll";
 
 const Attendance = () => {
   const { user, token } = useAuth();
@@ -17,6 +18,7 @@ const Attendance = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
+  const [activeTab, setActiveTab] = useState("attendance");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -213,11 +215,36 @@ const handleSubmit = async (e) => {
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
 
+{/* Tabs */}
+{user?.role === "admin" && (
+<div className="border-b border-slate-200 mb-4">
+  <div className="flex gap-6">
+    {["attendance", "payroll"].map((tab) => (
+      <button
+        key={tab}
+        onClick={() => setActiveTab(tab)}
+        className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+          activeTab === tab
+            ? "border-indigo-600 text-indigo-700"
+            : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+        }`}
+      >
+        {tab.replace("_", " ")}
+      </button>
+    ))}
+  </div>
+</div>
+)}
+
+{/* Tab Content */}
+<div className="animate-in fade-in duration-300">
+  {activeTab === "attendance" && (
+    <>
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
-            <p className="text-sm text-slate-500">Manage daily login/logout</p>
+            <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
           </div>
 
           {user.role !== "admin" && !showForm && (
@@ -283,28 +310,48 @@ const handleSubmit = async (e) => {
             </form>
           </div>
         )}
+        
+        {/* Filter */}
+        <div className="flex flex-col md:flex-row items-end justify-between mb-6 gap-4">
+          <div className="flex flex-col w-full md:w-1/3">
+            <input
+              id="search"
+              type="text"
+              placeholder="Search by name or role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+            />
+          </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center mb-4">
-  <input
-    type="text"
-    placeholder="Search by name or role..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="border px-4 py-2 rounded-lg w-full md:w-1/3 focus:ring-2 focus:ring-indigo-500 outline-none"
-  />
-  <input
-    type="date"
-    value={filterFrom}
-    onChange={(e) => setFilterFrom(e.target.value)}
-    className="border px-4 py-2 rounded-lg w-full md:w-1/6"
-  />
-  <input
-    type="date"
-    value={filterTo}
-    onChange={(e) => setFilterTo(e.target.value)}
-    className="border px-4 py-2 rounded-lg w-full md:w-1/6"
-  />
-</div>
+          <div className="flex gap-4 w-full md:w-auto">
+            <div className="flex flex-col">
+              <label htmlFor="filterFrom" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                Start Date : 
+              </label>
+              <input
+                id="filterFrom"
+                type="date"
+                value={filterFrom}
+                onChange={(e) => setFilterFrom(e.target.value)}
+                className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="filterTo" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                End Date : 
+              </label>
+              <input
+                id="filterTo"
+                type="date"
+                value={filterTo}
+                onChange={(e) => setFilterTo(e.target.value)}
+                className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* TABLE */}
         <table className="w-full text-sm min-w-[700px]">
@@ -378,33 +425,39 @@ const handleSubmit = async (e) => {
             </tbody>
         </table>
 
-{/* PAGINATION */}
-{totalPages > 1 && (
-  <div className="relative flex items-center mt-4 px-4">
-    {/* Previous Button */}
-    <button
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage(prev => prev - 1)}
-      className="absolute left-0 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-300"
-    >
-      Previous
-    </button>
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div className="relative flex items-center mt-4 px-4">
+            {/* Previous Button */}
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="absolute left-0 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-300"
+            >
+              Previous
+            </button>
 
-    {/* Page Info Centered */}
-    <span className="mx-auto text-sm font-medium">
-      Page {currentPage} of {totalPages}
-    </span>
+            {/* Page Info Centered */}
+            <span className="mx-auto text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
 
-    {/* Next Button */}
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() => setCurrentPage(prev => prev + 1)}
-      className="absolute right-0 px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-gray-300"
-    >
-      Next
-    </button>
-  </div>
-)}
+            {/* Next Button */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="absolute right-0 px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-gray-300"
+            >
+              Next
+            </button>
+          </div>
+        )}
+    </>
+  )}
+
+  {activeTab === "payroll" && <Payroll />}
+</div>
+
 
     
         {/* MODAL */}

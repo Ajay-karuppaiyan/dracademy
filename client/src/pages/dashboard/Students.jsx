@@ -264,11 +264,20 @@ const handleUpdate = async () => {
 <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4 z-50">
 
 <div
-className="bg-white p-6 rounded w-full max-w-6xl max-h-[90vh] overflow-y-auto"
-onClick={(e)=>e.stopPropagation()}
+  className="bg-white pl-6 rounded w-full max-w-6xl max-h-[90vh] overflow-y-auto relative"
+  onClick={(e)=>e.stopPropagation()}
 >
+<div className="sticky top-0 bg-white z-20 border-b pb-6 pt-6 flex justify-between items-center">
+  <h2 className="text-xl font-bold">Student Full Details</h2>
 
-<h2 className="text-xl font-bold mb-6">Student Full Details</h2>
+  <button
+    onClick={() => setSelectedStudent(null)}
+    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-lg"
+  >
+    ✕
+  </button>
+</div>
+
 
 {/* PERSONAL DETAILS */}
 
@@ -520,154 +529,143 @@ return (
 ))}
 </tbody>
 </table>
-
-<button
-onClick={()=>setSelectedStudent(null)}
-className="mt-6 bg-gray-600 text-white px-4 py-2 rounded w-full"
->
-Close
-</button>
 </div>
 </div>
 )}
 
       {/* EDIT MODAL */}
 
-      {editStudent && (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4 z-50">
-      <div className="bg-white p-6 rounded w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-      <h2 className="text-xl font-bold mb-6">Edit Student Full Details</h2>
-      {/* STEP 1 PERSONAL DETAILS */}
-      <h3 className="font-semibold text-blue-600 border-b pb-2 mb-4">
-      1. Personal Details
-      </h3>
+{editStudent && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center p-4 z-50"
+    onClick={() => setEditStudent(null)}
+  >
+    <div
+      className="bg-white rounded w-full max-w-5xl max-h-[90vh] flex flex-col"
+      onClick={(e) => e.stopPropagation()}
+    >
 
-      <div className="grid md:grid-cols-2 gap-4 text-sm">
-      <div>
-      <label className="font-semibold">Name (English)</label>
-      <input className="border p-2 w-full" value={editStudent.studentNameEnglish || ""} onChange={(e)=>setEditStudent({...editStudent,studentNameEnglish:e.target.value})}
-      />
-      </div>
+      {/* ✅ HEADER */}
+      <div className="sticky top-0 bg-white z-20 border-b p-4 flex justify-between items-center">
+        <h2 className="text-xl font-bold">Edit Student Full Details</h2>
 
-      <div>
-      <label className="font-semibold">Name (Mother Tongue)</label>
-      <input className="border p-2 w-full" value={editStudent.studentNameMotherTongue || ""} onChange={(e)=>setEditStudent({...editStudent,studentNameMotherTongue:e.target.value})}
-      />
-      </div>
-
-      <div>
-      <label className="font-semibold">Father Name</label>
-      <input className="border p-2 w-full" value={editStudent.fatherName || ""} onChange={(e)=>updateField("fatherName", e.target.value)}
-      />
+        <button
+          onClick={() => setEditStudent(null)}
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200"
+        >
+          ✕
+        </button>
       </div>
 
-      <div>
-      <label className="font-semibold">DOB</label>
-      <input type="date" className="border p-2 w-full" value={editStudent.dob ? editStudent.dob.split("T")[0] : ""} onChange={(e)=>setEditStudent({...editStudent,dob:e.target.value})}
-      />
-      </div>
+      {/* ✅ SCROLLABLE BODY */}
+      <div className="overflow-y-auto p-4">
 
-      <div>
-      <label className="font-semibold">Age</label>
-      <input className="border p-2 w-full" value={editStudent.age || ""} onChange={(e)=>setEditStudent({...editStudent,age:e.target.value})}
-      />
-      </div>
+        {/* STEP 1 PERSONAL DETAILS */}
+        <h3 className="font-semibold text-blue-600 border-b pb-2 mb-4">
+          1. Personal Details
+        </h3>
 
-      <div>
-      <label className="font-semibold">Gender</label>
-      <input className="border p-2 w-full" value={editStudent.gender || ""} onChange={(e)=>setEditStudent({...editStudent,gender:e.target.value})}
-      />
-      </div>
+        <div className="grid md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <label className="font-semibold">Name (English)</label>
+            <input className="border p-2 w-full" value={editStudent.studentNameEnglish || ""} onChange={(e)=>setEditStudent({...editStudent,studentNameEnglish:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Nationality</label>
-      <input className="border p-2 w-full" value={editStudent.nationality || ""} onChange={(e)=>setEditStudent({...editStudent,nationality:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Name (Mother Tongue)</label>
+            <input className="border p-2 w-full" value={editStudent.studentNameMotherTongue || ""} onChange={(e)=>setEditStudent({...editStudent,studentNameMotherTongue:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Aadhar No</label>
-      <input className="border p-2 w-full" value={editStudent.aadharNo || ""} onChange={(e)=>setEditStudent({...editStudent,aadharNo:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Father Name</label>
+            <input className="border p-2 w-full" value={editStudent.fatherName || ""} onChange={(e)=>updateField("fatherName", e.target.value)}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">KCET Reg No</label>
-      <input className="border p-2 w-full" value={editStudent.kcetRegNo || ""} onChange={(e)=>setEditStudent({...editStudent,kcetRegNo:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">DOB</label>
+            <input type="date" className="border p-2 w-full" value={editStudent.dob ? editStudent.dob.split("T")[0] : ""} onChange={(e)=>setEditStudent({...editStudent,dob:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">NEET Reg No</label>
-      <input className="border p-2 w-full" value={editStudent.neetRegNo || ""} onChange={(e)=>setEditStudent({...editStudent,neetRegNo:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Age</label>
+            <input className="border p-2 w-full" value={editStudent.age || ""} onChange={(e)=>setEditStudent({...editStudent,age:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">APPAR Id</label>
-      <input className="border p-2 w-full" value={editStudent.apaarId || ""} onChange={(e)=>setEditStudent({...editStudent,apaarId:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Gender</label>
+            <input className="border p-2 w-full" value={editStudent.gender || ""} onChange={(e)=>setEditStudent({...editStudent,gender:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">DEB ID</label>
-      <input className="border p-2 w-full" value={editStudent.debId || ""} onChange={(e)=>setEditStudent({...editStudent,debId:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Nationality</label>
+            <input className="border p-2 w-full" value={editStudent.nationality || ""} onChange={(e)=>setEditStudent({...editStudent,nationality:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">ABC ID</label>
-      <input className="border p-2 w-full" value={editStudent.abcId || ""} onChange={(e)=>setEditStudent({...editStudent,abcId:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Aadhar No</label>
+            <input className="border p-2 w-full" value={editStudent.aadharNo || ""} onChange={(e)=>setEditStudent({...editStudent,aadharNo:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Religion</label>
-      <input className="border p-2 w-full" value={editStudent.religion || ""} onChange={(e)=>setEditStudent({...editStudent,religion:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">KCET Reg No</label>
+            <input className="border p-2 w-full" value={editStudent.kcetRegNo || ""} onChange={(e)=>setEditStudent({...editStudent,kcetRegNo:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Community</label>
-      <input className="border p-2 w-full" value={editStudent.community || ""} onChange={(e)=>setEditStudent({...editStudent,community:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">NEET Reg No</label>
+            <input className="border p-2 w-full" value={editStudent.neetRegNo || ""} onChange={(e)=>setEditStudent({...editStudent,neetRegNo:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Marrital Status</label>
-      <input className="border p-2 w-full" value={editStudent.maritalStatus || ""} onChange={(e)=>setEditStudent({...editStudent,maritalStatus:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">APPAR Id</label>
+            <input className="border p-2 w-full" value={editStudent.apaarId || ""} onChange={(e)=>setEditStudent({...editStudent,apaarId:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">WhatsApp</label>
-      <input className="border p-2 w-full" value={editStudent.whatsapp || ""} onChange={(e)=>setEditStudent({...editStudent,whatsapp:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">DEB ID</label>
+            <input className="border p-2 w-full" value={editStudent.debId || ""} onChange={(e)=>setEditStudent({...editStudent,debId:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Email</label>
-      <input className="border p-2 w-full" value={editStudent.email || ""} onChange={(e)=>setEditStudent({...editStudent,email:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">ABC ID</label>
+            <input className="border p-2 w-full" value={editStudent.abcId || ""} onChange={(e)=>setEditStudent({...editStudent,abcId:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">English Fluency</label>
-      <input className="border p-2 w-full" value={editStudent.englishFluency || ""} onChange={(e)=>setEditStudent({...editStudent,englishFluency:e.target.value})}
-      />
-      </div>
+          <div>
+            <label className="font-semibold">Religion</label>
+            <input className="border p-2 w-full" value={editStudent.religion || ""} onChange={(e)=>setEditStudent({...editStudent,religion:e.target.value})}/>
+          </div>
 
-      <div>
-      <label className="font-semibold">Languages Known</label>
-      <input className="border p-2 w-full" value={editStudent.languagesKnown?.join(", ") || ""} onChange={(e) =>
-          setEditStudent({
-            ...editStudent,
-            languagesKnown: e.target.value.split(",").map((l) => l.trim())
-          })
-        }
-      />
-      </div>
-      </div>
+          <div>
+            <label className="font-semibold">Community</label>
+            <input className="border p-2 w-full" value={editStudent.community || ""} onChange={(e)=>setEditStudent({...editStudent,community:e.target.value})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold">Marrital Status</label>
+            <input className="border p-2 w-full" value={editStudent.maritalStatus || ""} onChange={(e)=>setEditStudent({...editStudent,maritalStatus:e.target.value})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold">WhatsApp</label>
+            <input className="border p-2 w-full" value={editStudent.whatsapp || ""} onChange={(e)=>setEditStudent({...editStudent,whatsapp:e.target.value})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold">Email</label>
+            <input className="border p-2 w-full" value={editStudent.email || ""} onChange={(e)=>setEditStudent({...editStudent,email:e.target.value})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold">English Fluency</label>
+            <input className="border p-2 w-full" value={editStudent.englishFluency || ""} onChange={(e)=>setEditStudent({...editStudent,englishFluency:e.target.value})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold">Languages Known</label>
+            <input className="border p-2 w-full" value={editStudent.languagesKnown?.join(", ") || ""} onChange={(e)=>setEditStudent({...editStudent,languagesKnown:e.target.value.split(",").map(l=>l.trim())})}/>
+          </div>
+        </div>
 
       {/* ADDRESS */}
 
@@ -1189,24 +1187,26 @@ Close
       </tbody>
       </table>
 
-      <div className="flex gap-3 mt-6">
-      <button
-      onClick={handleUpdate}
-      className="bg-green-600 text-white px-4 py-2 rounded flex-1"
-      >
-      Update
-      </button>
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setEditStudent(null)}
+          className="bg-gray-600 text-white px-12 py-2 rounded-md text-base"
+        >
+          Cancel
+        </button>
 
-      <button
-      onClick={()=>setEditStudent(null)}
-      className="bg-gray-600 text-white px-4 py-2 rounded flex-1"
-      >
-      Cancel
-      </button>
+        <button
+          onClick={handleUpdate}
+          className="bg-green-600 text-white px-12 py-2 rounded-md text-base"
+        >
+          Update
+        </button>
       </div>
+
       </div>
-      </div>
-      )}
+    </div>
+  </div>
+)}
     </div>
   );
 };

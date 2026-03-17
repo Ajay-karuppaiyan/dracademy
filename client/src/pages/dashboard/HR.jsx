@@ -21,8 +21,6 @@ import {
 import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
-import Payroll from "../../pages/payroll/Payroll";
-import Expenses from "../../pages/expenses/Expenses";
 
 const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -251,7 +249,7 @@ const HR = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [user, setUser] = useState(null); // logged-in user
+  const [user, setUser] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -379,25 +377,6 @@ const HR = () => {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-200">
-        <div className="flex gap-6">
-          {["employees", "payroll", "expenses"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${
-                activeTab === tab
-                  ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-              }`}
-            >
-              {tab.replace("_", " ")}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "employees" && (
@@ -411,8 +390,6 @@ const HR = () => {
           />
         )}
 
-        {activeTab === "payroll" && <Payroll />}
-        {activeTab === "expenses" && <Expenses />}
       </div>
     </div>
   );

@@ -462,4 +462,16 @@ router.get("/children-with-courses", protect, async (req, res) => {
 
 });
 
+// GET students by parent ID
+router.get("/parent/:parentId", async (req, res) => {
+  const { parentId } = req.params;
+  try {
+    const students = await Student.find({ parent: parentId });
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch students for this parent" });
+  }
+});
+
 module.exports = router;

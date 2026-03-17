@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { Menu, X, Search, ChevronDown, Globe, BookOpen } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const PublicLayout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,8 +48,8 @@ const PublicLayout = () => {
           <div className="flex justify-between items-center h-20 gap-8">
             {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
-              <div className="bg-brand-700 text-white p-1.5 rounded shadow-sm">
-                <BookOpen size={24} strokeWidth={2} />
+              <div className="p-1.5 rounded shadow-sm bg-brand-700">
+                <img src={logo} alt="DRRG Academy Logo" className="h-8 w-8 object-contain" />
               </div>
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
                 DRRG Academy

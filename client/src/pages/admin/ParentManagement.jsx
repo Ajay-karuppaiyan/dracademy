@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
-import { UserPlus, Check, Loader2, Trash2 } from "lucide-react";
+import { UserPlus, Check, Loader2, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
 
 const ParentManagement = () => {
   const [parents, setParents] = useState([]);
   const [loadingParents, setLoadingParents] = useState(true);
-
   const [showForm, setShowForm] = useState(false);
-
+  const [selectedChildren, setSelectedChildren] = useState([]);
+  const [showChildrenModal, setShowChildrenModal] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,7 +32,7 @@ const ParentManagement = () => {
   };
 
   useEffect(() => {
-    fetchParents(); // fetch parents on mount
+    fetchParents();
   }, []);
 
   // Handle parent creation
@@ -43,8 +43,8 @@ const ParentManagement = () => {
       await api.post("/auth/register-parent", formData);
       toast.success("Parent account created successfully!");
       setFormData({ name: "", email: "", password: "", mobile: "" });
-      setShowForm(false); // hide form after submit
-      fetchParents(); // refresh table
+      setShowForm(false);
+      fetchParents();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to create parent");
     } finally {
@@ -53,24 +53,35 @@ const ParentManagement = () => {
   };
 
   // Handle delete parent
-const handleDelete = async (id) => {
-  if (!window.confirm("Are you sure you want to delete this parent?")) return;
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this parent?")) return;
 
-  try {
-    await api.delete(`/parent/parent/${id}`);
-    toast.success("Parent deleted successfully");
-    setParents((prev) => prev.filter((p) => p._id !== id));
-  } catch (err) {
-    toast.error(err?.response?.data?.message || "Failed to delete parent");
-  }
-};
+    try {
+      await api.delete(`/parent/parent/${id}`);
+      toast.success("Parent deleted successfully");
+      setParents((prev) => prev.filter((p) => p._id !== id));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete parent");
+    }
+  };
+
+  // Fetch children by parent id
+  const fetchChildren = async (parentId) => {
+    try {
+      const res = await api.get(`/parent/parent/${parentId}`);
+      setSelectedChildren(res.data || []);
+      setShowChildrenModal(true);
+    } catch (err) {
+      toast.error("Failed to fetch children");
+    }
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Parent Management</h1>
         <button
-          onClick={() => setShowForm(true)} // show form, hide table
+          onClick={() => setShowForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
         >
           <UserPlus size={20} /> Add Parent
@@ -135,7 +146,7 @@ const handleDelete = async (id) => {
 
               <button
                 type="button"
-                onClick={() => setShowForm(false)} // cancel button
+                onClick={() => setShowForm(false)}
                 className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
               >
                 Cancel
@@ -145,7 +156,7 @@ const handleDelete = async (id) => {
         </div>
       )}
 
-      {/* Parents Table: show only if form is not active */}
+      {/* Parents Table */}
       {!showForm && (
         <div className="overflow-x-auto bg-white rounded-lg shadow">
           <table className="min-w-full border text-center">
@@ -170,13 +181,25 @@ const handleDelete = async (id) => {
                     <td className="p-3 border">{p.name}</td>
                     <td className="p-3 border">{p.email}</td>
                     <td className="p-3 border">{p.mobile || "N/A"}</td>
-                    <td className="p-3 border">
+                    <td className="p-3 border flex justify-center gap-2">
+
+                      {/* View Children Icon */}
+                      <button
+                        onClick={() => fetchChildren(p._id)}
+                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        title="View Children" 
+                      >
+                        <Users size={16} />
+                      </button>
+
                       <button
                         onClick={() => handleDelete(p._id)}
                         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
+
                     </td>
                   </tr>
                 ))
@@ -187,6 +210,52 @@ const handleDelete = async (id) => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Children Modal */}
+      {showChildrenModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+          onClick={() => setShowChildrenModal(false)}
+        >
+          <div
+            className="bg-white rounded w-full max-w-4xl max-h-[80vh] overflow-y-auto p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Children Details</h2>
+              <button
+                onClick={() => setShowChildrenModal(false)}
+                className="text-gray-700 px-3 py-1 rounded hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+
+            {selectedChildren.length === 0 ? (
+              <p>No children found for this parent.</p>
+            ) : (
+              <table className="min-w-full border text-center">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">S.no</th>
+                    <th className="p-2 border">Child Name</th>
+                    <th className="p-2 border">Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedChildren.map((child, index) => (
+                    <tr key={child._id} className="hover:bg-gray-50">
+                      <td className="p-2 border">{index + 1}</td>
+                      <td className="p-2 border">{child.studentNameEnglish}</td>
+                      <td className="p-2 border">{child.age || "N/A"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
     </div>

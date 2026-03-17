@@ -17,26 +17,66 @@ const upload = multer({ storage });
 // =================== APPLY LEAVE ===================
 router.post("/apply", protect, upload.single("file"), async (req, res) => {
   try {
-    const { leaveType, reason, startDate, endDate, numDays } = req.body;
-
-    if (!leaveType || !reason || !startDate || !endDate || !numDays) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const leave = new Leave({
-      userId: req.user._id,        
-      employeeName: req.user.name,       
+    const {
+      mode,
       leaveType,
       reason,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      numDays: Number(numDays),
+      startDate,
+      endDate,
+      numDays,
+      permissionDate,
+      startTime,
+      endTime,
+    } = req.body;
+
+    if (!mode || !leaveType || !reason) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // ===== VALIDATION =====
+    if (mode === "leave") {
+      if (!startDate || !endDate || !numDays) {
+        return res.status(400).json({ message: "Leave fields required" });
+      }
+    }
+
+    if (mode === "permission") {
+      if (!permissionDate || !startTime || !endTime) {
+        return res.status(400).json({ message: "Permission fields required" });
+      }
+    }
+
+    // ===== CREATE DATA =====
+    const leave = new Leave({
+      userId: req.user._id,
+      employeeName: req.user.name,
+      mode,
+      leaveType,
+      reason,
+
+      // Leave fields
+      startDate: mode === "leave" ? new Date(startDate) : undefined,
+      endDate: mode === "leave" ? new Date(endDate) : undefined,
+      numDays: mode === "leave" ? Number(numDays) : undefined,
+
+      // Permission fields
+      permissionDate:
+        mode === "permission" ? new Date(permissionDate) : undefined,
+      startTime: mode === "permission" ? startTime : undefined,
+      endTime: mode === "permission" ? endTime : undefined,
+
       fileUrl: req.file ? req.file.path : undefined,
     });
 
     await leave.save();
-    res.status(201).json({ message: "Leave applied successfully", leave });
 
+    res.status(201).json({
+      message:
+        mode === "leave"
+          ? "Leave applied successfully"
+          : "Permission requested successfully",
+      leave,
+    });
   } catch (err) {
     console.error("SERVER ERROR:", err);
     res.status(500).json({ message: "Server error" });

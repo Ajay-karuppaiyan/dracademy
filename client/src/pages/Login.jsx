@@ -6,6 +6,8 @@ import {
   Mail,
   User,
   Phone,
+  Eye,
+  EyeOff,
   Facebook,
   Twitter,
   Linkedin,
@@ -26,6 +28,7 @@ const Login = () => {
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [tempUserId, setTempUserId] = useState(null);
   const { login, register, verifyTwoFactor } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleTwoFactorVerify = async (e) => {
@@ -244,21 +247,31 @@ const handleSubmit = async (e) => {
                     </div>
                   )}
 
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="password"
-                      required
-                      className="block w-full pl-12 pr-4 py-3 border border-gray-200 rounded-full text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all"
-                      placeholder="••••••••••••"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
-                      }
-                    />
-                  </div>
+
+<div className="relative">
+  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+    <Lock className="h-5 w-5 text-gray-400" />
+  </div>
+
+  <input
+    type={showPassword ? "text" : "password"}
+    required
+    className="block w-full pl-12 pr-12 py-3 border border-gray-200 rounded-full text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all"
+    placeholder="••••••••••••"
+    value={formData.password}
+    onChange={(e) =>
+      setFormData({ ...formData, password: e.target.value })
+    }
+  />
+
+  {/* Eye Icon */}
+  <div
+    className="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-gray-400"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </div>
+</div>
 
                  {isLogin && (
                     <div className="text-right">
