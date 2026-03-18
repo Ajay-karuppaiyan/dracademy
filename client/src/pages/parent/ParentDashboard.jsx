@@ -10,7 +10,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import toast from "react-hot-toast"; // Make sure you have react-hot-toast installed
+import toast from "react-hot-toast";
+import CustomDataTable from "../../components/DataTable";
 
 const ParentDashboard = () => {
   const [children, setChildren] = useState([]);
@@ -105,12 +106,39 @@ const ParentDashboard = () => {
     }
   };
 
-  // Filter children based on search
- const filteredChildren = children.filter((c) =>
-  c.studentNameEnglish
-    ?.toLowerCase()
-    .includes(searchTerm?.toLowerCase() || "")
-);
+  const filteredChildren = children.filter((c) =>
+    c.studentNameEnglish
+      ?.toLowerCase()
+      .includes(searchTerm?.toLowerCase() || "")
+  );
+
+  const conditionalRowStyles = [
+    {
+      when: row => row.highlight,
+      style: {
+        backgroundColor: '#fefce8',
+      },
+    },
+  ];
+
+  const columns = [
+    { name: 'S.No', selector: row => row.sNo, width: '70px', center: true },
+    { name: 'Date', selector: row => row.date, sortable: true },
+    { name: 'Day', selector: row => row.day, sortable: true, cell: row => <span className="text-gray-600">{row.day}</span> },
+    { name: 'Login', selector: row => row.loginTime },
+    { name: 'Logout', selector: row => row.logoutTime },
+    { name: 'Hours', selector: row => row.totalHours, center: true, cell: row => <span className="font-medium text-blue-600">{row.totalHours}</span> },
+    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full ${
+          row.status === "Present" ? "text-green-700 bg-green-100" :
+          row.status === "Leave" ? "text-yellow-700 bg-yellow-100" :
+          "text-red-700 bg-red-100"
+        }`}>
+          {row.status}
+        </span>
+      ) 
+    }
+  ];
 
   // Loading Screen
   if (loading && !children.length) {
@@ -223,50 +251,12 @@ const ParentDashboard = () => {
             </div>
 
             {attendanceList.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-[900px] w-full text-sm">
-                  <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
-                    <tr>
-                      <th className="p-2 text-left">S.No</th>
-                      <th className="p-2 text-left">Date</th>
-                      <th className="p-2 text-left">Day</th>
-                      <th className="p-2 text-left">Login</th>
-                      <th className="p-2 text-left">Logout</th>
-                      <th className="p-2 text-left">Hours</th>
-                      <th className="p-2 text-left">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceList.map((item) => (
-                      <tr
-                        key={item.sNo}
-                        className={`border-b hover:bg-gray-50 transition ${
-                          item.highlight ? "bg-yellow-50" : ""
-                        }`}
-                      >
-                        <td className="p-2 font-medium">{item.sNo}</td>
-                        <td className="p-2">{item.date}</td>
-                        <td className="p-2 text-gray-600">{item.day}</td>
-                        <td className="p-2">{item.loginTime}</td>
-                        <td className="p-2">{item.logoutTime}</td>
-                        <td className="p-2 font-medium text-blue-600">
-                          {item.totalHours}
-                        </td>
-                        <td
-                          className={`p-2 font-semibold ${
-                            item.status === "Present"
-                              ? "text-green-600"
-                              : item.status === "Leave"
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {item.status}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="overflow-x-auto pb-4">
+                <CustomDataTable
+                  columns={columns}
+                  data={attendanceList}
+                  conditionalRowStyles={conditionalRowStyles}
+                />
               </div>
             ) : (
               <p className="text-gray-500 text-sm">

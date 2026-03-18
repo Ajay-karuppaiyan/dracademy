@@ -22,224 +22,105 @@ import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 
+import CustomDataTable from "../../components/DataTable";
+
 const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const filteredEmployees = employees.filter(emp => 
+    emp.firstName?.toLowerCase().includes(search.toLowerCase()) || 
+    emp.lastName?.toLowerCase().includes(search.toLowerCase()) ||
+    emp.employeeId?.toLowerCase().includes(search.toLowerCase()) ||
+    emp.department?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
 
+  const columns = [
+    { name: "S.No", selector: (row, index) => index + 1, width: "70px", sortable: true },
+    { name: "Employee", sortable: true, cell: row => (
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-brand-50 border border-slate-200 overflow-hidden shrink-0">
+          {row.profilePic?.url ? (
+            <img src={row.profilePic.url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-brand-600 font-bold bg-blue-100">
+              {row.firstName?.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div>
+          <div className="font-bold text-slate-900 whitespace-nowrap">{row.firstName} {row.lastName}</div>
+          <div className="text-xs text-slate-500">{row.employeeId}</div>
+        </div>
+      </div>
+    ), width: "220px"},
+    { name: "Role / Dept", sortable: true, cell: row => (
+      <div>
+        <div className="font-medium text-slate-800 capitalize">{row.user?.role || "Employee"}</div>
+        <div className="text-[11px] text-slate-500 capitalize">{row.department} • {row.designation}</div>
+      </div>
+    )},
+    { name: "Status", sortable: true, cell: row => (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
+        row.status === "active" ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"
+      }`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${row.status === "active" ? "bg-green-500" : "bg-yellow-500"}`}></span>
+        {row.status}
+      </span>
+    )},
+    { name: "Contact", cell: row => (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-xs text-slate-600"><Mail size={12} className="text-slate-400"/> {row.user?.email}</div>
+        <div className="flex items-center gap-2 text-xs text-slate-600"><Phone size={12} className="text-slate-400"/> {row.phone}</div>
+      </div>
+    ), width: "200px"},
+    { name: "Joined", sortable: true, cell: row => (
+      <span className="text-slate-600 text-sm whitespace-nowrap">
+        {new Date(row.joiningDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+      </span>
+    )},
+    { name: "Action", cell: row => (
+      <div className="relative">
+        <button onClick={() => toggleMenu(row._id)} className="p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors border shadow-sm ml-auto block">
+          <MoreVertical size={16} />
+        </button>
+        {openMenuId === row._id && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)}></div>
+            <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
+              <button onClick={() => { onEdit(row); setOpenMenuId(null); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                <Edit size={16} className="text-amber-500" /> Edit Details
+              </button>
+              <button onClick={() => { onToggleStatus(row._id); setOpenMenuId(null); }} className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${row.status === "active" ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}`}>
+                {row.status === "active" ? <><Ban size={16} /> Block Employee</> : <><Unlock size={16} /> Unblock Employee</>}
+              </button>
+              <button onClick={() => { if (window.confirm(`Delete ${row.firstName}?`)) { onDelete(row._id); setOpenMenuId(null); } }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <XCircle size={16} /> Delete Employee
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    ), width: "90px"}
+  ];
+
+  if (loading) return <div className="p-10 flex flex-col items-center gap-3 text-slate-500"><Clock className="animate-spin" size={24} /> Loading employees...</div>;
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-      {/* Table Header / Filters */}
-      <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search employees by name, ID, or role..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100">
-            <Filter size={16} /> Filters
-          </button>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100">
-            Export
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto min-h-[400px]">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider text-xs">
-            <tr>
-              <th className="px-6 py-4">SL No</th>
-              <th className="px-6 py-4">Employee</th>
-              <th className="px-6 py-4">Role / Dept</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Contact</th>
-              <th className="px-6 py-4">Joined</th>
-              <th className="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              <tr>
-                <td colSpan="7" className="px-6 py-10 text-center text-slate-400">
-                  <div className="flex flex-col items-center gap-2">
-                    <Clock className="animate-spin" size={24} />
-                    <span>Loading employees...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : employees.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="px-6 py-10 text-center text-slate-400">
-                  No employees found.
-                </td>
-              </tr>
-            ) : (
-              employees.map((emp, index) => (
-                <tr key={emp._id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-slate-600">{index + 1}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-brand-50 border border-slate-200 overflow-hidden">
-                        {emp.profilePic?.url ? (
-                          <img
-                            src={emp.profilePic.url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-brand-600 font-bold">
-                            {emp.firstName.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900">
-                          {emp.firstName} {emp.lastName}
-                        </div>
-                        <div className="text-xs text-slate-500">{emp.employeeId}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-slate-800 lowercase capitalize">
-                      {emp.user?.role || "Employee"}
-                    </div>
-                    <div className="text-xs text-slate-500 capitalize">
-                      {emp.department} • {emp.designation}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                        emp.status === "active"
-                          ? "bg-green-50 text-green-700 border-green-100"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          emp.status === "active" ? "bg-green-500" : "bg-yellow-500"
-                        }`}
-                      ></span>
-                      {emp.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <Mail size={12} /> {emp.user?.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <Phone size={12} /> {emp.phone}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500">
-                    {new Date(emp.joiningDate).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
-
-                  <td className="px-6 py-4 text-right relative">
-                    <button
-                      onClick={() => toggleMenu(emp._id)}
-                      className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                    >
-                      <MoreVertical size={18} />
-                    </button>
-                    
-                    {openMenuId === emp._id && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setOpenMenuId(null)}
-                        ></div>
-                        <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
-                          {/* Edit Button */}
-                          <button
-                            onClick={() => {
-                              onEdit(emp);
-                              setOpenMenuId(null);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                          >
-                            <Edit size={16} className="text-slate-400" />
-                            Edit Details
-                          </button>
-
-                          {/* Toggle Status Button */}
-                          <button
-                            onClick={() => {
-                              onToggleStatus(emp._id);
-                              setOpenMenuId(null);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                              emp.status === "active"
-                                ? "text-red-600 hover:bg-red-50"
-                                : "text-green-600 hover:bg-green-50"
-                            }`}
-                          >
-                            {emp.status === "active" ? (
-                              <>
-                                <Ban size={16} /> Block Employee
-                              </>
-                            ) : (
-                              <>
-                                <Unlock size={16} /> Unblock Employee
-                              </>
-                            )}
-                          </button>
-
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to delete ${emp.firstName}?`)) {
-                                onDelete(emp._id);
-                                setOpenMenuId(null);
-                              }
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <XCircle size={16} /> Delete Employee
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </td>
-
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-        <span>
-          Showing {employees.length} of {employees.length} employees
-        </span>
-        <div className="flex gap-2">
-          <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50" disabled>
-            Previous
-          </button>
-          <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+    <CustomDataTable 
+      columns={columns}
+      data={filteredEmployees}
+      search={search}
+      setSearch={setSearch}
+      searchPlaceholder="Search employees by name, ID, or role..."
+      exportButton={
+        <button className="flex items-center gap-2 px-4 py-2 font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">
+          <Filter size={16} /> Filters
+        </button>
+      }
+    />
   );
 };
 

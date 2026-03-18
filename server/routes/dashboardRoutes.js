@@ -13,6 +13,10 @@ router.get("/", async (req, res) => {
     // Active courses
     const activeCourses = await Course.countDocuments({ isActive: true });
 
+    // Total enrollments (count of items in enrolledCourses across all students)
+    const students = await Student.find({}, 'enrolledCourses');
+    const totalEnrollments = students.reduce((sum, s) => sum + (s.enrolledCourses?.length || 0), 0);
+
     // Total revenue (sum of payments)
     const payments = await Payment.find();
     const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -21,6 +25,7 @@ router.get("/", async (req, res) => {
       totalStudents,
       activeCourses,
       totalRevenue,
+      totalEnrollments
     });
   } catch (err) {
     console.error(err);
@@ -36,6 +41,21 @@ router.get("/recent-students", async (req, res) => {
       .limit(5);
 
     res.json(students);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/recent-enrollments", async (req, res) => {
+  try {
+    const enrollments = await Payment.find({ type: "inward" })
+      .populate("student", "studentNameEnglish email")
+      .populate("course", "title price")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json(enrollments);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

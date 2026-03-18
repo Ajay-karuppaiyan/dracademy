@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
+const { protect } = require('../middleware/authMiddleware');
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -9,12 +14,47 @@ const generateToken = (id, role) => {
     });
 };
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
+// @desc    Auth with Google
+// @route   POST /api/auth/google
 // @access  Public
-const speakeasy = require('speakeasy');
-const qrcode = require('qrcode');
-const { protect } = require('../middleware/authMiddleware');
+router.post('/google', async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const { name, email, sub: googleId } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name,
+                email,
+                googleId,
+                role: 'student', // Default role for new Google logins
+            });
+        } else if (!user.googleId) {
+            // Link existing account to Google
+            user.googleId = googleId;
+            await user.save();
+        }
+
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id, user.role),
+        });
+    } catch (error) {
+        console.error('GOOGLE LOGIN ERROR:', error);
+        res.status(401).json({ message: 'Google authentication failed' });
+    }
+});
 
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
@@ -161,11 +201,42 @@ router.get('/me', protect, async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            mobile: user.mobile,
             role: user.role,
             isTwoFactorEnabled: user.isTwoFactorEnabled,
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (user) {
+            user.name = req.body.name || user.name;
+            user.mobile = req.body.mobile || user.mobile;
+            user.email = req.body.email || user.email;
+
+            const updatedUser = await user.save();
+
+            res.json({
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                mobile: updatedUser.mobile,
+                role: updatedUser.role,
+                isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

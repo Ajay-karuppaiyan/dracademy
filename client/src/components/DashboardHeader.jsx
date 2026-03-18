@@ -247,9 +247,19 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
               <button
                 onClick={() =>
+                  navigate("/dashboard/profile")
+                }
+                className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+              >
+                <User size={14} />
+                Profile
+              </button>
+
+              <button
+                onClick={() =>
                   navigate("/dashboard/settings")
                 }
-                className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
               >
                 <Settings
                   size={14}
@@ -260,7 +270,7 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
 
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
               >
                 <LogOut
                   size={14}

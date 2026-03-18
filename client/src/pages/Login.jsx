@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from '@react-oauth/google';
 import {
   Lock,
   Mail,
@@ -27,7 +28,7 @@ const Login = () => {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [tempUserId, setTempUserId] = useState(null);
-  const { login, register, verifyTwoFactor } = useAuth();
+  const { login, googleLogin, register, verifyTwoFactor } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -45,6 +46,23 @@ const Login = () => {
       }
     } catch {
       toast.error("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    try {
+      const result = await googleLogin(credentialResponse.credential);
+      if (result.success) {
+        toast.success("Login successful!");
+        navigate("/dashboard");
+      } else {
+        toast.error(result.error);
+      }
+    } catch (err) {
+      toast.error("Google login failed");
     } finally {
       setIsLoading(false);
     }
@@ -134,9 +152,9 @@ const handleSubmit = async (e) => {
 
         {/* RIGHT SIDE (Form) */}
         <div className="w-full md:w-1/2 bg-white flex flex-col justify-center items-center p-8 md:p-12 relative z-30">
-          <div className="w-full max-w-sm text-center">
+          <div className="w-full max-w-sm text-center overflow-y-auto max-h-full scrollbar-hidden">
             <h2 className="text-4xl font-normal text-gray-600 mb-2">Welcome</h2>
-            <p className="text-gray-400 mb-10 font-light">
+            <p className="text-gray-400 mb-6 font-light">
               {isLogin
                 ? "Log in to your account to continue"
                 : "Create an account to get started"}
@@ -144,7 +162,7 @@ const handleSubmit = async (e) => {
 
             <form
               onSubmit={showTwoFactor ? handleTwoFactorVerify : handleSubmit}
-              className="space-y-5"
+              className="space-y-4"
             >
               {showTwoFactor ? (
                 // 2FA Input View
@@ -295,8 +313,25 @@ const handleSubmit = async (e) => {
               )}
             </form>
 
-            <div className="mt-10 text-center">
-              <p className="text-gray-400 text-sm mb-4">
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <div className="relative w-full flex items-center py-2">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink mx-4 text-gray-300 text-xs uppercase tracking-widest">Or login with</span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+              
+              <div className="flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error("Google Login Failed")}
+                  useOneTap
+                  theme="filled_blue"
+                  shape="pill"
+                  width="200"
+                />
+              </div>
+
+              <p className="text-gray-400 text-sm">
                 {isLogin
                   ? "Don't have an account?"
                   : "Already have an account?"}
@@ -308,15 +343,15 @@ const handleSubmit = async (e) => {
                 </button>
               </p>
 
-              <div className="flex justify-center gap-4 text-gray-400">
+              <div className="flex justify-center gap-4 text-gray-300">
                 <a href="#" className="hover:text-brand-500 transition-colors">
-                  <Facebook size={20} />
+                  <Facebook size={18} />
                 </a>
                 <a href="#" className="hover:text-brand-500 transition-colors">
-                  <Twitter size={20} />
+                  <Twitter size={18} />
                 </a>
                 <a href="#" className="hover:text-brand-500 transition-colors">
-                  <Linkedin size={20} />
+                  <Linkedin size={18} />
                 </a>
               </div>
             </div>

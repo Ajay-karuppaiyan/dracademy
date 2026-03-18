@@ -14,12 +14,14 @@ import {
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import AddExpenseModal from "./AddExpenseModel";
+import CustomDataTable from "../../components/DataTable";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchExpense, setSearchExpense] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user")) || { role: "employee" };
 
@@ -80,6 +82,48 @@ const Expenses = () => {
     fetchExpenses();
   }, []);
 
+  /* ================= COLUMNS ================= */
+  const columns = [
+    { name: 'S.No', selector: (row, i) => i + 1, width: '70px', center: true },
+    { name: 'Employee', selector: row => row.submittedBy?.name || "Unknown", sortable: true, cell: row => <span className="font-medium text-gray-800">{row.submittedBy?.name || "Unknown"}</span> },
+    { name: 'Category', selector: row => row.category, sortable: true, cell: row => <span className="text-gray-600">{row.category}</span> },
+    { name: 'Amount', selector: row => row.amount, sortable: true, cell: row => <span className="font-bold text-gray-800">₹ {row.amount?.toLocaleString("en-IN")}</span> },
+    { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-gray-600 font-mono">{new Date(row.date).toLocaleDateString("en-IN")}</span> },
+    { name: 'Status', selector: row => row.status, sortable: true, center: true, width: '120px', cell: row => <StatusBadge status={row.status} /> },
+    { name: 'Action', center: true, width: '80px', cell: row => (
+        <div className="relative flex justify-center w-full">
+          <button
+            onClick={() => setOpenMenuId(openMenuId === row._id ? null : row._id)}
+            className="p-2 hover:bg-slate-100 rounded-lg text-gray-600 transition"
+          >
+            <MoreVertical size={18} />
+          </button>
+          
+          {openMenuId === row._id && (
+            <div className="absolute right-full top-0 mr-2 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-[9999] text-left overflow-hidden">
+              {user.role === "admin" && row.status === "pending" && (
+                <>
+                  <button onClick={() => handleStatusUpdate(row._id, "approved")} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-green-600 hover:bg-green-50 transition"><CheckCircle size={16} /> Approve</button>
+                  <button onClick={() => handleStatusUpdate(row._id, "rejected")} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition"><XCircle size={16} /> Reject</button>
+                </>
+              )}
+              {user.role === "admin" && row.status === "approved" && (
+                <button onClick={() => handleReimburse(row._id)} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition"><Banknote size={16} /> Reimburse</button>
+              )}
+              <button onClick={() => handleDelete(row._id)} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition border-t border-gray-100"><Trash2 size={16} /> Delete</button>
+            </div>
+          )}
+        </div>
+      )
+    }
+  ];
+
+  /* ================= FILTER ================= */
+  const filteredExpenses = expenses.filter(e => 
+    e.category?.toLowerCase().includes(searchExpense.toLowerCase()) || 
+    e.submittedBy?.name?.toLowerCase().includes(searchExpense.toLowerCase())
+  );
+
   /* ================= STATS ================= */
   const totalAmount = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const pendingCount = expenses.filter((e) => e.status === "pending").length;
@@ -121,97 +165,15 @@ const Expenses = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-6 py-4 text-left">S.No</th>
-              <th className="px-6 py-4 text-left">Employee</th>
-              <th className="px-6 py-4 text-left">Category</th>
-              <th className="px-6 py-4 text-left">Amount</th>
-              <th className="px-6 py-4 text-left">Date</th>
-              <th className="px-6 py-4 text-left">Status</th>
-              <th className="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="text-center py-8 text-slate-400">
-                  Loading...
-                </td>
-              </tr>
-            ) : expenses.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-8 text-slate-400">
-                  No expenses found
-                </td>
-              </tr>
-            ) : (
-              expenses.map((exp) => (
-                <tr key={exp._id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4">{expenses.indexOf(exp) + 1}</td>
-                  <td className="px-6 py-4 font-medium">
-                    {exp.submittedBy?.name || "Unknown"}
-                  </td>
-                  <td className="px-6 py-4">{exp.category}</td>
-                  <td className="px-6 py-4 font-semibold">
-                    ₹ {exp.amount}
-                  </td>
-                  <td className="px-6 py-4">
-                    {new Date(exp.date).toLocaleDateString("en-IN")}
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={exp.status} />
-                  </td>
-                  <td className="px-6 py-4 text-right relative">
-                    <button
-                      onClick={() =>
-                        setOpenMenuId(openMenuId === exp._id ? null : exp._id)
-                      }
-                      className="p-2 hover:bg-slate-100 rounded-lg"
-                    >
-                      <MoreVertical size={18} />
-                    </button>
-
-                    {openMenuId === exp._id && (
-                      <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-lg z-50">
-
-                        {user.role === "admin" && exp.status === "pending" && (
-                          <>
-                            <MenuButton
-                              icon={CheckCircle}
-                              text="Approve"
-                              color="green"
-                              onClick={() => handleStatusUpdate(exp._id, "approved")}
-                            />
-                            <MenuButton
-                              icon={XCircle}
-                              text="Reject"
-                              color="red"
-                              onClick={() => handleStatusUpdate(exp._id, "rejected")}
-                            />
-                          </>
-                        )}
-
-                        {user.role === "admin" && exp.status === "approved" && (
-                          <MenuButton
-                            icon={Banknote}
-                            text="Reimburse"
-                            color="blue"
-                            onClick={() => handleReimburse(exp._id)}
-                          />
-                        )}
-
-                        <MenuButton icon={Trash2} text="Delete" color="red" onClick={() => handleDelete(exp._id)} />
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-visible pb-4">
+        <CustomDataTable 
+          columns={columns}
+          data={filteredExpenses}
+          progressPending={loading}
+          search={searchExpense}
+          setSearch={setSearchExpense}
+          searchPlaceholder="Search by employee or category..."
+        />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { Loader2, Plus, ChevronDown } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import CustomDataTable from "../../components/DataTable";
 
 const Payroll = () => {
 const { user } = useAuth();
@@ -31,6 +32,7 @@ remainingDays: 0
 const [selectedAttendanceEmployee, setSelectedAttendanceEmployee] = useState(null);
 const tableRef = useRef(null);
 const [highlightedRow, setHighlightedRow] = useState(null);
+const [searchPayroll, setSearchPayroll] = useState("");
 const [attendanceData, setAttendanceData] = useState({});
 const [attendanceFilter, setAttendanceFilter] = useState("all");
 const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
@@ -209,401 +211,352 @@ const calculateHours = (login, logout) => {
   return `${hours}h ${minutes}m`;
 };
 
-/* ==============================
-UI
-================================ */
-return (
+const generatePayslip = async (payrollId, employeeName) => {
+  console.log("Generating payslip for:", payrollId, employeeName);
+  try {
+    const res = await api.get(`/payroll/payslip/${payrollId}`, {
+      responseType: "blob"
+    });
+    console.log("Response received:", res);
 
-<div className="space-y-6">
-{/* HEADER */}
-{/* HEADER */}
-<div className="flex justify-between items-center bg-white border p-4 rounded-xl">
-  <div className="flex items-center gap-2">
-    <span className="text-gray-600 font-medium">
-      Month:
-    </span>
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `payslip_${employeeName || payrollId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("generatePayslip error:", err.response || err);
+    toast.error("Failed to download payslip");
+  }
+};
 
-    <div className="relative">
-      <button
-        onClick={() => setShowMonthGrid(!showMonthGrid)}
-        className="px-3 py-2 border rounded flex items-center gap-2"
-      >
-        {selectedMonth &&
-          new Date(selectedMonth).toLocaleString("default", {
-            month: "short",
-            year: "numeric"
-          })}
-        <ChevronDown size={16} />
-      </button>
-
-      {showMonthGrid && (
-        <div className="absolute top-10 left-0 bg-white border shadow-lg rounded p-2 grid grid-cols-3 gap-2 z-50">
-          {getMonthOptions().map(m => (
-            <button
-              key={m.value}
-              onClick={() => {
-                setSelectedMonth(m.value);
-                setShowMonthGrid(false);
-              }}
-              className={`px-2 py-1 rounded text-sm ${
-                selectedMonth === m.value
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+  // --- COLUMN DEFINITIONS ---
+  const payrollColumns = [
+    { name: '#', selector: (row, i) => i + 1, width: '60px', center: true },
+    { 
+      name: 'Employee', selector: row => row.name, sortable: true, width: '180px',
+      cell: row => <div onClick={() => fetchAttendance(row, "all")} className="font-semibold text-gray-800 cursor-pointer hover:text-blue-600 truncate">{row.name}</div>
+    },
+    {
+      name: 'Dept', selector: row => row.department, center: true, width: '120px',
+      cell: row => <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{row.department || "-"}</span>
+    },
+    { name: 'Basic Salary', selector: row => row.basic, sortable: true, right: true, cell: row => <div className="text-gray-700 font-medium"><span className="text-gray-400 mr-1">₹</span>{row.basic?.toLocaleString("en-IN") || "0"}</div> },
+    { name: 'Days', selector: row => row.totalDays, center: true, width: '80px', cell: row => <span className="text-gray-600 font-medium">{row.totalDays || "-"}</span> },
+    { name: 'Present', selector: row => row.present, center: true, width: '80px', cell: row => <div className="font-bold text-green-600 cursor-pointer hover:bg-green-50 p-1 rounded" onClick={() => fetchAttendance(row, "present")}>{row.present ?? "-"}</div> },
+    { name: 'Leave', selector: row => row.absent, center: true, width: '80px', cell: row => <div className="font-bold text-red-500 cursor-pointer hover:bg-red-50 p-1 rounded" onClick={() => fetchAttendance(row, "leave")}>{row.absent ?? "-"}</div> },
+    { 
+      name: 'Late Info', center: true, width: '90px',
+      cell: row => (
+        <div className="flex flex-col items-center cursor-pointer hover:bg-orange-50 p-1 rounded" onClick={() => fetchAttendance(row, "all")}>
+          <span className="text-xs font-semibold text-orange-600">{row.lateDays} {row.lateDays === 1 ? 'day' : 'days'}</span>
+          <span className="text-[10px] text-gray-500">{row.lateTime}</span>
         </div>
-      )}
-    </div>
-  </div>
+      )
+    },
+    { name: 'Allowances', selector: row => row.allowances, right: true, width: '100px', cell: row => <div className="font-bold text-blue-600 cursor-pointer hover:bg-blue-50 p-1 rounded" onClick={() => viewAdjustments(row, "allowance")}>{row.allowances > 0 ? <><span className="text-blue-300 mr-1">+ ₹</span>{row.allowances.toLocaleString("en-IN")}</> : '-'}</div> },
+    { name: 'Deductions', selector: row => row.deductions, right: true, width: '100px', cell: row => <div className="font-bold text-red-500 cursor-pointer hover:bg-red-50 p-1 rounded" onClick={() => viewAdjustments(row, "deduction")}>{row.deductions > 0 ? <><span className="text-red-300 mr-1">- ₹</span>{row.deductions.toLocaleString("en-IN")}</> : '-'}</div> },
+    { name: 'Advance', selector: row => row.advance, right: true, width: '100px', cell: row => <div className="font-bold text-orange-600 cursor-pointer hover:bg-orange-50 p-1 rounded" onClick={() => viewAdjustments(row, "advance")}>{row.advance > 0 ? <><span className="text-orange-300 mr-1">₹</span>{row.advance.toLocaleString("en-IN")}</> : '-'}</div> },
+    { name: 'Net Salary', selector: row => row.netSalary, sortable: true, right: true, width: '120px', cell: row => <div className="font-bold text-gray-800"><span className="text-green-600 mr-1">₹</span><span className="text-[15px]">{row.netSalary?.toLocaleString("en-IN")}</span></div> },
+    { 
+      name: 'Action', center: true, width: '100px',
+      cell: row => row._id ? (
+        <button className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-600 hover:text-white transition text-[11px] font-bold shadow-sm w-full" onClick={() => generatePayslip(row._id, row.name)}>Payslip</button>
+      ) : <span className="text-gray-400 text-xs">-</span>
+    }
+  ];
 
-  {/* MOVE ADJUSTMENT BUTTON TO RIGHT */}
-  <button
-    onClick={openPayrollForm}
-    className="flex items-center gap-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-  >
-    <Plus size={16} />
-    Adjustment
-  </button>
-</div>
+  const filteredPayrolls = payrolls.filter(p => p.name?.toLowerCase().includes(searchPayroll.toLowerCase()) || p.department?.toLowerCase().includes(searchPayroll.toLowerCase()));
 
-{/* PAYROLL TABLE */}
-<div
-ref={tableRef}
-className="bg-white border rounded-xl shadow-sm overflow-x-auto max-h-[500px]"
->
+  const attendanceColumns = attendanceFilter === "leave" ? [
+    { name: '#', selector: (row, i) => i + 1, width: '60px' },
+    { name: 'Leave Type', selector: row => row.leaveType, cell: row => <span className="capitalize font-medium text-gray-700">{row.leaveType || "-"}</span> },
+    { name: 'Reason', selector: row => row.reason, cell: row => <span className="text-gray-600">{row.reason || "-"}</span> },
+    { name: 'Applied Date', selector: row => row.createdAt, cell: row => <span className="font-mono text-gray-600">{row.createdAt ? new Date(row.startDate).toLocaleDateString("en-GB") : "-"}</span> },
+    { name: 'Status', selector: row => row.status, center: true, width: '120px', cell: row => <span className="px-2.5 py-1 rounded-md text-[11px] uppercase font-bold bg-green-100 text-green-700 border border-green-200">{row.status || "Approved"}</span> }
+  ] : [
+    { name: '#', selector: (row, i) => i + 1, width: '60px' },
+    { name: 'Date', selector: row => row.date || row.startDate, sortable: true, cell: row => <span className="font-mono text-gray-700 font-medium">{new Date(row.date || row.startDate).toLocaleDateString("en-GB", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span> },
+    { 
+      name: 'Status', selector: row => row.type, center: true, width: '100px',
+      cell: row => row.type === "leave" ? <span className="px-2.5 py-1 rounded-md text-[11px] uppercase font-bold bg-red-100 text-red-700 border border-red-200">Leave</span> : <span className="px-2.5 py-1 rounded-md text-[11px] uppercase font-bold bg-green-100 text-green-700 border border-green-200">Present</span>
+    },
+    { name: 'Login', selector: row => row.loginTime, center: true, cell: row => <span className="font-mono text-gray-600">{row.loginTime || "-"}</span> },
+    { name: 'Logout', selector: row => row.logoutTime, center: true, cell: row => <span className="font-mono text-gray-600">{row.logoutTime || "-"}</span> },
+    { name: 'Working Hours', center: true, cell: row => <span className="font-mono font-medium text-gray-800 bg-gray-50 px-2 py-1 rounded">{row.type !== "leave" && row.loginTime && row.logoutTime ? calculateHours(row.loginTime, row.logoutTime) : "-"}</span> }
+  ];
 
-{loading ? (
-<div className="flex justify-center py-8">
-<Loader2 className="animate-spin" size={32} />
-</div>
+  const adjustmentColumns = [
+    { name: '#', selector: (row, i) => i + 1, width: '60px', center: true },
+    { 
+      name: 'Amount', selector: row => row.amount, right: true, sortable: true,
+      cell: row => <span className={`font-bold ${selectedAdjustmentType === "allowance" ? "text-blue-600" : selectedAdjustmentType === "deduction" ? "text-red-500" : "text-orange-600"}`}>₹{row.amount?.toLocaleString("en-IN")}</span>
+    },
+    { name: 'Date Added', selector: row => row.createdAt, center: true, cell: row => <span className="text-gray-500 font-mono">{new Date(row.createdAt).toLocaleDateString("en-GB")}</span> },
+    { name: 'Note / Reason', selector: row => row.note, cell: row => <span className="text-gray-600">{row.note || "-"}</span> }
+  ];
 
-) : (
-<table className="w-full text-sm text-center border-collapse min-w-[900px]">
-<thead className="bg-gray-50 sticky top-0">
-<tr>
+  /* ==============================
+  UI
+  ================================ */
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-white border p-5 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-gray-600 font-semibold">Payroll Month:</span>
+          <div className="relative">
+            <button
+              onClick={() => setShowMonthGrid(!showMonthGrid)}
+              className="px-4 py-2 border rounded-lg flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition shadow-sm text-gray-800 font-medium"
+            >
+              {selectedMonth &&
+                new Date(selectedMonth).toLocaleString("default", {
+                  month: "long",
+                  year: "numeric"
+                })}
+              <ChevronDown size={18} className="text-gray-500" />
+            </button>
+            {showMonthGrid && (
+              <div className="absolute top-12 left-0 bg-white border shadow-xl rounded-lg p-3 grid grid-cols-3 gap-2 z-50 w-80">
+                {getMonthOptions().map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => {
+                      setSelectedMonth(m.value);
+                      setShowMonthGrid(false);
+                    }}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                      selectedMonth === m.value
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                        : "bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
-<th className="border px-3 py-2">S.No</th>
-<th className="border px-3 py-2">Name</th>
-<th className="border px-3 py-2">Basic Salary</th>
-<th className="border px-3 py-2">Total Days</th>
-<th className="border px-3 py-2">Present</th>
-<th className="border px-3 py-2">Leave</th>
-<th className="border px-3 py-2">Late Days</th>
-<th className="border px-3 py-2">Late Time</th>
-<th className="border px-3 py-2">Allowances</th>
-<th className="border px-3 py-2">Deductions</th>
-<th className="border px-3 py-2">Advance</th>
-<th className="border px-3 py-2">Net Salary</th>
-
-</tr>
-</thead>
-<tbody>
-
-{payrolls.length === 0 ? (
-<tr>
-<td colSpan={12} className="py-6 text-gray-500">
-No payroll found
-</td>
-</tr>
-
-) : (
-          payrolls.map((p, i) => {
-            return (
-              <tr
-                key={p.employeeId}
-                id={`row-${p.employeeId}`}
-                className={`${
-                  highlightedRow === p.employeeId ? "bg-yellow-100" : ""
-                }`}
-              >
-                <td className="border px-3 py-2">{i + 1}</td>
-
-                <td
-                  className="border px-3 py-2 text-black cursor-pointer hover:bg-gray-100 font-medium"
-                  onClick={() => fetchAttendance(p, 'all')}
-                  title="View full attendance"
-                >
-                  {p.name}
-                </td>
-
-                <td className="border px-3 py-2">₹{p.basic}</td>
-                <td className="border px-3 py-2">{p.totalDays || "-"}</td>
-
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600 " onClick={() => fetchAttendance(p, 'present')} title="View Present Days">{p.present ?? "-"}</td>
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-red-600 " onClick={() => fetchAttendance(p, 'leave')} title="View Leaves">{p.absent ?? "-"}</td>
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => fetchAttendance(p, 'all')} title="View Attendance details">{p.lateDays ?? "-"}</td>
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => fetchAttendance(p, 'all')} title="View Attendance details">{p.lateTime ?? "-"}</td>
-
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600 " onClick={() => viewAdjustments(p, 'allowance')} title="View Allowances">₹{p.allowances}</td>
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-red-600 " onClick={() => viewAdjustments(p, 'deduction')} title="View Deductions">₹{p.deductions}</td>
-                <td className="border px-3 py-2 cursor-pointer hover:bg-gray-100 text-orange-600 " onClick={() => viewAdjustments(p, 'advance')} title="View Advances">₹{p.advance}</td>
-
-                <td className="border px-3 py-2 font-bold text-green-600">
-                  ₹{p.netSalary}
-                </td>
-              </tr>
-            );
-          })
-      )}
-    </tbody>
-  </table>
-)}
-</div>
-
-{attendanceModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">
-          Attendance - {selectedAttendanceEmployee?.firstName || selectedAttendanceEmployee?.name}
-        </h2>
         <button
-          onClick={() => setAttendanceModalOpen(false)}
-          className="text-xl font-bold"
+          onClick={openPayrollForm}
+          className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2.5 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-md shadow-green-200 font-medium"
         >
-          ×
+          <Plus size={18} />
+          Add Adjustment
         </button>
       </div>
 
-      {attendanceLoading ? (
-        <div className="flex justify-center py-6">
-          <Loader2 className="animate-spin" />
-        </div>
+      {/* PAYROLL TABLE */}
+      <div
+        ref={tableRef}
+        className="bg-white border rounded-xl shadow-sm overflow-hidden"
+      >
+        {loading ? (
+          <div className="flex justify-center flex-col items-center py-20 gap-3">
+            <Loader2 className="animate-spin text-blue-600" size={40} />
+            <p className="text-gray-500 font-medium">Loading payroll data...</p>
+          </div>
         ) : (
-        <div className="overflow-x-auto">
-          <div className="overflow-y-auto max-h-[350px] border rounded">
-          <table className="w-full table-fixed text-sm text-center border-collapse [&_td]:text-center [&_th]:text-center">
-          <thead className="bg-gray-50 sticky top-0">
-          <tr>
-            {attendanceFilter === 'leave' ? (
-              <>
-                <th className="border px-2 py-2 w-[80px]">S.No</th>
-                <th className="border px-2 py-2 w-[120px]">Leave Type</th>
-                <th className="border px-2 py-2 w-[150px]">Reason</th>
-                <th className="border px-2 py-2 w-[120px]">Date</th>
-                <th className="border px-2 py-2 w-[100px]">Status</th>
-              </>
-            ) : (
-              <>
-                <th className="border px-2 py-2 w-[80px]">S.no</th>
-                <th className="border px-2 py-2 w-[120px]">Date</th>
-                <th className="border px-2 py-2 w-[120px]">Status</th>
-                <th className="border px-2 py-2 w-[120px]">Login</th>
-                <th className="border px-2 py-2 w-[120px]">Logout</th>
-                <th className="border px-2 py-2 w-[140px]">Working Hours</th>
-              </>
-            )}
-          </tr>
-          </thead>
-            <tbody>
-              {attendanceSummary.filter(record => {
-                if (attendanceFilter === 'present') return record.type !== 'leave';
-                if (attendanceFilter === 'leave') return record.type === 'leave';
-                return true;
-              }).length === 0 ? (
-                <tr>
-                  <td colSpan={attendanceFilter === 'leave' ? 5 : 6} className="py-4 text-gray-500 text-center">
-                    No records found
-                  </td>
-                </tr>
+            <CustomDataTable 
+              columns={payrollColumns} 
+              data={filteredPayrolls} 
+              search={searchPayroll}
+              setSearch={setSearchPayroll}
+              searchPlaceholder="Search by name or department..."
+              progressPending={loading}
+              pointerOnHover={false}
+              paginationPerPage={15}
+            />
+        )}
+      </div>
+
+      {/* ATTENDANCE MODAL */}
+      {attendanceModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gray-50 p-5 border-b flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Attendance Details
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Employee: <span className="font-semibold text-gray-700">{selectedAttendanceEmployee?.firstName || selectedAttendanceEmployee?.name}</span>
+                  <span className="mx-2">•</span>
+                  Filter: <span className="font-medium capitalize text-blue-600">{attendanceFilter}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setAttendanceModalOpen(false)}
+                className="bg-white rounded-full p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition shadow-sm border"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="p-0 overflow-hidden flex-1 flex flex-col">
+              {attendanceLoading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="animate-spin text-blue-600" size={32} />
+                </div>
               ) : (
-                attendanceSummary.filter(record => {
-                  if (attendanceFilter === 'present') return record.type !== 'leave';
-                  if (attendanceFilter === 'leave') return record.type === 'leave';
-                  return true;
-                }).map((record, index) => (
-                  <tr key={record._id} className={record.type === "leave" ? "bg-red-50" : ""}>
-                    {attendanceFilter === 'leave' ? (
-                      <>
-                        <td className="border px-2 py-1">{index + 1}</td>
-                        <td className="border px-2 py-1 capitalize">{record.leaveType || "-"}</td>
-                        <td className="border px-2 py-1">{record.reason || "-"}</td>
-                        <td className="border px-2 py-1">
-                          {record.createdAt ? new Date(record.startDate).toLocaleDateString() : "-"}
-                        </td>
-                        <td className="border px-2 py-1">
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-green-200 text-green-700`}>
-                            {record.status || "Approved"}
-                          </span>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="border px-2 py-1">{index + 1}</td>
-                        <td className="border px-2 py-1">
-                          {new Date(record.date || record.startDate).toLocaleDateString()}
-                        </td>
-                        <td className="border px-2 py-1">
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                            record.type === "leave" ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
-                          }`}>
-                            {record.type === "leave" ? "Leave" : "Present"}
-                          </span>
-                        </td>
-                        <td className="border px-2 py-1">{record.loginTime || "-"}</td>
-                        <td className="border px-2 py-1">{record.logoutTime || "-"}</td>
-                        <td className="border px-2 py-1 text-center font-mono">
-                          {record.type !== "leave" && record.loginTime && record.logoutTime
-                            ? calculateHours(record.loginTime, record.logoutTime)
-                            : "-"}
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
+                <div className="overflow-hidden flex-1 w-full bg-white">
+                  <CustomDataTable 
+                    columns={attendanceColumns} 
+                    data={attendanceSummary.filter((record) => {
+                      if (attendanceFilter === "present") return record.type !== "leave";
+                      if (attendanceFilter === "leave") return record.type === "leave";
+                      return true;
+                    })}
+                    pagination={false}
+                  />
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADJUSTMENT MODAL */}
+      {adjustmentModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="bg-gray-50 p-5 border-b flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 capitalize">
+                  {selectedAdjustmentType}s Details
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Employee: <span className="font-semibold text-gray-700">{selectedAdjustmentEmployee?.name}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setAdjustmentModalOpen(false)}
+                className="bg-white rounded-full p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition shadow-sm border"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="p-0 overflow-hidden flex-1 bg-white">
+              <CustomDataTable 
+                columns={adjustmentColumns} 
+                data={selectedAdjustmentData}
+                pagination={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE ADJUSTMENT PAYROLL FORM MODAL */}
+      {payrollFormOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-[450px] shadow-2xl space-y-5">
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-800">New Payroll Adjustment</h2>
+              <button
+                onClick={() => setPayrollFormOpen(false)}
+                className="bg-gray-100 rounded-full p-1.5 text-gray-500 hover:bg-gray-200 transition"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* EMPLOYEE */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                <select
+                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
+                  value={selectedEmployee?._id || ""}
+                  onChange={(e) =>
+                    setSelectedEmployee(
+                      employees.find((emp) => emp._id === e.target.value)
+                    )
+                  }
+                >
+                  <option value="">-- Select Employee --</option>
+                  {employees.map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.firstName} {emp.lastName} {emp.department ? `(${emp.department})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* TYPE */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adjustment Type</label>
+                <select
+                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
+                  value={salaryData.adjustmentType}
+                  onChange={(e) =>
+                    setSalaryData({
+                      ...salaryData,
+                      adjustmentType: e.target.value,
+                    })
+                  }
+                >
+                  <option value="">-- Select Type --</option>
+                  <option value="allowance">Allowance (+)</option>
+                  <option value="deduction">Deduction (-)</option>
+                  <option value="advance">Advance (-)</option>
+                </select>
+              </div>
+
+              {/* AMOUNT */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-gray-500 font-medium">₹</span>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    className="w-full border border-gray-300 pl-8 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 font-medium text-gray-800"
+                    value={salaryData.adjustmentAmount || ""}
+                    onChange={(e) =>
+                      setSalaryData({
+                        ...salaryData,
+                        adjustmentAmount: e.target.value === "" ? "" : Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* NOTE */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Note / Reason</label>
+                <textarea
+                  placeholder="Enter details..."
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 resize-none h-24 custom-scrollbar text-gray-800"
+                  value={salaryData.adjustmentNote}
+                  onChange={(e) =>
+                    setSalaryData({
+                      ...salaryData,
+                      adjustmentNote: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <button
+                onClick={handleSavePayroll}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-md shadow-blue-200 mt-2"
+              >
+                Save Adjustment
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
-  </div>
-)}
-
-{adjustmentModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-xl p-6 w-[700px] shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold capitalize">
-          {selectedAdjustmentType}s - {selectedAdjustmentEmployee?.name}
-        </h2>
-        <button
-          onClick={() => setAdjustmentModalOpen(false)}
-          className="text-xl font-bold"
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="overflow-x-auto">
-        <div className="overflow-y-auto max-h-[350px] border rounded">
-        <table className="w-full table-fixed text-sm text-center border-collapse [&_td]:text-center [&_th]:text-center">
-        <thead className="bg-gray-50 sticky top-0">
-        <tr>
-        <th className="border px-2 py-2 w-[80px]">S.No</th>
-        <th className="border px-2 py-2 w-[120px]">Amount</th>
-        <th className="border px-2 py-2 w-[150px]">Date</th>
-        <th className="border px-2 py-2">Note</th>
-        </tr>
-        </thead>
-          <tbody>
-            {selectedAdjustmentData.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="py-4 text-gray-500 text-center">
-                  No {selectedAdjustmentType}s found
-                </td>
-              </tr>
-            ) : (
-              selectedAdjustmentData.map((record, index) => (
-                <tr key={index}>
-                  <td className="border px-2 py-1">{index + 1}</td>
-                  <td className="border px-2 py-1 font-medium text-gray-800">₹{record.amount}</td>
-                  <td className="border px-2 py-1 text-center">{record.createdAt.slice(0, 10)}</td>
-                  <td className="border px-2 py-1 text-center">{record.note || "-"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-{/* ADJUSTMENT MODAL */}
-{payrollFormOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-xl p-6 w-[420px] shadow-lg space-y-4">
-
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Payroll Adjustment</h2>
-        <button
-          onClick={() => setPayrollFormOpen(false)}
-          className="text-xl font-bold"
-        >
-          ×
-        </button>
-      </div>
-
-      {/* EMPLOYEE */}
-
-      <select
-        className="w-full border p-2 rounded"
-        value={selectedEmployee?._id || ""}
-        onChange={(e) =>
-          setSelectedEmployee(
-            employees.find((emp) => emp._id === e.target.value)
-          )
-        }
-      >
-        <option value="">Select Employee</option>
-        {employees.map((emp) => (
-          <option key={emp._id} value={emp._id}>
-            {emp.firstName} {emp.lastName}
-          </option>
-        ))}
-      </select>
-
-      {/* TYPE */}
-      <select
-        className="w-full border p-2 rounded"
-        value={salaryData.adjustmentType}
-        onChange={(e) =>
-          setSalaryData({
-            ...salaryData,
-            adjustmentType: e.target.value
-          })
-        }
-      >
-        <option value="">Select Type</option>
-        <option value="allowance">Allowance</option>
-        <option value="deduction">Deduction</option>
-        <option value="advance">Advance</option>
-      </select>
-
-      {/* AMOUNT */}
-      <input
-        type="number"
-        placeholder="Amount"
-        className="w-full border p-2 rounded"
-        value={salaryData.adjustmentAmount || ""}
-        onChange={(e) =>
-          setSalaryData({
-            ...salaryData,
-            adjustmentAmount: e.target.value === "" ? "" : Number(e.target.value)
-          })
-        }
-      />
-
-      {/* NOTE */}
-      <textarea
-        placeholder="Note"
-        className="w-full border p-2 rounded"
-        value={salaryData.adjustmentNote}
-        onChange={(e) =>
-          setSalaryData({
-            ...salaryData,
-            adjustmentNote: e.target.value
-          })
-        }
-      />
-
-      <button
-        onClick={handleSavePayroll}
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-      >
-        Save Adjustment
-      </button>
-
-    </div>
-  </div>
-)}
-</div>
-);};
+  );
+};
 
 export default Payroll;

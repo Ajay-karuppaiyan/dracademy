@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import { UserPlus, Check, Loader2, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
+import CustomDataTable from "../../components/DataTable";
 
 const ParentManagement = () => {
   const [parents, setParents] = useState([]);
@@ -17,6 +18,33 @@ const ParentManagement = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [searchParent, setSearchParent] = useState("");
+
+  const parentColumns = [
+    { name: 'S.no', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
+    { name: 'Name', selector: row => row.name, sortable: true, cell: row => <span className="font-medium text-gray-800">{row.name}</span> },
+    { name: 'Email', selector: row => row.email, sortable: true, cell: row => <span className="text-gray-600">{row.email}</span> },
+    { name: 'Mobile', selector: row => row.mobile || "N/A" },
+    { name: 'Actions', center: true, cell: row => (
+        <div className="flex justify-center gap-2">
+          <button onClick={() => fetchChildren(row._id)} className="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 transition" title="View Children">
+            <Users size={16} />
+          </button>
+          <button onClick={() => handleDelete(row._id)} className="bg-red-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-red-600 transition" title="Delete">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  const filteredParents = parents.filter(p => p.name?.toLowerCase().includes(searchParent.toLowerCase()) || p.email?.toLowerCase().includes(searchParent.toLowerCase()) || p.mobile?.includes(searchParent));
+
+  const childColumns = [
+    { name: 'S.no', selector: (row, i) => i + 1, width: '80px', center: true },
+    { name: 'Child Name', selector: row => row.studentNameEnglish, sortable: true, cell: row => <span className="font-medium text-gray-800">{row.studentNameEnglish}</span> },
+    { name: 'Age', selector: row => row.age, cell: row => <span>{row.age || "N/A"}</span> }
+  ];
 
   // Fetch all parents
   const fetchParents = async () => {
@@ -156,62 +184,16 @@ const ParentManagement = () => {
         </div>
       )}
 
-      {/* Parents Table */}
-      {!showForm && (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full border text-center">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 border">S.no</th>
-                <th className="p-3 border">Name</th>
-                <th className="p-3 border">Email</th>
-                <th className="p-3 border">Mobile</th>
-                <th className="p-3 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loadingParents ? (
-                <tr>
-                  <td colSpan="5" className="p-4 text-center">Loading...</td>
-                </tr>
-              ) : parents.length > 0 ? (
-                parents.map((p, i) => (
-                  <tr key={p._id} className="hover:bg-gray-50">
-                    <td className="p-3 border">{i + 1}</td>
-                    <td className="p-3 border">{p.name}</td>
-                    <td className="p-3 border">{p.email}</td>
-                    <td className="p-3 border">{p.mobile || "N/A"}</td>
-                    <td className="p-3 border flex justify-center gap-2">
-
-                      {/* View Children Icon */}
-                      <button
-                        onClick={() => fetchChildren(p._id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        title="View Children" 
-                      >
-                        <Users size={16} />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(p._id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="p-4 text-center">No parents found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100 pb-4">
+          <CustomDataTable 
+            columns={parentColumns} 
+            data={filteredParents} 
+            progressPending={loadingParents}
+            search={searchParent}
+            setSearch={setSearchParent}
+            searchPlaceholder="Search parents by name, email or mobile..."
+          />
         </div>
-      )}
 
       {/* Children Modal */}
       {showChildrenModal && (
@@ -236,24 +218,13 @@ const ParentManagement = () => {
             {selectedChildren.length === 0 ? (
               <p>No children found for this parent.</p>
             ) : (
-              <table className="min-w-full border text-center">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="p-2 border">S.no</th>
-                    <th className="p-2 border">Child Name</th>
-                    <th className="p-2 border">Age</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedChildren.map((child, index) => (
-                    <tr key={child._id} className="hover:bg-gray-50">
-                      <td className="p-2 border">{index + 1}</td>
-                      <td className="p-2 border">{child.studentNameEnglish}</td>
-                      <td className="p-2 border">{child.age || "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-hidden bg-white border border-gray-100 rounded-xl">
+                <CustomDataTable 
+                  columns={childColumns}
+                  data={selectedChildren}
+                  pagination={false}
+                />
+              </div>
             )}
           </div>
         </div>

@@ -12,6 +12,7 @@ const EnrollClass = () => {
 
   const [children, setChildren] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState("");
+  const [viewCourse, setViewCourse] = useState(null);
 
   /////////////////////////////////////////////////////////////
   // FETCH COURSES
@@ -165,6 +166,16 @@ const EnrollClass = () => {
     }
   };
 
+  const fetchCourseDetails = async (courseId) => {
+  try {
+    const { data } = await api.get(`/courses/${courseId}`);
+    setViewCourse(data);
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to load course details");
+  }
+};
+
   /////////////////////////////////////////////////////////////
   // LOADING UI
   /////////////////////////////////////////////////////////////
@@ -252,18 +263,177 @@ const EnrollClass = () => {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleEnroll(course)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-700"
-                >
-                  <GraduationCap size={18} />
-                  Enroll
-                </button>
+<div className="flex gap-2 mt-auto">
+  <button
+    onClick={() => handleEnroll(course)}
+    className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-700"
+  >
+    <GraduationCap size={18} /> Enroll
+  </button>
+
+  <button
+    onClick={() => fetchCourseDetails(course._id)}
+    className="bg-slate-200 text-slate-800 px-4 py-2 rounded-xl hover:bg-slate-300"
+  >
+    View Course
+  </button>
+</div>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+{viewCourse && (
+  <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      {/* Close Button */}
+      <button
+        onClick={() => setViewCourse(null)}
+        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+      >
+        ✕
+      </button>
+
+      {/* Hero / Thumbnail */}
+      <div className="relative h-64 bg-slate-900">
+        {viewCourse.thumbnail?.url ? (
+          <img
+            src={viewCourse.thumbnail.url}
+            alt={viewCourse.title}
+            className="w-full h-full object-cover opacity-60"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-500">
+            No Image
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+        <div className="absolute bottom-6 left-8 right-8 text-white">
+          <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full mb-3 inline-block">
+            {viewCourse.category}
+          </span>
+          <h3 className="text-3xl font-black">{viewCourse.title}</h3>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 text-slate-900">
+        {/* Left Column: Description + Syllabus */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Overview */}
+          <section>
+            <h4 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <BookOpen size={16} /> Course Overview
+            </h4>
+            <p className="text-slate-600 leading-relaxed whitespace-pre-line text-sm">
+              {viewCourse.description}
+            </p>
+          </section>
+
+          {/* Curriculum */}
+          <section>
+            <h4 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              Curriculum & Syllabus
+            </h4>
+            <div className="space-y-4">
+              {viewCourse.syllabus?.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-slate-50 border border-slate-100 rounded-2xl p-5"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="text-[10px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">
+                      {item.week}
+                    </span>
+                    {item.projectName && (
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded italic">
+                        Project: {item.projectName}
+                      </span>
+                    )}
+                  </div>
+                  <h5 className="font-bold text-slate-800 mb-2">
+                    {item.topic || "Untitled Topic"}
+                  </h5>
+                  <p className="text-xs text-slate-500">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Meta Cards */}
+        <div className="space-y-4">
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-green-600">
+              <IndianRupee size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">
+                Investment
+              </p>
+              <p className="text-xl font-black text-slate-900">
+                {viewCourse.price === 0 ? "Free" : `₹${viewCourse.price}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-orange-600">
+              <Clock size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">
+                Duration
+              </p>
+              <p className="text-xl font-black text-slate-900">
+                {viewCourse.duration} {viewCourse.durationUnit}s
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-blue-600">
+              <GraduationCap size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">
+                Level
+              </p>
+              <p className="text-xl font-black text-slate-900">
+                {viewCourse.level}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-purple-600">
+              <GraduationCap size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">
+                Instructor
+              </p>
+              <p className="text-sm font-bold text-slate-900">
+                {viewCourse.instructor?.name || "Not Assigned"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Close Button */}
+      <div className="flex justify-end pt-6 border-t border-gray-100 sticky bottom-0 bg-white z-10 p-4">
+        <button
+          onClick={() => setViewCourse(null)}
+          className="bg-slate-200 text-slate-800 px-6 py-2 rounded-xl hover:bg-slate-300 font-bold"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

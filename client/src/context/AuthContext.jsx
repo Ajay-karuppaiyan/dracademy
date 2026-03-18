@@ -39,6 +39,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (token) => {
+    try {
+      const { data } = await api.post("/auth/google", { token });
+
+      setUser(data);
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("name", data.name);
+      localStorage.setItem("id", data._id);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Google auth error",
+      };
+    }
+  };
+
   const verifyTwoFactor = async (userId, token) => {
     try {
       const { data } = await api.post("/auth/2fa/validate", { userId, token });
@@ -84,7 +102,9 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     login,
+    googleLogin,
     logout,
     register,
     verifyTwoFactor,

@@ -3,6 +3,7 @@ import api from "../services/api";
 import toast from "react-hot-toast";
 import { Eye, Trash2 } from "lucide-react";
 import LeaveApplicationForm from "./LeaveApplicationForm";
+import CustomDataTable from "./DataTable";
 
 const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [requests, setRequests] = useState([]);
@@ -11,10 +12,6 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
 
   // ================= FETCH LOGGED IN USER =================
   const fetchUser = async () => {
@@ -98,10 +95,61 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
     return list;
   }, [requests, searchTerm, onlyMine, user]);
 
-  const totalPages = Math.ceil(filteredRequests.length / recordsPerPage);
-  const indexOfLast = currentPage * recordsPerPage;
-  const indexOfFirst = indexOfLast - recordsPerPage;
-  const currentRecords = filteredRequests.slice(indexOfFirst, indexOfLast);
+  const columns = [
+    { name: 'S.No', selector: (row, i) => i + 1, width: '70px', center: true },
+    { name: 'Employee', selector: row => row.employeeName, sortable: true, cell: row => <span className="font-medium text-slate-700">{row.employeeName || "Unknown"}</span> },
+    { name: 'Category', selector: row => row.mode, sortable: true, cell: row => <span className="text-slate-600">{row.mode === "permission" ? "Permission" : "Leave"}</span> },
+    { name: 'Type', selector: row => row.leaveType, sortable: true },
+    { name: 'Reason', selector: row => row.reason, wrap: true, cell: row => <span className="text-slate-600">{row.reason}</span> },
+    { name: 'Applied Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="text-slate-600">{new Date(row.createdAt).toLocaleDateString()}</span> },
+    { name: 'Range', selector: row => row.startDate, cell: row => (
+        <span className="text-slate-600">
+          {row.mode === "permission" ? (
+            <div>
+              <p>{new Date(row.permissionDate).toLocaleDateString()}</p>
+              <p className="text-xs text-slate-500">{row.startTime} - {row.endTime}</p>
+            </div>
+          ) : (
+            <div>
+              <p>{new Date(row.startDate).toLocaleDateString()} - {new Date(row.endDate).toLocaleDateString()}</p>
+              <p className="text-xs text-slate-500">{row.numDays} day(s)</p>
+            </div>
+          )}
+        </span>
+      )
+    },
+    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        user?.role === "admin" ? (
+          <select
+            value={row.status}
+            onChange={(e) => handleStatusChange(row._id, e.target.value)}
+            className="border border-slate-200 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+          >
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        ) : (
+          <span className={`px-2.5 py-1 text-xs rounded-full font-semibold ${getStatusClass(row.status)}`}>
+            {row.status}
+          </span>
+        )
+      )
+    },
+    { name: 'Action', center: true, width: '120px', cell: row => (
+        <div className="flex justify-center gap-3">
+          <button onClick={() => fetchLeaveDetails(row._id)} className="text-blue-600 hover:text-blue-800 transition">
+            <Eye size={18} />
+          </button>
+          {(user?.role === "admin" || (row.userId === user?._id && row.status === "pending")) && (
+            <button onClick={() => handleDelete(row._id)} className="text-red-500 hover:text-red-700 transition">
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ];
 
   // ================= STATUS CLASS HELPER =================
   const getStatusClass = (status) => {
@@ -131,128 +179,17 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
           )}
         </div>
 
-        {/* ===== SEARCH BAR ===== */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-          <input
-            type="text"
-            placeholder="Search by employee"
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full md:w-1/2 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-        </div>
-
         {/* ===== TABLE CARD ===== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          {currentRecords.length === 0 ? (
-            <div className="p-10 text-center text-slate-400">No leave requests found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4 text-left">S.No</th>
-                    <th className="px-6 py-4 text-left">Employee</th>
-                    <th className="px-6 py-4 text-left">Category</th>
-                    <th className="px-6 py-4 text-left">Type</th>
-                    <th className="px-6 py-4 text-left">Reason</th>
-                    <th className="px-6 py-4 text-left">Applied date</th>
-                    <th className="px-6 py-4 text-left">Range</th>
-                    <th className="px-6 py-4 text-left">Status</th>
-                    <th className="px-6 py-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRecords.map((req, index) => (
-                    <tr key={req._id} className="border-t hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 text-slate-600">{indexOfFirst + index + 1}</td>
-                      <td className="px-6 py-4 font-medium text-slate-700">{req.employeeName || "Unknown"}</td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {req.mode === "permission" ? "Permission" : "Leave"}
-                      </td>
-                      <td className="px-6 py-4">{req.leaveType}</td>
-                      <td className="px-6 py-4 text-slate-600">{req.reason}</td>
-                      <td className="px-6 py-4 text-slate-600"> {new Date(req.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {req.mode === "permission" ? (
-                          <div>
-                            <p>{new Date(req.permissionDate).toLocaleDateString()}</p>
-                            <p className="text-xs text-slate-500">
-                              {req.startTime} - {req.endTime}
-                            </p>
-                          </div>
-                        ) : (
-                          <div>
-                            <p>
-                              {new Date(req.startDate).toLocaleDateString()} -{" "}
-                              {new Date(req.endDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {req.numDays} day(s)
-                            </p>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {user?.role === "admin" ? (
-                          <select
-                            value={req.status}
-                            onChange={(e) => handleStatusChange(req._id, e.target.value)}
-                            className="border border-slate-200 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                          </select>
-                        ) : (
-                          <span className={`px-3 py-1 text-xs rounded-full font-semibold ${getStatusClass(req.status)}`}>
-                            {req.status}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 flex justify-center gap-3">
-                        <button
-                          onClick={() => fetchLeaveDetails(req._id)}
-                          className="text-blue-600 hover:text-blue-800 transition"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {(user?.role === "admin" || (req.userId === user?._id && req.status === "pending")) && (
-                          <button
-                            onClick={() => handleDelete(req._id)}
-                            className="text-red-500 hover:text-red-700 transition"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* ===== PAGINATION ===== */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-50">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => prev - 1)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-700 transition"
-              >
-                Previous
-              </button>
-              <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg disabled:bg-gray-300 hover:bg-green-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden pb-4">
+          <CustomDataTable 
+             columns={columns}
+             data={filteredRequests}
+             progressPending={loadingDetails}
+             pagination
+             search={searchTerm}
+             setSearch={setSearchTerm}
+             searchPlaceholder="Search by employee, leave type or reason..."
+          />
         </div>
       </div>
 

@@ -149,6 +149,26 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
+// //////////////////////////////////////////////////////
+// // GET EMPLOYEE BY USER ID
+// //////////////////////////////////////////////////////
+router.get("/user/:id", protect, async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ user: req.params.id }).populate(
+      "user",
+      "name email role"
+    );
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employee profile not found" });
+    }
+
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 //////////////////////////////////////////////////////
 // DELETE EMPLOYEE
 //////////////////////////////////////////////////////
@@ -227,9 +247,8 @@ router.put(
       }
 
       if (firstName || lastName) {
-        user.name = `${firstName || employee.firstName} ${
-          lastName || employee.lastName
-        }`;
+        user.name = `${firstName || employee.firstName} ${lastName || employee.lastName
+          }`;
       }
 
       // ROLE UPDATE

@@ -16,15 +16,18 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import CustomDataTable from "../components/DataTable";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [students, setStudents] = React.useState([]);
+  const [enrollments, setEnrollments] = React.useState([]);
 
 const [stats, setStats] = React.useState({
   totalStudents: 0,
   activeCourses: 0,
   totalRevenue: 0,
+  totalEnrollments: 0,
   loading: true,
 });
 
@@ -43,6 +46,7 @@ React.useEffect(() => {
         totalStudents: data.totalStudents,
         activeCourses: data.activeCourses,
         totalRevenue: data.totalRevenue,
+        totalEnrollments: data.totalEnrollments,
         loading: false,
       });
     } catch (err) {
@@ -61,11 +65,94 @@ React.useEffect(() => {
   }
 };
 
+  const fetchEnrollments = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/dashboard-stats/recent-enrollments");
+      const data = await res.json();
+      setEnrollments(data);
+    } catch (err) {
+      console.error("Failed to fetch enrollments", err);
+    }
+  };
+
   fetchStats();
   fetchStudents();
+  fetchEnrollments();
 }, []);
 
 
+  const studentActivityData = [
+    { course: "UI/UX Design", activity: "Completed Module 3", date: "Oct 24, 2026", status: "Completed" },
+    { course: "Full Stack Dev", activity: "Submitted Assignment 2", date: "Oct 23, 2026", status: "Graded" },
+    { course: "Data Science", activity: "Started Module 1", date: "Oct 22, 2026", status: "In Progress" },
+    { course: "Cyber Security", activity: "Viewed Lecture 5", date: "Oct 21, 2026", status: "Viewed" },
+  ];
+
+  const studentActivityColumns = [
+    { name: 'Course', selector: row => row.course, sortable: true, cell: row => <span className="font-medium text-slate-900">{row.course}</span> },
+    { name: 'Activity', selector: row => row.activity, cell: row => <span className="text-slate-500">{row.activity}</span> },
+    { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-slate-500">{row.date}</span> },
+    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          row.status === "Completed" || row.status === "Graded" ? "bg-green-100 text-green-800" :
+          row.status === "In Progress" ? "bg-yellow-100 text-yellow-800" :
+          "bg-slate-100 text-slate-800"
+        }`}>
+          {row.status}
+        </span>
+      )
+    },
+    { name: 'Action', center: true, width: '80px', cell: row => (
+        <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={18} /></button>
+      )
+    }
+  ];
+
+  const adminStudentColumns = [
+    { name: 'Student Name', selector: row => row.studentNameEnglish, sortable: true, cell: row => <span className="font-medium text-slate-900">{row.studentNameEnglish}</span> },
+    { name: 'Email', selector: row => row.email, sortable: true, cell: row => <span className="text-slate-500">{row.email}</span> },
+    { name: 'Phone', selector: row => row.whatsapp || row.phone, cell: row => <span className="text-slate-500">{row.whatsapp || row.phone || "N/A"}</span> },
+    { name: 'Joining Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="text-slate-500">{new Date(row.createdAt).toLocaleDateString()}</span> },
+    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+          {row.status}
+        </span>
+      )
+    },
+    { name: 'Action', center: true, width: '80px', cell: row => (
+        <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={18} /></button>
+      )
+    }
+  ];
+
+  const enrollmentColumns = [
+    { name: 'Student', selector: row => row.student?.studentNameEnglish, sortable: true, cell: row => (
+        <div className="flex flex-col">
+          <span className="font-medium text-slate-900">{row.student?.studentNameEnglish || "Unknown"}</span>
+          <span className="text-[10px] text-slate-400">{row.student?.email}</span>
+        </div>
+      )
+    },
+    { name: 'Course Enrolled', selector: row => row.course?.title, sortable: true, cell: row => (
+        <span className="text-brand-600 font-semibold">{row.course?.title || "N/A"}</span>
+      )
+    },
+    { name: 'Amount Paid', selector: row => row.amount, sortable: true, cell: row => (
+        <span className="font-bold text-slate-900">₹{row.amount}</span>
+      )
+    },
+    { name: 'Enrollment Date', selector: row => row.createdAt, sortable: true, cell: row => (
+        <div className="flex flex-col">
+          <span className="text-slate-600">{new Date(row.createdAt).toLocaleDateString()}</span>
+          <span className="text-[10px] text-slate-400">{new Date(row.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      )
+    },
+    { name: 'Ref', selector: row => row.razorpayPaymentId || row.razorpayOrderId, cell: row => (
+        <span className="text-xs font-mono text-slate-400">{row.razorpayPaymentId?.slice(-8) || "Manual"}</span>
+      )
+    }
+  ];
 
   if (user && user.role === "student") {
     return (
@@ -181,78 +268,12 @@ React.useEffect(() => {
                   View All Activity
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-semibold">
-                    <tr>
-                      <th className="px-6 py-4">Course</th>
-                      <th className="px-6 py-4">Activity</th>
-                      <th className="px-6 py-4">Date</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {[
-                      {
-                        course: "UI/UX Design",
-                        activity: "Completed Module 3",
-                        date: "Oct 24, 2026",
-                        status: "Completed",
-                      },
-                      {
-                        course: "Full Stack Dev",
-                        activity: "Submitted Assignment 2",
-                        date: "Oct 23, 2026",
-                        status: "Graded",
-                      },
-                      {
-                        course: "Data Science",
-                        activity: "Started Module 1",
-                        date: "Oct 22, 2026",
-                        status: "In Progress",
-                      },
-                      {
-                        course: "Cyber Security",
-                        activity: "Viewed Lecture 5",
-                        date: "Oct 21, 2026",
-                        status: "Viewed",
-                      },
-                    ].map((row, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-medium text-slate-900">
-                          {row.course}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500">
-                          {row.activity}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500">{row.date}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              row.status === "Completed" ||
-                              row.status === "Graded"
-                                ? "bg-green-100 text-green-800"
-                                : row.status === "In Progress"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-slate-100 text-slate-800"
-                            }`}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-slate-400 hover:text-slate-600">
-                            <MoreHorizontal size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="overflow-x-auto pb-4">
+                <CustomDataTable 
+                  columns={studentActivityColumns}
+                  data={studentActivityData}
+                  pagination
+                />
               </div>
             </div>
 
@@ -415,7 +436,7 @@ React.useEffect(() => {
         {[
           {
             label: "Total Students",
-            value: stats.loading ? "..." : stats.totalStudents.toLocaleString(),
+            value: stats.loading ? "..." : (stats.totalStudents || 0).toLocaleString(),
             icon: Users,
             change: "+12.5%",
             trend: "up",
@@ -423,7 +444,7 @@ React.useEffect(() => {
           },
           {
             label: "Total Revenue",
-            value: stats.loading ? "..." : `$${stats.totalRevenue.toLocaleString()}`,
+            value: stats.loading ? "..." : `₹${(stats.totalRevenue || 0).toLocaleString()}`,
             icon: DollarSign,
             change: "+8.2%",
             trend: "up",
@@ -436,6 +457,14 @@ React.useEffect(() => {
             change: "0%",
             trend: "neutral",
             color: "purple",
+          },
+          {
+            label: "Course Enrollments",
+            value: stats.loading ? "..." : (stats.totalEnrollments || 0).toLocaleString(),
+            icon: CheckCircle,
+            change: "+15.3%",
+            trend: "up",
+            color: "orange",
           },
         ].map((stat, idx) => (
           <div
@@ -490,61 +519,31 @@ React.useEffect(() => {
                 View All
               </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 font-semibold">
-                  <tr>
-                    <th className="px-6 py-4">Student Name</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">phone</th>
-                    <th className="px-6 py-4"> Joining Date</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Action</th>
-                  </tr>
-                </thead>
+            <div className="overflow-x-auto pb-4">
+              <CustomDataTable 
+                columns={adminStudentColumns}
+                data={students}
+                pagination
+              />
+            </div>
+          </div>
 
-               <tbody className="divide-y divide-slate-100">
-                {students.map((row, i) => (
-                <tr key={row._id} className="hover:bg-slate-50">
-
-                <td className="px-6 py-4 font-medium text-slate-900">
-                {row.studentNameEnglish}
-                </td>
-
-                <td className="px-6 py-4 text-slate-500">
-                {row.email}
-                </td>
-
-                <td className="px-6 py-4 text-slate-500">
-                {row.whatsapp || row.phone || "N/A"}
-                </td>
-
-                <td className="px-6 py-4 text-slate-500">
-                {new Date(row.createdAt).toLocaleDateString()}
-                </td>
-
-                <td className="px-6 py-4">
-                <span
-                className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                row.status === "active"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-                }`}
-                >
-                {row.status}
-                </span>
-                </td>
-
-                <td className="px-6 py-4 text-right">
-                <button className="text-slate-400 hover:text-slate-600">
-                <MoreHorizontal size={18} />
-                </button>
-                </td>
-
-                </tr>
-                ))}
-                </tbody>
-              </table>
+          {/* Recent Course Enrollments Table */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-900">
+                Course Enrollments <span className="text-xs font-normal text-slate-400 ml-2">(via Payments)</span>
+              </h3>
+              <button onClick={() => window.location.href='/admin/courses'} className="text-brand-600 text-sm font-bold hover:text-brand-700">
+                Manage Courses
+              </button>
+            </div>
+            <div className="overflow-x-auto pb-4">
+              <CustomDataTable 
+                columns={enrollmentColumns}
+                data={enrollments}
+                pagination
+              />
             </div>
           </div>
 

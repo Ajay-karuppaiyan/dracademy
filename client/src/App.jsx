@@ -179,9 +179,7 @@ function App() {
             <Route path="students" element={<Students />} />
 
             {/* Profile */}
-            <Route path="student/profile" element={<Profile />} />
-            <Route path="coach/profile" element={<Profile />} />
-            <Route path="hr/profile" element={<Profile />} />
+            <Route path="profile" element={<Profile />} />
 
             {/* Settings */}
             <Route path="settings" element={<Settings />} />

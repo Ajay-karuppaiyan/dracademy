@@ -362,4 +362,19 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// @desc    Fetch students enrolled in a course
+// @route   GET /api/courses/:id/students
+router.get('/:id/students', async (req, res) => {
+    try {
+        const students = await Student.find({ enrolledCourses: req.params.id })
+            .select('studentNameEnglish email phone whatsapp profilePic status createdAt')
+            .populate('parent', 'name email');
+        
+        res.json(students);
+    } catch (error) {
+        console.error('FETCH ENROLLED STUDENTS ERROR:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 module.exports = router;

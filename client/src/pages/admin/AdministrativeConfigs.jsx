@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import CustomDataTable from "../../components/DataTable";
 
 const toTitleCase = (str) => {
   return str
@@ -30,6 +31,7 @@ const AdministrativeConfigs = () => {
   const [formData, setFormData] = useState({
     name: "",
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const config = {
     departments: {
@@ -130,6 +132,31 @@ const AdministrativeConfigs = () => {
     setCurrentId(null);
   };
 
+  const columns = [
+    { name: 'SL No', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
+    { name: `${config[activeTab].title.slice(0, -1)} Name`, selector: row => row.name, sortable: true, cell: row => (
+      <div className="flex items-center">
+        <div className="flex-shrink-0 h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
+          {config[activeTab].icon}
+        </div>
+        <div className="ml-4 font-medium text-gray-900">{row.name}</div>
+      </div>
+    )},
+    { name: 'Actions', center: true, width: '120px', cell: row => (
+        <div className="flex justify-center gap-2">
+          <button onClick={() => openModal(row)} className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-50 transition-colors" title="Edit">
+            <Edit size={18} />
+          </button>
+          <button onClick={() => handleDelete(row._id)} className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  const filteredData = data.filter(item => item.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -173,75 +200,15 @@ const AdministrativeConfigs = () => {
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-gray-500">Loading...</div>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                  SL No
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {config[activeTab].title.slice(0, -1)} Name
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {data.length > 0 ? (
-                data.map((item, index) => (
-                  <tr
-                    key={item._id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
-                          {config[activeTab].icon}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.name}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openModal(item)}
-                        className="text-brand-600 hover:text-brand-900 mr-4 p-1 rounded-md hover:bg-brand-50 transition-colors"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="text-red-500 hover:text-red-700 p-1 rounded-md hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="3"
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    No {activeTab} found. Click the button above to add one.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
+        <CustomDataTable 
+          columns={columns}
+          data={filteredData}
+          progressPending={loading}
+          search={searchQuery}
+          setSearch={setSearchQuery}
+          searchPlaceholder={`Search ${config[activeTab].title.toLowerCase()}...`}
+        />
       </div>
 
       {/* Modal */}

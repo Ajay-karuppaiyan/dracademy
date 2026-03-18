@@ -3,6 +3,7 @@ import api from "../services/api";
 import { Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import CustomDataTable from "../components/DataTable";
 
 const Finance = () => {
   const [payments, setPayments] = useState([]);
@@ -293,68 +294,39 @@ return (
 // TABLE COMPONENT
 ////////////////////////////////////////////////////////////
 
-const Table = ({ title, payments, getStatusColor, showCourse }) => (
-  <div>
-    <h2 className="text-2xl font-semibold mb-4">{title}</h2>
-    <div className="bg-white rounded-2xl shadow overflow-x-auto">
-      <table className="w-full text-sm text-center">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-4">S.No</th>
-            <th className="p-4">Name</th>
-            {showCourse && <th className="p-4">Course</th>}
-            <th className="p-4">Amount</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Date</th>
-          </tr>
-        </thead>
+const Table = ({ title, payments, getStatusColor, showCourse }) => {
+  const columns = [
+    { name: 'S.No', selector: (row, index) => index + 1, width: '80px', center: true },
+    { name: 'Name', selector: row => row.student?.studentNameEnglish || row.recipientName || row.student?.email || "N/A", sortable: true, cell: row => <span className="font-medium text-gray-800">{row.student?.studentNameEnglish || row.recipientName || row.student?.email || "N/A"}</span> },
+  ];
+  if (showCourse) {
+    columns.push({ name: 'Course', selector: row => row.course?.title || "-", sortable: true, cell: row => <span className="text-gray-600">{row.course?.title || "-"}</span> });
+  }
+  columns.push(
+    { name: 'Amount', selector: row => row.amount, sortable: true, cell: row => <span className="font-bold text-gray-800">₹ {row.amount?.toLocaleString("en-IN")}</span> },
+    { name: 'Status', selector: row => row.status, sortable: true, center: true, 
+      cell: row => (
+        <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${getStatusColor(row.status)}`}>
+          {row.status}
+        </span>
+      )
+    },
+    { name: 'Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="font-mono text-gray-600">{new Date(row.createdAt).toLocaleDateString("en-GB")}</span> }
+  );
 
-        <tbody>
-          {payments.length === 0 ? (
-            <tr>
-              <td colSpan="6" className="p-6 text-gray-500">
-                No transactions found
-              </td>
-            </tr>
-          ) : (
-            payments.map((payment, index) => (
-              <tr key={payment._id} className="border-t">
-                <td className="p-4">{index + 1}</td>
-
-                <td className="p-4">
-                  {payment.student?.studentNameEnglish ||
-                  payment.recipientName ||
-                  payment.student?.email ||
-                  "N/A"}
-                </td>
-
-                {showCourse && (
-                  <td className="p-4">
-                    {payment.course?.title || "-"}
-                  </td>
-                )}
-
-                <td className="p-4">
-                  ₹ {payment.amount}
-                </td>
-
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(payment.status)}`}>
-                    {payment.status}
-                  </span>
-                </td>
-
-                <td className="p-4">
-                  {new Date(payment.createdAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+  return (
+    <div className="mt-4">
+      {title && <h2 className="text-2xl font-semibold mb-4">{title}</h2>}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden pb-3">
+        <CustomDataTable 
+          columns={columns}
+          data={payments}
+          pagination
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // CARD
 

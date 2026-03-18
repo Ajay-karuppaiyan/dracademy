@@ -2,8 +2,8 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  BookOpen,
   Users,
+  BookOpen,
   DollarSign,
   Settings,
   GraduationCap,
@@ -20,6 +20,7 @@ import {
   Receipt,
   MessageSquare 
 } from "lucide-react";
+import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
 
 const NavItem = ({ item, isCollapsed, closeMobile }) => (
@@ -163,10 +164,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
         <div className="h-20 flex items-center px-6 border-b border-white/10 relative">
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
-              <div className="bg-brand-600 p-1.5 rounded-lg">
-                <BookOpen size={20} />
+              <div className="p-1 rounded bg-white">
+                <img src={logo} alt="DRRG Academy Logo" className="h-8 w-8 object-contain" />
               </div>
-              <span className="text-xl font-bold tracking-tight">DRRG</span>
+              <span className="text-x1 font-bold tracking-tight">DRRG</span>
             </div>
           ) : (
             <div className="mx-auto bg-brand-600 p-2 rounded-lg">

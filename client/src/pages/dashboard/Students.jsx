@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { Eye, Trash2, Edit2 } from "lucide-react";
+import CustomDataTable from "../../components/DataTable";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -128,135 +129,48 @@ const handleUpdate = async () => {
     });
   };  
 
+  const columns = [
+    { name: "S.No", selector: (row, index) => index + 1, width: "80px", sortable: true },
+    { name: "Name", selector: row => row.user?.name, sortable: true, cell: row => <span className="font-semibold text-slate-800">{row.user?.name}</span> },
+    { name: "Email", selector: row => row.user?.email, sortable: true, cell: row => <span className="text-slate-600">{row.user?.email}</span> },
+    { name: "WhatsApp", selector: row => row.whatsapp || "-" },
+    { name: "Status", selector: row => row.status, sortable: true, cell: row => (
+      <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${row.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+        {row.status === "active" ? "Active" : "Inactive"}
+      </span>
+    )},
+    { name: "Actions", cell: row => (
+      <div className="flex gap-2">
+        <button onClick={() => setSelectedStudent(row)} className="p-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition shadow-sm" title="View">
+          <Eye size={16} className="text-blue-600" />
+        </button>
+        <button onClick={() => setEditStudent({...JSON.parse(JSON.stringify(row)), email: row.user?.email || ""})} className="p-2 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition shadow-sm" title="Edit">
+          <Edit2 size={16} className="text-yellow-600" />
+        </button>
+        <button onClick={() => handleDelete(row._id)} className="p-2 bg-red-50 rounded-lg hover:bg-red-100 transition shadow-sm" title="Delete">
+          <Trash2 size={16} className="text-red-600" />
+        </button>
+      </div>
+    ), width: "160px"}
+  ];
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-2xl font-bold mb-4">Students</h1>
-
-      {/* SEARCH + EXPORT */}
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <input
-          type="text"
-          placeholder="Search by name, email, phone..."
-          className="border p-2 rounded w-full sm:w-1/3"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button
-          onClick={exportToExcel}
-          className="bg-green-600 text-white px-4 py-2 rounded w-full sm:w-auto"
-        >
-          Export Excel
-        </button>
-      </div>
-
-      {/* STUDENTS TABLE */}
-      <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-[900px] w-full text-center border">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 border">S.No</th>
-              <th className="p-3 border">Name</th>
-              <th className="p-3 border">Email</th>
-              <th className="p-3 border">WhatsApp</th>
-              <th className="p-3 border">Status</th>
-              <th className="p-3 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentStudents.map((s, i) => (
-              <tr key={s._id} className="hover:bg-gray-50">
-                <td className="p-3 border">
-                  {(currentPage - 1) * studentsPerPage + i + 1}
-                </td>
-                <td className="p-3 border">{s.user?.name}</td>
-                <td className="p-3 border">{s.user?.email}</td>
-                <td className="p-3 border">{s.whatsapp || "-"}</td>
-                <td className="p-3 border text-center">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      s.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {s.status === "active" ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td className="p-3 border">
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <button
-                      onClick={() => setSelectedStudent(s)}
-                      className="p-2 rounded hover:bg-blue-100 transition"
-                      title="View"
-                    >
-                      <Eye size={18} className="text-blue-600" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setEditStudent({
-                          ...JSON.parse(JSON.stringify(s)),
-                          email: s.user?.email || ""
-                        })
-                      }
-                      className="p-2 rounded hover:bg-yellow-100 transition"
-                      title="Edit"
-                    >
-                      <Edit2 size={18} className="text-yellow-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(s._id)}
-                      className="p-2 rounded hover:bg-red-100 transition"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} className="text-red-600" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {currentStudents.length === 0 && (
-              <tr>
-                <td colSpan={9} className="py-4 text-center text-gray-500">
-                  No students found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* PAGINATION */}
-      <div className="flex justify-center mt-4 gap-4">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((prev) => prev - 1)}
-          className={`px-4 py-2 rounded ${
-            currentPage === 1
-              ? "bg-gray-300 text-gray-500"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          Previous
-        </button>
-
-        <span className="px-4 py-2 text-gray-700">
-          Page {currentPage} of {totalPages}
-        </span>
-
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((prev) => prev + 1)}
-          className={`px-4 py-2 rounded ${
-            currentPage === totalPages
-              ? "bg-gray-300 text-gray-500"
-              : "bg-green-600 text-white hover:bg-green-700"
-          }`}
-        >
-          Next
-        </button>
-      </div>
+    <div className="p-4 sm:p-6 w-full max-w-full overflow-x-hidden h-[calc(100vh-80px)]">
+      <h1 className="text-2xl font-bold mb-6 text-slate-900">Student Directory</h1>
+      <CustomDataTable 
+        columns={columns}
+        data={filtered}
+        search={search}
+        setSearch={setSearch}
+        searchPlaceholder="Search by name, email, phone..."
+        exportButton={
+          <button onClick={exportToExcel} className="bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-green-700 shadow-md transition whitespace-nowrap">
+            Export to Excel
+          </button>
+        }
+      />
 
       {/* VIEW MODAL */}
 

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import Payroll from "../../pages/payroll/Payroll";
+import CustomDataTable from "../../components/DataTable";
 
 const Attendance = () => {
   const { user, token } = useAuth();
@@ -19,10 +20,6 @@ const Attendance = () => {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [activeTab, setActiveTab] = useState("attendance");
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -156,11 +153,51 @@ const handleSubmit = async (e) => {
       });
   }, [attendanceList, searchTerm, filterFrom, filterTo, user]);
 
-  // PAGINATION
-  const totalPages = Math.ceil(filteredAttendance.length / recordsPerPage);
-  const indexOfLast = currentPage * recordsPerPage;
-  const indexOfFirst = indexOfLast - recordsPerPage;
-  const currentRecords = filteredAttendance.slice(indexOfFirst, indexOfLast);
+  // COLUMNS
+  const calculateWorkingHours = (loginTime, logoutTime) => {
+    if (!loginTime || !logoutTime) return "-";
+    const start = new Date(`1970-01-01T${loginTime}`);
+    const end = new Date(`1970-01-01T${logoutTime}`);
+    const diffMs = end - start;
+    if (diffMs < 0) return "-";
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
+  const columns = [
+    { name: 'S.no', selector: (row, i) => i + 1, width: '70px', center: true },
+    { name: 'Employee', selector: row => row.name, sortable: true, cell: row => <span className="font-medium text-slate-800">{row.name}</span> },
+    { name: 'Date', selector: row => row.date, sortable: true, cell: row => new Date(row.date).toISOString().slice(0, 10) },
+    { name: 'Login', selector: row => row.loginTime, sortable: true, cell: row => formatTime12Hour(row.loginTime) },
+    { name: 'Logout', selector: row => row.logoutTime, sortable: true, cell: row => formatTime12Hour(row.logoutTime) },
+    { name: 'Hours', selector: row => calculateWorkingHours(row.loginTime, row.logoutTime), center: true },
+    { name: 'Action', center: true, width: '160px', cell: row => (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => setViewModal(row)}
+            className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-600 transition shadow-sm"
+          >
+            View
+          </button>
+          {user.role !== "admin" &&
+            new Date(row.date).toISOString().slice(0, 10) === todayDate && (
+              <button
+                disabled={!!row.logoutTime}
+                onClick={() => handleSetLogout(row)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm ${
+                  row.logoutTime
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-green-500 text-white hover:bg-green-600"
+                }`}
+              >
+                {row.logoutTime ? "Logged Out" : "Logout"}
+              </button>
+            )}
+        </div>
+      )
+    }
+  ];
 
   // STATS (kept same)
   let stats = null;
@@ -216,7 +253,6 @@ const handleSubmit = async (e) => {
       <div className="max-w-7xl mx-auto space-y-8">
 
 {/* Tabs */}
-{user?.role === "admin" && (
 <div className="border-b border-slate-200 mb-4">
   <div className="flex gap-6">
     {["attendance", "payroll"].map((tab) => (
@@ -234,7 +270,6 @@ const handleSubmit = async (e) => {
     ))}
   </div>
 </div>
-)}
 
 {/* Tab Content */}
 <div className="animate-in fade-in duration-300">
@@ -354,104 +389,14 @@ const handleSubmit = async (e) => {
         </div>
 
         {/* TABLE */}
-        <table className="w-full text-sm min-w-[700px]">
-          <thead>
-            <tr className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
-              <th className="py-3 px-4 text-left">S.no</th>
-              <th className="py-3 px-4 text-left">Employee</th>
-              <th className="py-3 px-4 text-left">Date</th>
-              <th className="py-3 px-4 text-left">Login</th>
-              <th className="py-3 px-4 text-left">Logout</th>
-              <th>Hours</th>
-              <th className="py-3 px-4 text-center">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-              {currentRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-14 text-center text-slate-400">
-                    No attendance records found
-                  </td>
-                </tr>
-              ) : (
-                currentRecords.map((a, idx) => {
-                  // Calculate working hours dynamically
-                  const calculateWorkingHours = (loginTime, logoutTime) => {
-                    if (!loginTime || !logoutTime) return "-";
-                    const start = new Date(`1970-01-01T${loginTime}`);
-                    const end = new Date(`1970-01-01T${logoutTime}`);
-                    const diffMs = end - start;
-                    if (diffMs < 0) return "-";
-                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                    return `${hours}h ${minutes}m`;
-                  };
-
-                  return (
-                    <tr key={a._id || idx} className="border-b hover:bg-indigo-50 transition">
-                      <td className="py-3 px-4">{indexOfFirst + idx + 1}</td>
-                      <td className="py-3 px-4 font-medium text-slate-800">{a.name}</td>
-                      <td className="py-3 px-4">{new Date(a.date).toISOString().slice(0, 10)}</td>
-                      <td className="py-3 px-4">{formatTime12Hour(a.loginTime)}</td>
-                      <td className="py-3 px-4">{formatTime12Hour(a.logoutTime)}</td>
-                      <td className="py-3 px-4">{calculateWorkingHours(a.loginTime, a.logoutTime)}</td>
-                      <td className="py-3 px-4 flex justify-center gap-2">
-                        <button
-                          onClick={() => setViewModal(a)}
-                          className="bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-indigo-600 transition"
-                        >
-                          View
-                        </button>
-                        {user.role !== "admin" &&
-                          new Date(a.date).toISOString().slice(0, 10) === todayDate && (
-                            <button
-                              disabled={!!a.logoutTime}
-                              onClick={() => handleSetLogout(a)}
-                              className={`px-3 py-1 rounded-lg text-xs transition ${
-                                a.logoutTime
-                                  ? "bg-gray-300 text-gray-500"
-                                  : "bg-green-500 text-white hover:bg-green-600"
-                              }`}
-                            >
-                              {a.logoutTime ? "Logged Out" : "Logout"}
-                            </button>
-                          )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-        </table>
-
-        {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="relative flex items-center mt-4 px-4">
-            {/* Previous Button */}
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => prev - 1)}
-              className="absolute left-0 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-300"
-            >
-              Previous
-            </button>
-
-            {/* Page Info Centered */}
-            <span className="mx-auto text-sm font-medium">
-              Page {currentPage} of {totalPages}
-            </span>
-
-            {/* Next Button */}
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              className="absolute right-0 px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-gray-300"
-            >
-              Next
-            </button>
-          </div>
-        )}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
+          <CustomDataTable 
+            columns={columns}
+            data={filteredAttendance}
+            progressPending={loading}
+            pagination
+          />
+        </div>
     </>
   )}
 
