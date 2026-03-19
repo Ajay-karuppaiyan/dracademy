@@ -22,6 +22,7 @@ const forumRoutes = require("./routes/forumRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const centerRoutes = require("./routes/centerRoutes"); 
 
 dotenv.config();
 connectDB();
@@ -37,7 +38,8 @@ app.use(
 );
 
 // Normal JSON parser
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -59,6 +61,7 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/dashboard-stats", dashboardRoutes);
+app.use("/api/centers", centerRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

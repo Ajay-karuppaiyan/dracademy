@@ -59,7 +59,7 @@ const Attendance = () => {
   const fetchAttendance = async () => {
     if (!user) return;
     try {
-      const params = user.role === "admin" ? {} : { name: user.name };
+      const params = ["admin", "center"].includes(user.role) ? {} : { name: user.name };
       const res = await api.get(`${API_URL}/attendance`, {
         headers: { Authorization: `Bearer ${token}` },
         params,
@@ -146,8 +146,8 @@ const handleSubmit = async (e) => {
         const matchFrom = filterFrom ? new Date(a.date) >= new Date(filterFrom) : true;
         const matchTo = filterTo ? new Date(a.date) <= new Date(filterTo) : true;
 
-        // NON-ADMIN: show only self
-        const matchUser = user.role !== "admin" ? a.name === user.name : true;
+        // NON-ADMIN: show only self (except for center role which sees all in their center)
+        const matchUser = !["admin", "center"].includes(user.role) ? a.name === user.name : true;
 
         return matchSearch && matchFrom && matchTo && matchUser;
       });

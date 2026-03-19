@@ -32,6 +32,19 @@ const Profile = () => {
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [childData, setChildData] = useState({});
   const [childEditorTab, setChildEditorTab] = useState("personal");
+  const [centers, setCenters] = useState([]);
+
+  useEffect(() => {
+    const fetchCenters = async () => {
+      try {
+        const res = await api.get("/centers");
+        setCenters(res.data);
+      } catch (err) {
+        console.error("Failed to fetch centers:", err);
+      }
+    };
+    fetchCenters();
+  }, []);
 
   useEffect(() => {
     fetchProfile();
@@ -56,8 +69,8 @@ const Profile = () => {
         const sRes = await api.get(`/students/user/${userData._id}`);
         setStudentProfile(sRes.data.studentProfile);
         // Sync phone if needed
-        if (!userData.mobile && sRes.data.studentProfile?.phone) {
-          setProfileData(prev => ({ ...prev, mobile: sRes.data.studentProfile.phone }));
+        if (!userData.mobile && sRes.data.studentProfile?.whatsapp) {
+          setProfileData(prev => ({ ...prev, mobile: sRes.data.studentProfile.whatsapp }));
         }
       } else if (["employee", "coach", "hr", "finance", "admin", "pms_admin"].includes(userData.role)) {
         try {
@@ -98,7 +111,7 @@ const Profile = () => {
     if (studentProfile) {
         if (name === "name") setStudentProfile({ ...studentProfile, studentNameEnglish: value });
         if (name === "email") setStudentProfile({ ...studentProfile, email: value });
-        if (name === "mobile") setStudentProfile({ ...studentProfile, phone: value });
+        if (name === "mobile") setStudentProfile({ ...studentProfile, whatsapp: value });
     }
     if (employeeProfile) {
         if (name === "mobile") setEmployeeProfile({ ...employeeProfile, phone: value });
@@ -253,8 +266,13 @@ const Profile = () => {
                     <Mail size={14} className="text-blue-500" /> {profileData.email}
                 </span>
                 <span className="px-4 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-xl border border-slate-100 flex items-center gap-2 shadow-sm hover:translate-y-[-2px] transition-transform">
-                    <Phone size={14} className="text-green-500" /> {profileData.mobile || employeeProfile?.phone || studentProfile?.phone || "No Phone recorded"}
+                    <Phone size={14} className="text-green-500" /> {profileData.mobile || employeeProfile?.phone || studentProfile?.whatsapp || "No Phone recorded"}
                 </span>
+                {(studentProfile?.center || employeeProfile?.center) && (
+                  <span className="px-4 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-100 flex items-center gap-2 shadow-sm hover:translate-y-[-2px] transition-transform">
+                    <MapPin size={14} className="text-indigo-500" /> {studentProfile?.center?.name || employeeProfile?.center?.name}
+                  </span>
+                )}
             </div>
           </div>
 
@@ -344,6 +362,7 @@ const Profile = () => {
                             <InputCard label="Community" value={studentProfile.community} onChange={(e)=>updateStudentField("community", e.target.value)} isEditing={isEditingPersonal} />
                             <InputCard label="Marital Status" value={studentProfile.maritalStatus} onChange={(e)=>updateStudentField("maritalStatus", e.target.value)} isEditing={isEditingPersonal} />
                             <InputCard label="English Fluency" value={studentProfile.englishFluency} onChange={(e)=>updateStudentField("englishFluency", e.target.value)} isEditing={isEditingPersonal} />
+                            <InputCard label="Assigned Center" value={studentProfile.center?.name || "No Center"} isEditing={false} />
                           </div>
                         </SectionCard>
 
@@ -515,6 +534,7 @@ const Profile = () => {
                       <InputCard label="Role Title" value={employeeProfile.designation} isEditing={false} />
                       <InputCard label="Joined On" value={employeeProfile.joiningDate?.substring(0,10)} isEditing={false} />
                       <InputCard label="Assigned Gender" value={employeeProfile.gender} onChange={(e)=>updateEmployeeField("gender", e.target.value)} isEditing={isEditingPersonal} />
+                      <InputCard label="Assigned Center" value={employeeProfile.center?.name || "No Center"} isEditing={false} />
                     </div>
                   </SectionCard>
                 </div>
@@ -538,7 +558,7 @@ const Profile = () => {
                        </p>
                        <div className="grid grid-cols-2 gap-4 text-xs font-black uppercase tracking-tighter text-slate-400 mb-8">
                           <div><span className="block mb-1">WhatsApp</span><span className="text-slate-800">{child.whatsapp || "N/A"}</span></div>
-                          <div><span className="block mb-1">Status</span><span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-lg">{child.status}</span></div>
+                          <div><span className="block mb-1">Center</span><span className="text-blue-600">{child.center?.name || "N/A"}</span></div>
                        </div>
                        <button 
                          onClick={() => openChildEditor(child)}
@@ -602,6 +622,21 @@ const Profile = () => {
                                 <InputCard label="Email" value={childData.email} onChange={(e)=>updateChildField("email", e.target.value)} isEditing={true} />
                                 <InputCard label="English Fluency" value={childData.englishFluency} onChange={(e)=>updateChildField("englishFluency", e.target.value)} isEditing={true} />
                                 <InputCard label="Languages (Comma Separated)" value={childData.languagesKnown?.join(", ")} onChange={(e)=>updateChildField("languagesKnown", e.target.value.split(",").map(l=>l.trim()))} isEditing={true} />
+                                
+                                <div className="space-y-2 group">
+                                    <label className="block text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] ml-1">Assigned Center</label>
+                                    <select 
+                                        className="w-full px-5 py-3.5 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all outline-none font-bold text-slate-700 shadow-inner"
+                                        value={childData.center?._id || childData.center || ""}
+                                        onChange={(e) => updateChildField("center", e.target.value)}
+                                    >
+                                        <option value="">Select Center</option>
+                                        {centers.map(c => (
+                                            <option key={c._id} value={c._id}>{c.name} - {c.location}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div className="col-span-full border-t pt-8 mt-4 grid md:grid-cols-5 gap-4">
                                     <h4 className="col-span-full font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">Permanent Address</h4>
                                     <InputCard label="Village" value={childData.address?.village} onChange={(e)=>updateChildAddress("village", e.target.value)} isEditing={true} />

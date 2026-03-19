@@ -4,6 +4,7 @@ const { upload } = require("../config/cloudinary");
 const Employee = require("../models/Employee");
 const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
+const Center = require("../models/Center"); 
 
 //////////////////////////////////////////////////////
 // CREATE EMPLOYEE
@@ -35,6 +36,7 @@ router.post(
         salary,
         shiftStart,
         shiftEnd,
+        center,
       } = req.body;
 
       //////////////////////////////////////////////////////
@@ -65,6 +67,13 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
+      if (center && center !== "") {
+        const centerExists = await Center.findById(center);
+        if (!centerExists) {
+          return res.status(400).json({ message: "Invalid center" });
+        }
+      }
+
       //////////////////////////////////////////////////////
       // CREATE USER
       //////////////////////////////////////////////////////
@@ -90,6 +99,7 @@ router.post(
         department,
         designation,
         employmentType,
+        center: center || null,
 
         salary:
           salary !== undefined && salary !== ""
@@ -138,10 +148,13 @@ router.post(
 //////////////////////////////////////////////////////
 router.get("/", protect, async (req, res) => {
   try {
-    const employees = await Employee.find().populate(
-      "user",
-      "name email role"
-    );
+    let query = {};
+    if (req.user.role === "center") {
+      query.center = req.user.center;
+    }
+    const employees = await Employee.find(query)
+      .populate("user", "name email role")
+      .populate("center", "name location");
 
     res.json(employees);
   } catch (err) {
@@ -154,10 +167,9 @@ router.get("/", protect, async (req, res) => {
 // //////////////////////////////////////////////////////
 router.get("/user/:id", protect, async (req, res) => {
   try {
-    const employee = await Employee.findOne({ user: req.params.id }).populate(
-      "user",
-      "name email role"
-    );
+    const employee = await Employee.findOne({ user: req.params.id })
+      .populate("user", "name email role")
+      .populate("center", "name location");
 
     if (!employee) {
       return res.status(404).json({ message: "Employee profile not found" });
@@ -225,6 +237,7 @@ router.put(
         salary,
         shiftStart,
         shiftEnd,
+        center,
       } = req.body;
 
       //////////////////////////////////////////////////////
@@ -238,17 +251,27 @@ router.put(
 
       if (email && email !== user.email) {
         const emailExists = await User.findOne({ email });
-
         if (emailExists) {
           return res.status(400).json({ message: "Email already exists" });
         }
-
         user.email = email;
       }
 
       if (firstName || lastName) {
         user.name = `${firstName || employee.firstName} ${lastName || employee.lastName
           }`;
+      }
+
+      if (center !== undefined) {
+        if (center === "") {
+          employee.center = null; // allow removing center
+        } else {
+          const centerExists = await Center.findById(center);
+          if (!centerExists) {
+            return res.status(400).json({ message: "Invalid center" });
+          }
+          employee.center = center;
+        }
       }
 
       // ROLE UPDATE

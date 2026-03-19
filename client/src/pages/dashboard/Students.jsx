@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { Eye, Trash2, Edit2 } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "../../services/api";
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -16,13 +15,24 @@ const Students = () => {
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editStudent, setEditStudent] = useState(null);
+  const [centers, setCenters] = useState([]);
+
+  useEffect(() => {
+    const fetchCenters = async () => {
+      try {
+        const { data } = await api.get("/centers");
+        setCenters(data || []);
+      } catch (err) {
+        console.error("Failed to fetch centers:", err);
+      }
+    };
+    fetchCenters();
+  }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await fetch(`${API_URL}/students`);
-        const data = await res.json();
-        // Use the students array inside the response
+        const { data } = await api.get("/students");
         setStudents(data.students || []);
         setFiltered(data.students || []);
       } catch (err) {
@@ -54,7 +64,7 @@ const Students = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this student?")) return;
     try {
-      await fetch(`${API_URL}/students/${id}`, { method: "DELETE" });
+      await api.delete(`/students/${id}`);
       setStudents((prev) => prev.filter((s) => s._id !== id));
     } catch (err) {
       console.error(err);
@@ -80,30 +90,39 @@ const Students = () => {
   };
 
 const handleUpdate = async () => {
-  try {
-    const res = await fetch(`${API_URL}/students/${editStudent._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editStudent),
-    });
+    try {
+      const payload = { ...editStudent };
+      
+      // Ensure center is sent as an ID
+      if (payload.center && typeof payload.center === "object") {
+        payload.center = payload.center._id;
+      }
 
-    const data = await res.json();
+      // Ensure enrolledCourses are sent as IDs if they are objects
+      if (payload.enrolledCourses && Array.isArray(payload.enrolledCourses)) {
+        payload.enrolledCourses = payload.enrolledCourses.map(c => 
+          typeof c === "object" ? c._id : c
+        );
+      }
 
-    setStudents((prev) =>
-      prev.map((s) => (s._id === editStudent._id ? data.student : s))
-    );
+      const { data } = await api.put(`/students/${editStudent._id}`, payload);
 
-    setFiltered((prev) =>
-      prev.map((s) => (s._id === editStudent._id ? data.student : s))
-    );
+      setStudents((prev) =>
+        prev.map((s) => (s._id === editStudent._id ? data.student : s))
+      );
 
-    setEditStudent(null);
+      setFiltered((prev) =>
+        prev.map((s) => (s._id === editStudent._id ? data.student : s))
+      );
 
-  } catch (err) {
-    console.error(err);
-    alert("Failed to update student.");
-  }
-};
+      setEditStudent(null);
+      alert("Student updated successfully!");
+
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || err.message || "Failed to update student.");
+    }
+  };
 
   const updateField = (field, value) => {
     setEditStudent({ ...editStudent, [field]: value });
@@ -134,6 +153,7 @@ const handleUpdate = async () => {
     { name: "Name", selector: row => row.user?.name, sortable: true, cell: row => <span className="font-semibold text-slate-800">{row.user?.name}</span> },
     { name: "Email", selector: row => row.user?.email, sortable: true, cell: row => <span className="text-slate-600">{row.user?.email}</span> },
     { name: "WhatsApp", selector: row => row.whatsapp || "-" },
+    { name: "Center", selector: row => row.center?.name || "-", sortable: true },
     { name: "Status", selector: row => row.status, sortable: true, cell: row => (
       <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${row.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
         {row.status === "active" ? "Active" : "Inactive"}
@@ -144,7 +164,10 @@ const handleUpdate = async () => {
         <button onClick={() => setSelectedStudent(row)} className="p-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition shadow-sm" title="View">
           <Eye size={16} className="text-blue-600" />
         </button>
-        <button onClick={() => setEditStudent({...JSON.parse(JSON.stringify(row)), email: row.user?.email || ""})} className="p-2 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition shadow-sm" title="Edit">
+        <button onClick={() => {
+          const studentClone = JSON.parse(JSON.stringify(row));
+          setEditStudent({...studentClone, email: row.user?.email || ""});
+        }} className="p-2 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition shadow-sm" title="Edit">
           <Edit2 size={16} className="text-yellow-600" />
         </button>
         <button onClick={() => handleDelete(row._id)} className="p-2 bg-red-50 rounded-lg hover:bg-red-100 transition shadow-sm" title="Delete">
@@ -218,6 +241,7 @@ const handleUpdate = async () => {
 <p><b>Marital Status:</b> {selectedStudent.maritalStatus || "-"}</p>
 <p><b>Email:</b> {selectedStudent.email || "-"}</p>
 <p><b>WhatsApp:</b> {selectedStudent.whatsapp || "-"}</p>
+<p><b>Center:</b> {selectedStudent.center?.name || "-"}</p>
 <p><b>English Fluency:</b> {selectedStudent.englishFluency || "-"}</p>
 
 <p>
@@ -578,6 +602,20 @@ return (
           <div>
             <label className="font-semibold">Languages Known</label>
             <input className="border p-2 w-full" value={editStudent.languagesKnown?.join(", ") || ""} onChange={(e)=>setEditStudent({...editStudent,languagesKnown:e.target.value.split(",").map(l=>l.trim())})}/>
+          </div>
+
+          <div>
+            <label className="font-semibold text-blue-600">Select Center</label>
+            <select
+              className="border p-2 w-full bg-blue-50 focus:ring-2 focus:ring-blue-300"
+              value={editStudent.center?._id || editStudent.center || ""}
+              onChange={(e) => setEditStudent({...editStudent, center: e.target.value})}
+            >
+              <option value="">Select Center</option>
+              {centers.map(c => (
+                <option key={c._id} value={c._id}>{c.name} - {c.location}</option>
+              ))}
+            </select>
           </div>
         </div>
 

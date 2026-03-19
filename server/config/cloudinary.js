@@ -40,6 +40,13 @@ const storage = new CloudinaryStorage({
         }
 
         // =========================
+        // LESSONS (NEW)
+        // =========================
+        else if (file.fieldname === 'lessonFile') {
+            folder += '/courses/lessons';
+        }
+
+        // =========================
         // DEFAULT
         // =========================
         else {
@@ -48,7 +55,8 @@ const storage = new CloudinaryStorage({
 
         const options = {
             folder: folder,
-            allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'docx', 'webp'],
+            resource_type: 'auto', // Detect video vs image vs raw
+            allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'docx', 'webp', 'mp4', 'mkv', 'xls', 'xlsx'],
             public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
         };
 

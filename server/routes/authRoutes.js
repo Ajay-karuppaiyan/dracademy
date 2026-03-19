@@ -48,6 +48,7 @@ router.post('/google', async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            center: user.center,
             token: generateToken(user._id, user.role),
         });
     } catch (error) {
@@ -79,6 +80,7 @@ router.post('/login', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                center: user.center,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -114,6 +116,7 @@ router.post('/2fa/validate', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                center: user.center,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -196,13 +199,14 @@ router.post('/2fa/disable', protect, async (req, res) => {
 // @access  Private
 router.get('/me', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).populate("center", "name location");
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             mobile: user.mobile,
             role: user.role,
+            center: user.center,
             isTwoFactorEnabled: user.isTwoFactorEnabled,
         });
     } catch (error) {

@@ -13,12 +13,15 @@ import {
   IndianRupee,
   User as UserIcon,
   CheckCircle2,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Play,
+  Video,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
+import LessonManagementModal from "../../components/modals/LessonManagementModal";
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -34,6 +37,8 @@ const CourseManagement = () => {
   const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [fetchingStudents, setFetchingStudents] = useState(false);
   const [currentCourseTitle, setCurrentCourseTitle] = useState("");
+  const [showManageLessons, setShowManageLessons] = useState(false);
+  const [manageCourse, setManageCourse] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -67,9 +72,14 @@ const CourseManagement = () => {
         .map((emp) => ({
           id: emp.user?._id,
           name: emp.user?.name || `${emp.firstName} ${emp.lastName}`,
-          role: emp.user?.role,
+          role: emp.user?.role || emp.role,
         }))
-        .filter((instructor) => instructor.id && instructor.role === "Coach");
+        .filter((instructor) => 
+          instructor.id && 
+          (instructor.role?.toLowerCase() === "coach" || 
+           instructor.role?.toLowerCase() === "admin" ||
+           instructor.role?.toLowerCase() === "center")
+        );
       setInstructors(list);
     } catch (error) {
       console.error("Error fetching instructors:", error);
@@ -153,6 +163,11 @@ const CourseManagement = () => {
     }
   };
   
+  const handleManageLessons = (course) => {
+    setManageCourse(course);
+    setShowManageLessons(true);
+  };
+
   const handleShowStudents = async (course) => {
     setFetchingStudents(true);
     setCurrentCourseTitle(course.title);
@@ -187,16 +202,38 @@ const CourseManagement = () => {
   };
 
   const addSyllabusRow = () => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       syllabus: [
-        ...formData.syllabus,
+        ...prev.syllabus,
         {
-          week: `Week ${formData.syllabus.length + 1}`,
+          week: `${prev.durationUnit === "week" ? "Week" : "Month"} ${prev.syllabus.length + 1}`,
           topic: "",
           description: "",
+          projectName: "",
         },
       ],
+    }));
+  };
+
+  const handleDurationChange = (val) => {
+    const num = parseInt(val) || 0;
+    setFormData((prev) => {
+      const newSyllabus = [...prev.syllabus];
+      
+      // If expanding duration, optionally auto-add rows if syllabus is smaller
+      if (num > newSyllabus.length && window.confirm(`Expand syllabus to ${num} modules?`)) {
+        for (let i = newSyllabus.length; i < num; i++) {
+          newSyllabus.push({
+            week: `${prev.durationUnit === "week" ? "Week" : "Month"} ${i + 1}`,
+            topic: "",
+            description: "",
+            projectName: "",
+          });
+        }
+      }
+
+      return { ...prev, duration: val, syllabus: newSyllabus };
     });
   };
 
@@ -207,6 +244,13 @@ const CourseManagement = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    // Validation: Check if all syllabus topics are filled
+    const incompleteSyllabus = formData.syllabus.some(s => !s.topic || !s.description);
+    if (incompleteSyllabus) {
+      return toast.error("Please fill in topic and description for all modules before submitting.");
+    }
+
     const loadingToast = toast.loading("Saving course...");
     try {
       const data = new FormData();
@@ -307,11 +351,14 @@ const CourseManagement = () => {
           <button onClick={() => handleView(row)} className="text-brand-600 hover:text-brand-900 transition-colors" title="View Details">
             <Eye size={18} />
           </button>
-          <button onClick={() => handleDelete(row._id)} className="text-red-600 hover:text-red-900 transition-colors" title="Delete">
-            <Trash2 size={18} />
-          </button>
           <button onClick={() => handleShowStudents(row)} className="text-purple-600 hover:text-purple-900 transition-colors" title="Enrolled Students">
             <UsersIcon size={18} />
+          </button>
+          <button onClick={() => handleManageLessons(row)} className="text-orange-600 hover:text-orange-900 transition-colors" title="Manage Lessons">
+            <Play size={18} />
+          </button>
+          <button onClick={() => handleDelete(row._id)} className="text-red-600 hover:text-red-900 transition-colors" title="Delete">
+            <Trash2 size={18} />
           </button>
         </div>
       )
@@ -677,22 +724,23 @@ const CourseManagement = () => {
                             placeholder="8"
                             className="w-full border-0 p-2.5 text-sm focus:ring-0"
                             value={formData.duration}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                duration: e.target.value,
-                              })
-                            }
+                            onChange={(e) => handleDurationChange(e.target.value)}
                           />
                           <select
                             className="bg-gray-50 border-0 border-l p-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 focus:ring-0 cursor-pointer"
                             value={formData.durationUnit}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                durationUnit: e.target.value,
-                              })
-                            }
+                            onChange={(e) => {
+                              const unit = e.target.value;
+                              const updatedSyllabus = formData.syllabus.map((s, idx) => ({
+                                ...s,
+                                week: `${unit === "week" ? "Week" : "Month"} ${idx + 1}`
+                              }));
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                durationUnit: unit, 
+                                syllabus: updatedSyllabus 
+                              }));
+                            }}
                           >
                             <option value="week">Weeks</option>
                             <option value="month">Months</option>
@@ -906,6 +954,18 @@ const CourseManagement = () => {
             )}
           </div>
         </div>
+      )}
+
+      {manageCourse && (
+        <LessonManagementModal
+          course={manageCourse}
+          isOpen={showManageLessons}
+          onClose={() => {
+            setShowManageLessons(false);
+            setManageCourse(null);
+          }}
+          onUpdate={fetchCourses}
+        />
       )}
     </div>
   );

@@ -27,6 +27,9 @@ const lessonSchema = mongoose.Schema({
 
   // Assignment submission type
   maxMarks: Number,
+
+  // Link to syllabus topic index
+  topicIndex: { type: Number, default: 0 },
 });
 
 

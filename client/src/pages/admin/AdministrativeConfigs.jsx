@@ -6,6 +6,8 @@ import {
   Building2,
   UserCheck,
   Briefcase,
+  MapPin,
+  Key,
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
@@ -30,8 +32,19 @@ const AdministrativeConfigs = () => {
   // Form State
   const [formData, setFormData] = useState({
     name: "",
+    location: "",
+    description: "",
   });
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Login Management State
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginData, setLoginData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [isSavingLogin, setIsSavingLogin] = useState(false);
 
   const config = {
     departments: {
@@ -48,6 +61,11 @@ const AdministrativeConfigs = () => {
       title: "Designations",
       endpoint: "/designations",
       icon: <Briefcase size={20} />,
+    },
+    centers: {
+      title: "Centers",
+      endpoint: "/centers",
+      icon: <MapPin size={20} />,
     },
   };
 
@@ -116,11 +134,19 @@ const AdministrativeConfigs = () => {
 
   const openModal = (item = null) => {
     if (item) {
-      setFormData({ name: item.name });
+      setFormData({
+        name: item.name || "",
+        location: item.location || "",
+        description: item.description || "",
+      });
       setIsEditing(true);
       setCurrentId(item._id);
     } else {
-      setFormData({ name: "" });
+      setFormData({
+        name: "",
+        location: "",
+        description: "",
+      });
       setIsEditing(false);
     }
     setShowModal(true);
@@ -132,18 +158,58 @@ const AdministrativeConfigs = () => {
     setCurrentId(null);
   };
 
+  const openLoginModal = async (center) => {
+    setCurrentId(center._id);
+    setLoginData({ name: center.name, email: "", password: "" });
+    try {
+      const { data } = await api.get(`/centers/${center._id}/login`);
+      if (data) {
+        setLoginData({
+          name: data.name || center.name,
+          email: data.email || "",
+          password: "", // Don't show password
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching login:", error);
+    }
+    setShowLoginModal(true);
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setIsSavingLogin(true);
+    try {
+      await api.post(`/centers/${currentId}/login`, loginData);
+      toast.success("Center login saved successfully");
+      setShowLoginModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving login");
+    } finally {
+      setIsSavingLogin(false);
+    }
+  };
+
   const columns = [
     { name: 'SL No', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
-    { name: `${config[activeTab].title.slice(0, -1)} Name`, selector: row => row.name, sortable: true, cell: row => (
-      <div className="flex items-center">
-        <div className="flex-shrink-0 h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
-          {config[activeTab].icon}
+    {
+      name: `${config[activeTab].title.slice(0, -1)} Name`, selector: row => row.name, sortable: true, cell: row => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
+            {config[activeTab].icon}
+          </div>
+          <div className="ml-4 font-medium text-gray-900">{row.name}</div>
         </div>
-        <div className="ml-4 font-medium text-gray-900">{row.name}</div>
-      </div>
-    )},
-    { name: 'Actions', center: true, width: '120px', cell: row => (
+      )
+    },
+    {
+      name: 'Actions', center: true, width: '150px', cell: row => (
         <div className="flex justify-center gap-2">
+          {activeTab === "centers" && (
+            <button onClick={() => openLoginModal(row)} className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors" title="Manage Login">
+              <Key size={18} />
+            </button>
+          )}
           <button onClick={() => openModal(row)} className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-50 transition-colors" title="Edit">
             <Edit size={18} />
           </button>
@@ -165,7 +231,7 @@ const AdministrativeConfigs = () => {
             Administrative Configs
           </h1>
           <p className="text-sm text-gray-500">
-            Manage departments, roles, and designations
+            Manage departments, roles, designations, and centers
           </p>
         </div>
         <button
@@ -182,11 +248,10 @@ const AdministrativeConfigs = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-4 px-2 text-sm font-medium transition-colors relative ${
-              activeTab === tab
+            className={`pb-4 px-2 text-sm font-medium transition-colors relative ${activeTab === tab
                 ? "text-brand-600"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2">
               {config[tab].icon}
@@ -201,7 +266,7 @@ const AdministrativeConfigs = () => {
 
       {/* Content */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
-        <CustomDataTable 
+        <CustomDataTable
           columns={columns}
           data={filteredData}
           progressPending={loading}
@@ -242,6 +307,40 @@ const AdministrativeConfigs = () => {
                   }
                 />
               </div>
+
+              {activeTab === "centers" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border-gray-200 p-3"
+                      placeholder="Enter location..."
+                      value={formData.location}
+                      onChange={(e) =>
+                        setFormData({ ...formData, location: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border-gray-200 p-3"
+                      placeholder="Enter description..."
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                    />
+                  </div>
+                </>
+              )}
               <div className="flex justify-end gap-3 mt-8">
                 <button
                   type="button"
@@ -257,6 +356,70 @@ const AdministrativeConfigs = () => {
                   {isEditing
                     ? "Save Changes"
                     : `Add ${config[activeTab].title.slice(0, -1)}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl scale-in-center">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <Key size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Manage Center Login</h2>
+            </div>
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Display Name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full rounded-xl border border-gray-200 p-3"
+                  value={loginData.name}
+                  onChange={(e) => setLoginData({ ...loginData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full rounded-xl border border-gray-200 p-3"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Password {loginData.email && "(Leave blank to keep current)"}
+                </label>
+                <input
+                  type="password"
+                  className="w-full rounded-xl border border-gray-200 p-3"
+                  placeholder="Enter new password..."
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginModal(false)}
+                  className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingLogin}
+                  className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-md transition-all disabled:opacity-50"
+                >
+                  {isSavingLogin ? "Saving..." : "Save Login Details"}
                 </button>
               </div>
             </form>

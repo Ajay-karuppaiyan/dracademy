@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import CustomDataTable from "../components/DataTable";
+import api from "../services/api";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -34,13 +35,7 @@ const [stats, setStats] = React.useState({
 React.useEffect(() => {
   const fetchStats = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/dashboard-stats");
-
-      if (!res.ok) {
-        throw new Error("API error");
-      }
-
-      const data = await res.json();
+      const { data } = await api.get("/dashboard-stats");
 
       setStats({
         totalStudents: data.totalStudents,
@@ -56,19 +51,17 @@ React.useEffect(() => {
   };
 
   const fetchStudents = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/api/dashboard-stats/recent-students");
-    const data = await res.json();
-    setStudents(data);
-  } catch (err) {
-    console.error("Failed to fetch students", err);
-  }
-};
+    try {
+      const { data } = await api.get("/dashboard-stats/recent-students");
+      setStudents(data);
+    } catch (err) {
+      console.error("Failed to fetch students", err);
+    }
+  };
 
   const fetchEnrollments = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/dashboard-stats/recent-enrollments");
-      const data = await res.json();
+      const { data } = await api.get("/dashboard-stats/recent-enrollments");
       setEnrollments(data);
     } catch (err) {
       console.error("Failed to fetch enrollments", err);
@@ -414,10 +407,10 @@ React.useEffect(() => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Executive Overview
+            {user?.role === "center" ? "Center Overview" : "Executive Overview"}
           </h1>
           <p className="text-slate-500 mt-1">
-            Welcome back, Admin. Here's what's happening today.
+            Welcome back, {user?.name || (user?.role === "center" ? "Center Admin" : "Admin")}. Here's what's happening today.
           </p>
         </div>
         <div className="flex items-center gap-3">

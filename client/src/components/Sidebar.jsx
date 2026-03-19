@@ -115,7 +115,16 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
-  // ================= ROLE BASED NAVIGATION ================
+  const centerItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <Users size={22} />, label: "Employee Management", path: "/dashboard/hr" },
+    { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
+  ];
+
+  // ================= ROLE BASED NAVIGATION =================
   let currentNavItems = [];
 
   if (role === "student") {
@@ -130,6 +139,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     currentNavItems = employeeItems;
   } else if (role === "finance") {
     currentNavItems = financeItems;
+  } else if (role === "center") {
+    currentNavItems = centerItems;
   }
 
   // ================= ADMIN EXTRA ZONE =================
@@ -165,9 +176,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
               <div className="p-1 rounded bg-white">
-                <img src={logo} alt="DRRG Academy Logo" className="h-8 w-8 object-contain" />
+                <img src={logo} alt="DRRG Academy Logo" className="h-6 w-6 object-contain" />
               </div>
-              <span className="text-x1 font-bold tracking-tight">DRRG</span>
+              <span className="text-2xl font-bold tracking-tight">DRRG</span>
             </div>
           ) : (
             <div className="mx-auto bg-brand-600 p-2 rounded-lg">

@@ -65,7 +65,9 @@ router.post("/register-child", protect, async (req, res) => {
     familyBackground,
 
     // STEP 4
-    references
+    references,
+
+    center
 
     } = req.body;
 
@@ -141,7 +143,8 @@ router.post("/register-child", protect, async (req, res) => {
     hscSubjects,
     hscDetails,
     familyBackground,
-    references
+    references,
+    center
 
     });
 

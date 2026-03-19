@@ -8,7 +8,9 @@ const RegisterChild = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  const [centers, setCenters] = useState([]);
   const [formData, setFormData] = useState({
+    center: "",
     // Personal Details
     studentNameEnglish: "",
     studentNameMotherTongue: "",
@@ -61,6 +63,18 @@ const RegisterChild = () => {
     hscMarks: "",
     hscPercentage: "",
   });
+
+  React.useEffect(() => {
+    const fetchCenters = async () => {
+      try {
+        const res = await api.get("/centers");
+        setCenters(res.data);
+      } catch (err) {
+        console.error("Failed to fetch centers:", err);
+      }
+    };
+    fetchCenters();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -234,6 +248,15 @@ const handleSubmit = async (e) => {
 
             <Select label="Marital Status" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange}
               options={["Married", "Unmarried"]} />
+
+            <Select
+              label="Select Center"
+              name="center"
+              value={formData.center}
+              onChange={handleChange}
+              options={centers.map(c => ({ value: c._id, label: `${c.name} - ${c.location}` }))}
+              isObjectOptions
+            />
 
           </div>
         </div>
@@ -627,13 +650,15 @@ const Input = ({ label, ...props }) => (
   </div>
 );
 
-const Select = ({ label, options, ...props }) => (
+const Select = ({ label, options, isObjectOptions, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
     <select autoComplete="off" {...props} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
       <option value="">Select</option>
       {options.map((opt, i) => (
-        <option key={i} value={opt}>{opt}</option>
+        <option key={i} value={isObjectOptions ? opt.value : opt}>
+          {isObjectOptions ? opt.label : opt}
+        </option>
       ))}
     </select>
   </div>

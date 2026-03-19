@@ -295,7 +295,11 @@ router.put('/:id', upload.single('thumbnail'), async (req, res) => {
         const course = await Course.findById(req.params.id);
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
-        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive } = req.body;
+        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive, lessons } = req.body;
+        
+        if (lessons) {
+            course.lessons = lessons;
+        }
 
         if (req.file) {
             course.thumbnail = {
@@ -369,11 +373,26 @@ router.get('/:id/students', async (req, res) => {
         const students = await Student.find({ enrolledCourses: req.params.id })
             .select('studentNameEnglish email phone whatsapp profilePic status createdAt')
             .populate('parent', 'name email');
-        
         res.json(students);
     } catch (error) {
         console.error('FETCH ENROLLED STUDENTS ERROR:', error);
         res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @desc    Upload lesson resource (video/doc)
+// @route   POST /api/courses/upload-lesson-file
+router.post('/upload-lesson-file', protect, upload.single('lessonFile'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+        res.json({
+            url: req.file.path,
+            public_id: req.file.filename
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

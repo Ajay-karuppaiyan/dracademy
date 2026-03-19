@@ -4,22 +4,36 @@ const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Payment = require("../models/Payment");
 
+const { protect } = require("../middleware/authMiddleware");
+
 // GET /api/dashboard-stats
-router.get("/", async (req, res) => {
+router.get("/", protect, async (req, res) => {
   try {
+    let studentQuery = {};
+    if (req.user.role === "center") {
+      studentQuery.center = req.user.center;
+    }
+
     // Total students
-    const totalStudents = await Student.countDocuments();
+    const totalStudents = await Student.countDocuments(studentQuery);
 
     // Active courses
     const activeCourses = await Course.countDocuments({ isActive: true });
 
-    // Total enrollments (count of items in enrolledCourses across all students)
-    const students = await Student.find({}, 'enrolledCourses');
+    // Total enrollments
+    const students = await Student.find(studentQuery, 'enrolledCourses');
     const totalEnrollments = students.reduce((sum, s) => sum + (s.enrolledCourses?.length || 0), 0);
 
-    // Total revenue (sum of payments)
-    const payments = await Payment.find();
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    // Total revenue (for now showing global or filtered if we had center in payment)
+    // To filter revenue by center, we'd need to join or find payments of these students
+    let revenueQuery = {};
+    if (req.user.role === "center") {
+      const studentIds = students.map(s => s._id);
+      revenueQuery.student = { $in: studentIds };
+    }
+    
+    const payments = await Payment.find(revenueQuery);
+    const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     res.json({
       totalStudents,
@@ -33,9 +47,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/recent-students", async (req, res) => {
+router.get("/recent-students", protect, async (req, res) => {
   try {
-    const students = await Student.find()
+    let query = {};
+    if (req.user.role === "center") {
+      query.center = req.user.center;
+    }
+    const students = await Student.find(query)
       .populate("enrolledCourses", "courseName") 
       .sort({ createdAt: -1 })
       .limit(5);
@@ -47,9 +65,15 @@ router.get("/recent-students", async (req, res) => {
   }
 });
 
-router.get("/recent-enrollments", async (req, res) => {
+router.get("/recent-enrollments", protect, async (req, res) => {
   try {
-    const enrollments = await Payment.find({ type: "inward" })
+    let query = { type: "inward" };
+    if (req.user.role === "center") {
+      const centerStudents = await Student.find({ center: req.user.center }).select("_id");
+      const studentIds = centerStudents.map(s => s._id);
+      query.student = { $in: studentIds };
+    }
+    const enrollments = await Payment.find(query)
       .populate("student", "studentNameEnglish email")
       .populate("course", "title price")
       .sort({ createdAt: -1 })

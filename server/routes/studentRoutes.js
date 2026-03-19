@@ -150,12 +150,19 @@ const User = require('../models/User');
 // ======================================================
 // GET ALL STUDENTS (FULL DATA)
 // ======================================================
-router.get("/", async (req, res) => {
+const { protect } = require("../middleware/authMiddleware");
+router.get("/", protect, async (req, res) => {
   try {
-    const students = await Student.find()
+    let query = {};
+    if (req.user.role === "center") {
+      query.center = req.user.center;
+    }
+
+    const students = await Student.find(query)
       .populate("user", "-password")
       .populate("parent", "name email")
-      .populate("enrolledCourses", "title price category duration");
+      .populate("enrolledCourses", "title price category duration")
+      .populate("center", "name location");
 
     res.json({
       count: students.length,
@@ -170,7 +177,7 @@ router.get("/", async (req, res) => {
 
 // ======================================================
 // GET STUDENT BY USER _ID
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', protect, async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -182,7 +189,7 @@ router.get('/user/:id', async (req, res) => {
     }
 
     // Then, find the corresponding student profile (if exists)
-    const student = await Student.findOne({ user: user._id });
+    const student = await Student.findOne({ user: user._id }).populate("center", "name location");
 
     res.json({
       user,
@@ -264,7 +271,8 @@ router.put(
       const updatedStudent = await Student.findById(student._id)
       .populate("user", "-password")
       .populate("parent", "name email")
-      .populate("enrolledCourses", "title price category duration");
+      .populate("enrolledCourses", "title price category duration")
+      .populate("center", "name location");
 
       res.json({
         message: "Student updated successfully",

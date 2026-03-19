@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
+// ✅ Define document schema
 const documentSchema = new mongoose.Schema({
   url: String,
-  public_id: String,
   name: String,
 });
 
@@ -16,32 +16,50 @@ const employeeSchema = new mongoose.Schema(
     firstName: String,
     lastName: String,
     phone: String,
+
     dob: Date,
-    gender: String,
+
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+
     employeeId: {
       type: String,
       unique: true,
     },
+
     joiningDate: Date,
     department: String,
     designation: String,
     employmentType: String,
+
     salary: {
       type: Number,
-      default: 0
+      default: 0,
     },
+
     shift: {
       start: String,
-      end: String
+      end: String,
     },
+
+    center: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Center",
+      required: true,
+    },
+
+    // ✅ FIXED
     profilePic: documentSchema,
     idFile: documentSchema,
     certificateFile: documentSchema,
     contractFile: documentSchema,
 
     role: {
-        type: String,
-        enum: ['coach', 'hr'],
+      type: String,
+      enum: ["coach", "hr"],
+      default: "coach",
     },
 
     status: {
@@ -52,5 +70,8 @@ const employeeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// ✅ Indexes
+employeeSchema.index({ center: 1 });
 
 module.exports = mongoose.model("Employee", employeeSchema);

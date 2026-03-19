@@ -21,12 +21,14 @@ import {
 import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import ReactDOM from "react-dom";
 
 import CustomDataTable from "../../components/DataTable";
 
 const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [search, setSearch] = useState("");
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const filteredEmployees = employees.filter(emp => 
     emp.firstName?.toLowerCase().includes(search.toLowerCase()) || 
@@ -35,13 +37,24 @@ const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) 
     emp.department?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const toggleMenu = (id) => setOpenMenuId(openMenuId === id ? null : id);
+  const toggleMenu = (id, event) => {
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right - 180, // width adjust
+      });
+      setOpenMenuId(id);
+    }
+  };
 
   const columns = [
     { name: "S.No", selector: (row, index) => index + 1, width: "70px", sortable: true },
     { name: "Employee", sortable: true, cell: row => (
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-brand-50 border border-slate-200 overflow-hidden shrink-0">
+        <div className="w-9 h-9 rounded-full bg-brand-50 border border-slate-200 overflow-visible shrink-0">
           {row.profilePic?.url ? (
             <img src={row.profilePic.url} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -83,25 +96,70 @@ const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) 
     )},
     { name: "Action", cell: row => (
       <div className="relative">
-        <button onClick={() => toggleMenu(row._id)} className="p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors border shadow-sm ml-auto block">
+        <button
+          onClick={(e) => toggleMenu(row._id, e)}
+          className="p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors border shadow-sm ml-auto block"
+        >
           <MoreVertical size={16} />
         </button>
-        {openMenuId === row._id && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)}></div>
-            <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
-              <button onClick={() => { onEdit(row); setOpenMenuId(null); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                <Edit size={16} className="text-amber-500" /> Edit Details
-              </button>
-              <button onClick={() => { onToggleStatus(row._id); setOpenMenuId(null); }} className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${row.status === "active" ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}`}>
-                {row.status === "active" ? <><Ban size={16} /> Block Employee</> : <><Unlock size={16} /> Unblock Employee</>}
-              </button>
-              <button onClick={() => { if (window.confirm(`Delete ${row.firstName}?`)) { onDelete(row._id); setOpenMenuId(null); } }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <XCircle size={16} /> Delete Employee
-              </button>
-            </div>
-          </>
-        )}
+{openMenuId === row._id &&
+  ReactDOM.createPortal(
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 z-[9998]"
+        onClick={() => setOpenMenuId(null)}
+      ></div>
+
+      {/* Dropdown */}
+      <div
+        className="fixed w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-[9999] py-2"
+        style={{
+          top: menuPosition.top,
+          left: menuPosition.left,
+        }}
+      >
+        <button
+          onClick={() => { onEdit(row); setOpenMenuId(null); }}
+          className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-50"
+        >
+          <Edit size={16} className="text-amber-500" /> Edit Details
+        </button>
+
+        <button
+          onClick={() => { onToggleStatus(row._id); setOpenMenuId(null); }}
+          className={`w-full flex items-center gap-3 px-4 py-2 text-sm ${
+            row.status === "active"
+              ? "text-orange-600 hover:bg-orange-50"
+              : "text-green-600 hover:bg-green-50"
+          }`}
+        >
+          {row.status === "active" ? (
+            <>
+              <Ban size={16} /> Block Employee
+            </>
+          ) : (
+            <>
+              <Unlock size={16} /> Unblock Employee
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            if (window.confirm(`Delete ${row.firstName}?`)) {
+              onDelete(row._id);
+              setOpenMenuId(null);
+            }
+          }}
+          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+        >
+          <XCircle size={16} /> Delete Employee
+        </button>
+      </div>
+    </>,
+    document.body   // 🔥 THIS IS THE KEY FIX
+  )}
       </div>
     ), width: "90px"}
   ];

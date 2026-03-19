@@ -21,6 +21,7 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
   const [roles, setRoles] = useState([]);
   const [designations, setDesignations] = useState([]);
   const [preview, setPreview] = useState(null);
+  const [centers, setCenters] = useState([]);
 
 const [formData, setFormData] = useState({
   firstName: "",
@@ -38,6 +39,7 @@ const [formData, setFormData] = useState({
   salary: "",
   shiftStart: "",
   shiftEnd: "",
+  center: "",
   profilePic: null,
   idFile: null,
   certificateFile: null,
@@ -46,14 +48,17 @@ const [formData, setFormData] = useState({
 
   const fetchConfigs = async () => {
     try {
-      const [deptRes, roleRes, desigRes] = await Promise.all([
+      const [deptRes, roleRes, desigRes, centerRes] = await Promise.all([
         api.get("/departments"),
         api.get("/roles"),
         api.get("/designations"),
+        api.get("/centers"),
       ]);
+      console.log("Centers API:", centerRes.data);
       setDepartments(deptRes.data);
       setRoles(roleRes.data);
       setDesignations(desigRes.data);
+      setCenters(centerRes.data);
     } catch {
       toast.error("Failed to load configuration data");
     }
@@ -89,6 +94,7 @@ const [formData, setFormData] = useState({
           salary: employee.salary || "",
           shiftStart: employee.shift?.start || "",
           shiftEnd: employee.shift?.end || "",
+          center: employee.center?._id || "",
           profilePic: null,
           idFile: null,
           certificateFile: null,
@@ -112,6 +118,7 @@ const [formData, setFormData] = useState({
           salary: "",
           shiftStart: "",
           shiftEnd: "",
+          center: "",
           profilePic: null,
           idFile: null,
           certificateFile: null,
@@ -503,32 +510,53 @@ const [formData, setFormData] = useState({
                 </div>
               </div>
               <div>
-  <label className="block text-xs font-semibold text-slate-500 mb-1">
-    Shift Start
-  </label>
-  <input
-    type="time"
-    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-    value={formData.shiftStart}
-    onChange={(e) =>
-      setFormData({ ...formData, shiftStart: e.target.value })
-    }
-  />
-</div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Shift Start
+                </label>
+                <input
+                  type="time"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                  value={formData.shiftStart}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shiftStart: e.target.value })
+                  }
+                />
+              </div>
 
-<div>
-  <label className="block text-xs font-semibold text-slate-500 mb-1">
-    Shift End
-  </label>
-  <input
-    type="time"
-    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-    value={formData.shiftEnd}
-    onChange={(e) =>
-      setFormData({ ...formData, shiftEnd: e.target.value })
-    }
-  />
-</div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Shift End
+                </label>
+                <input
+                  type="time"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                  value={formData.shiftEnd}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shiftEnd: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Center <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                  value={formData.center}
+                  onChange={(e) =>
+                    setFormData({ ...formData, center: e.target.value })
+                  }
+                >
+                  <option value="">Select Center</option>
+                  {centers.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} - {c.location}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

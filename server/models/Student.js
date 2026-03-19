@@ -143,6 +143,10 @@ ref: "Course",
 },
 ],
 
+center: {
+type: mongoose.Schema.Types.ObjectId,
+ref: "Center",
+},
 year: String,
 department: String,
 
@@ -160,5 +164,7 @@ default: "active",
 },
 { timestamps: true }
 );
+
+studentSchema.index({ center: 1 });
 
 module.exports = mongoose.model("Student", studentSchema);
