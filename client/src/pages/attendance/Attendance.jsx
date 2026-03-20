@@ -253,6 +253,7 @@ const handleSubmit = async (e) => {
       <div className="max-w-7xl mx-auto space-y-8">
 
 {/* Tabs */}
+{user.role !== "student" && (
 <div className="border-b border-slate-200 mb-4">
   <div className="flex gap-6">
     {["attendance", "payroll"].map((tab) => (
@@ -270,6 +271,7 @@ const handleSubmit = async (e) => {
     ))}
   </div>
 </div>
+)}
 
 {/* Tab Content */}
 <div className="animate-in fade-in duration-300">

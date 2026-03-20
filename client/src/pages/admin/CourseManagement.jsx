@@ -219,10 +219,9 @@ const CourseManagement = () => {
   const handleDurationChange = (val) => {
     const num = parseInt(val) || 0;
     setFormData((prev) => {
-      const newSyllabus = [...prev.syllabus];
-      
-      // If expanding duration, optionally auto-add rows if syllabus is smaller
-      if (num > newSyllabus.length && window.confirm(`Expand syllabus to ${num} modules?`)) {
+      let newSyllabus = [...prev.syllabus];
+      // 🟢 Increase → add modules
+      if (num > newSyllabus.length) {
         for (let i = newSyllabus.length; i < num; i++) {
           newSyllabus.push({
             week: `${prev.durationUnit === "week" ? "Week" : "Month"} ${i + 1}`,
@@ -233,7 +232,16 @@ const CourseManagement = () => {
         }
       }
 
-      return { ...prev, duration: val, syllabus: newSyllabus };
+      // 🔴 Decrease → remove extra modules
+      if (num < newSyllabus.length) {
+        newSyllabus = newSyllabus.slice(0, num);
+      }
+
+      return {
+        ...prev,
+        duration: val,
+        syllabus: newSyllabus,
+      };
     });
   };
 

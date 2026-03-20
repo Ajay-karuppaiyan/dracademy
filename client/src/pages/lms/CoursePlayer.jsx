@@ -110,7 +110,7 @@ const CoursePlayer = () => {
           className="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 transition"
         >
           <ChevronLeft size={16} className="mr-1" />
-          Back to Catalog
+          Back
         </button>
 
         {/* Video / Document Section */}

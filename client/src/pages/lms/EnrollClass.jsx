@@ -216,72 +216,85 @@ const EnrollClass = () => {
       )}
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {courses.map((course) => (
-          <div
-            key={course._id}
-            className="flex flex-col overflow-hidden rounded-3xl bg-white shadow hover:shadow-xl border"
-          >
-            <div className="h-52 bg-slate-100">
-              {course.thumbnail?.url ? (
-                <img
-                  src={course.thumbnail.url}
-                  alt={course.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <BookOpen size={48} />
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 flex flex-col flex-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>{course.category}</span>
-                <span className="flex items-center gap-1">
-                  <Clock size={14} />
-                  {course.duration} {course.durationUnit}s
-                </span>
-              </div>
-
-              <h3 className="text-xl font-bold mt-2">{course.title}</h3>
-              <p className="text-sm text-slate-500 mt-2">
-                {course.description.length > 100
-                  ? `${course.description.slice(0, 100)}...`
-                  : course.description}
-              </p>
-
-              <div className="mt-auto flex justify-between items-center pt-6">
-                <div className="text-2xl font-black flex items-center">
-                  {course.price === 0 ? (
-                    <span className="text-green-600">FREE</span>
-                  ) : (
-                    <>
-                      <IndianRupee size={18} />
-                      {course.price}
-                    </>
-                  )}
-                </div>
-
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => fetchCourseDetails(course._id)}
-                  className="bg-slate-200 text-slate-800 px-4 py-2 rounded-xl hover:bg-slate-300"
-                >
-                  View Course
-                </button>
-                <button
-                  onClick={() => handleEnroll(course)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-700"
-                >
-                  <GraduationCap size={18} /> Enroll
-                </button>
-              </div>
-
-              </div>
-            </div>
+        {courses.length === 0 ? (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+            <BookOpen size={50} className="text-slate-300 mb-4" />
+            <h2 className="text-xl font-bold text-slate-700">
+              No Courses Available
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              You have already enrolled in all available courses 🎉
+            </p>
           </div>
-        ))}
+        ) : (
+          courses.map((course) => (
+            <div
+              key={course._id}
+              className="flex flex-col overflow-hidden rounded-3xl bg-white shadow hover:shadow-xl border"
+            >
+              <div className="h-52 bg-slate-100">
+                {course.thumbnail?.url ? (
+                  <img
+                    src={course.thumbnail.url}
+                    alt={course.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <BookOpen size={48} />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 flex flex-col flex-1">
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>{course.category}</span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={14} />
+                    {course.duration} {course.durationUnit}s
+                  </span>
+                </div>
+
+                <h3 className="text-xl font-bold mt-2">{course.title}</h3>
+
+                <p className="text-sm text-slate-500 mt-2">
+                  {course.description.length > 100
+                    ? `${course.description.slice(0, 100)}...`
+                    : course.description}
+                </p>
+
+                <div className="mt-auto flex justify-between items-center pt-6">
+                  <div className="text-2xl font-black flex items-center">
+                    {course.price === 0 ? (
+                      <span className="text-green-600">FREE</span>
+                    ) : (
+                      <>
+                        <IndianRupee size={18} />
+                        {course.price}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fetchCourseDetails(course._id)}
+                      className="bg-slate-200 text-slate-800 px-4 py-2 rounded-xl hover:bg-slate-300"
+                    >
+                      View Course
+                    </button>
+
+                    <button
+                      onClick={() => handleEnroll(course)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-700"
+                    >
+                      <GraduationCap size={18} /> Enroll
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {viewCourse && (
