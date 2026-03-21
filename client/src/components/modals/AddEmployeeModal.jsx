@@ -89,7 +89,9 @@ const [formData, setFormData] = useState({
             : "",
           department: employee.department || "",
           designation: employee.designation || "",
-          role: employee.user?.role || "employee",
+          role: employee.user?.role
+            ? employee.user.role.toLowerCase()
+            : "employee",
           employmentType: employee.employmentType || "full-time",
           salary: employee.salary || "",
           shiftStart: employee.shift?.start || "",
@@ -128,6 +130,22 @@ const [formData, setFormData] = useState({
       }
     }
   }, [isOpen, employee]);
+
+  useEffect(() => {
+      if (isEdit && roles.length > 0 && employee?.user?.role) {
+        const matchedRole = roles.find(
+          (r) =>
+            r.name.toLowerCase() === employee.user.role.toLowerCase()
+        );
+
+        if (matchedRole) {
+          setFormData((prev) => ({
+            ...prev,
+            role: matchedRole.name,
+          }));
+        }
+      }
+    }, [roles, employee, isEdit]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];

@@ -190,36 +190,58 @@ const AdministrativeConfigs = () => {
     }
   };
 
-  const columns = [
-    { name: 'SL No', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
-    {
-      name: `${config[activeTab].title.slice(0, -1)} Name`, selector: row => row.name, sortable: true, cell: row => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
-            {config[activeTab].icon}
-          </div>
-          <div className="ml-4 font-medium text-gray-900">{row.name}</div>
+const columns = [
+  { name: "S.No", selector: (r, i) => i + 1, width: "70px", center: true },
+
+  {
+    name: `${config[activeTab].title.slice(0, -1)} Name`,
+    selector: r => r.name,
+    sortable: true,
+    cell: r => (
+      <div className="flex items-center">
+        <div className="h-10 w-10 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center">
+          {config[activeTab].icon}
         </div>
-      )
-    },
-    {
-      name: 'Actions', center: true, width: '150px', cell: row => (
-        <div className="flex justify-center gap-2">
-          {activeTab === "centers" && (
-            <button onClick={() => openLoginModal(row)} className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors" title="Manage Login">
-              <Key size={18} />
-            </button>
-          )}
-          <button onClick={() => openModal(row)} className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-50 transition-colors" title="Edit">
-            <Edit size={18} />
+        <div className="ml-3 font-medium text-gray-900">{r.name}</div>
+      </div>
+    )
+  },
+  ...(activeTab === "centers"
+    ? [
+        {
+          name: "Location",
+          selector: r => r.location,
+          sortable: true,
+          cell: r => (
+            <span className="text-gray-500">
+              {r.location || "N/A"}
+            </span>
+          ),
+        },
+      ]
+    : []),
+
+  {
+    name: "Actions",
+    center: true,
+    width: "140px",
+    cell: r => (
+      <div className="flex justify-center gap-2">
+        {activeTab === "centers" && (
+          <button onClick={() => openLoginModal(r)} className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50">
+            <Key size={18} />
           </button>
-          <button onClick={() => handleDelete(row._id)} className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
-            <Trash2 size={18} />
-          </button>
-        </div>
-      )
-    }
-  ];
+        )}
+        <button onClick={() => openModal(r)} className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-50">
+          <Edit size={18} />
+        </button>
+        <button onClick={() => handleDelete(r._id)} className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50">
+          <Trash2 size={18} />
+        </button>
+      </div>
+    )
+  }
+];
 
   const filteredData = data.filter(item => item.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 

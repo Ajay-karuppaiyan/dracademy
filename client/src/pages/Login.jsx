@@ -31,7 +31,7 @@ const Login = () => {
   const { login, googleLogin, register, verifyTwoFactor } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
+  
   const handleTwoFactorVerify = async (e) => {
     e.preventDefault();
     setIsLoading(true);

@@ -19,6 +19,7 @@ router.post("/", protect, async (req, res) => {
 
     res.status(201).json(center);
   } catch (err) {
+    console.error("CENTER ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });

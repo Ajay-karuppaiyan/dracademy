@@ -146,13 +146,13 @@ const handleUpdate = async () => {
         [field]: value,
       },
     });
-  };  
+  };
 
   const columns = [
     { name: "S.No", selector: (row, index) => index + 1, width: "80px", sortable: true },
     { name: "Name", selector: row => row.user?.name, sortable: true, cell: row => <span className="font-semibold text-slate-800">{row.user?.name}</span> },
     { name: "Email", selector: row => row.user?.email, sortable: true, cell: row => <span className="text-slate-600">{row.user?.email}</span> },
-    { name: "WhatsApp", selector: row => row.whatsapp || "-" },
+    { name: "Phone", selector: row => row.whatsapp || "-" },
     { name: "Center", selector: row => row.center?.name || "-", sortable: true },
     { name: "Status", selector: row => row.status, sortable: true, cell: row => (
       <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${row.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const { upload } = require('../config/cloudinary');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -49,6 +50,7 @@ router.post('/google', async (req, res) => {
             email: user.email,
             role: user.role,
             center: user.center,
+            profilePic: user.profilePic,
             token: generateToken(user._id, user.role),
         });
     } catch (error) {
@@ -81,6 +83,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 center: user.center,
+                profilePic: user.profilePic,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -117,6 +120,7 @@ router.post('/2fa/validate', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 center: user.center,
+                profilePic: user.profilePic,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -207,6 +211,7 @@ router.get('/me', protect, async (req, res) => {
             mobile: user.mobile,
             role: user.role,
             center: user.center,
+            profilePic: user.profilePic,
             isTwoFactorEnabled: user.isTwoFactorEnabled,
         });
     } catch (error) {
@@ -217,7 +222,7 @@ router.get('/me', protect, async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-router.put('/profile', protect, async (req, res) => {
+router.put('/profile', protect, upload.single('profilePic'), async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
 
@@ -225,6 +230,14 @@ router.put('/profile', protect, async (req, res) => {
             user.name = req.body.name || user.name;
             user.mobile = req.body.mobile || user.mobile;
             user.email = req.body.email || user.email;
+
+            if (req.file) {
+                user.profilePic = {
+                    url: req.file.path,
+                    public_id: req.file.filename,
+                    name: req.file.originalname,
+                };
+            }
 
             const updatedUser = await user.save();
 
@@ -234,6 +247,7 @@ router.put('/profile', protect, async (req, res) => {
                 email: updatedUser.email,
                 mobile: updatedUser.mobile,
                 role: updatedUser.role,
+                profilePic: updatedUser.profilePic,
                 isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
             });
         } else {

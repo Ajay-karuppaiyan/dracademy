@@ -258,12 +258,22 @@ router.put(
       // =========================
 
       if (student.user) {
+        const updateData = {
+          ...(data.email && { email: data.email }),
+          ...(data.studentNameEnglish && { name: data.studentNameEnglish }),
+        };
+
+        if (req.files && req.files.profilePic) {
+          updateData.profilePic = {
+            url: req.files.profilePic[0].path,
+            public_id: req.files.profilePic[0].filename,
+            name: req.files.profilePic[0].originalname,
+          };
+        }
+
         await User.findByIdAndUpdate(
           student.user._id,
-          {
-            ...(data.email && { email: data.email }),
-            ...(data.studentNameEnglish && { name: data.studentNameEnglish }),
-          },
+          updateData,
           { new: true }
         );
       }

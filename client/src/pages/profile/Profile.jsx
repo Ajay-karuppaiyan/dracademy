@@ -19,7 +19,10 @@ const Profile = () => {
     name: "",
     email: "",
     mobile: "",
+    profilePic: null,
   });
+
+  const [preview, setPreview] = useState(null);
 
   // Role Specific Profiles
   const [studentProfile, setStudentProfile] = useState(null);
@@ -54,6 +57,7 @@ const Profile = () => {
   }, [authUser]);
 
   const fetchProfile = async () => {
+    setPreview(null);
     try {
       setLoading(true);
       const res = await api.get("/auth/me");
@@ -104,6 +108,18 @@ const Profile = () => {
   };
 
   // ----- SHARED HANDLERS -----
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileData({ ...profileData, profilePic: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handlePersonalChange = (e) => {
     const { name, value } = e.target;
     setProfileData({ ...profileData, [name]: value });
@@ -159,21 +175,74 @@ const Profile = () => {
   };
 
   const savePersonalProfile = async () => {
+    const loadingToast = toast.loading("Updating profile...");
     try {
       let res;
+      const data = new FormData();
+      
+      // Append fields to FormData
+      Object.keys(profileData).forEach(key => {
+        if (key === "profilePic") {
+          if (profileData.profilePic instanceof File) {
+            data.append("profilePic", profileData.profilePic);
+          }
+        } else {
+          data.append(key, profileData[key]);
+        }
+      });
+
+      // Also append student/employee specific fields if needed
       if (authUser?.role === "student" && studentProfile) {
-          res = await api.put(`/students/${studentProfile._id}`, studentProfile);
+          // Flatten student profile for the backend if it expects top level fields or handle specifically
+          // For now, assume the backend can handle the student update via PUT /students/:id
+          const studentFormData = new FormData();
+          Object.keys(studentProfile || {}).forEach(key => {
+            if (key === 'profilePic' && profileData.profilePic instanceof File) {
+               studentFormData.append('profilePic', profileData.profilePic);
+            } else if (typeof studentProfile[key] === 'object' && studentProfile[key] !== null) {
+               // Only send _id for populated objects like center/parent/user
+               if (studentProfile[key]._id) {
+                 studentFormData.append(key, studentProfile[key]._id);
+               }
+            } else {
+               studentFormData.append(key, studentProfile[key]);
+            }
+          });
+          res = await api.put(`/students/${studentProfile._id}`, studentFormData, {
+             headers: { "Content-Type": "multipart/form-data" }
+          });
       } else if (employeeProfile) {
-          res = await api.put(`/employees/${employeeProfile._id}`, employeeProfile);
+          const employeeFormData = new FormData();
+          Object.keys(employeeProfile || {}).forEach(key => {
+            if (key === 'profilePic' && profileData.profilePic instanceof File) {
+               employeeFormData.append('profilePic', profileData.profilePic);
+            } else if (typeof (employeeProfile[key]) === 'object' && employeeProfile[key] !== null) {
+               // Only send _id for populated objects like center/user
+               if (employeeProfile[key]._id) {
+                 employeeFormData.append(key, employeeProfile[key]._id);
+               }
+            } else {
+               employeeFormData.append(key, employeeProfile[key]);
+            }
+          });
+          res = await api.put(`/employees/${employeeProfile._id}`, employeeFormData, {
+             headers: { "Content-Type": "multipart/form-data" }
+          });
       } else {
-          res = await api.put("/auth/profile", profileData);
+          res = await api.put("/auth/profile", data, {
+             headers: { "Content-Type": "multipart/form-data" }
+          });
       }
+
+      const serverData = res.data.user || res.data.employee || res.data.student || res.data;
+      const serverUser = serverData.user || serverData;
 
       const updatedUser = {
         ...authUser,
-        name: profileData.name,
-        email: profileData.email,
-        mobile: profileData.mobile
+        name: serverUser.name || profileData.name,
+        email: serverUser.email || profileData.email,
+        mobile: serverUser.mobile || profileData.mobile,
+        profilePic: serverUser.profilePic || serverData.profilePic || authUser.profilePic
       };
 
       if (setAuthUser) setAuthUser(updatedUser);
@@ -181,9 +250,9 @@ const Profile = () => {
 
       setIsEditingPersonal(false);
       await fetchProfile();
-      toast.success("Profile updated!");
+      toast.success("Profile updated!", { id: loadingToast });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update profile");
+      toast.error(err.response?.data?.message || "Failed to update profile", { id: loadingToast });
     }
   };
 
@@ -248,12 +317,26 @@ const Profile = () => {
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* --- STUNNING HEADER --- */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-600/5 rounded-full -ml-12 -mb-12"></div>
+        <div className="bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 flex flex-col md:flex-row items-center gap-10 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-600/10 to-transparent rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-600/10 to-transparent rounded-full -ml-24 -mb-24 blur-3xl"></div>
           
-          <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center text-white text-5xl font-black shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
-            {profileData.name.charAt(0)}
+          <div className="relative group/avatar">
+            <div className={`w-40 h-40 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-6xl font-black shadow-2xl border-4 border-white transform transition-all duration-500 ${isEditingPersonal ? 'scale-105 rotate-0' : 'rotate-3 group-hover:rotate-0'} overflow-hidden`}>
+              {preview || studentProfile?.profilePic?.url || employeeProfile?.profilePic?.url ? (
+                <img src={preview || studentProfile?.profilePic?.url || employeeProfile?.profilePic?.url} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                profileData.name.charAt(0)
+              )}
+            </div>
+            {isEditingPersonal && (
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-[2.5rem] cursor-pointer opacity-0 group-hover/avatar:opacity-100 transition-opacity backdrop-blur-sm">
+                <div className="bg-white/20 p-4 rounded-2xl border border-white/30 backdrop-blur-md">
+                   <Plus className="text-white" size={32} />
+                </div>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+              </label>
+            )}
           </div>
 
           <div className="flex-1 text-center md:text-left space-y-3">

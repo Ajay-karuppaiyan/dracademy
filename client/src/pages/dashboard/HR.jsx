@@ -51,32 +51,39 @@ const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) 
   };
 
   const columns = [
-    { name: "S.No", selector: (row, index) => index + 1, width: "70px", sortable: true },
+    { name: "S.No", selector: (row, index) => index + 1, width: "80px", sortable: true },
     { name: "Employee", sortable: true, cell: row => (
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-brand-50 border border-slate-200 overflow-visible shrink-0">
+        <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-sm">
           {row.profilePic?.url ? (
             <img src={row.profilePic.url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-brand-600 font-bold bg-blue-100">
+            <div className="w-full h-full flex items-center justify-center text-brand-600 font-bold bg-brand-50">
               {row.firstName?.charAt(0)}
             </div>
           )}
         </div>
         <div>
-          <div className="font-bold text-slate-900 whitespace-nowrap">{row.firstName} {row.lastName}</div>
-          <div className="text-xs text-slate-500">{row.employeeId}</div>
+          <div className="font-bold text-slate-900 whitespace-nowrap leading-tight">{row.firstName} {row.lastName}</div>
+          <div className="text-[11px] font-medium text-slate-500">{row.employeeId}</div>
         </div>
       </div>
     ), width: "220px"},
     { name: "Role / Dept", sortable: true, cell: row => (
       <div>
-        <div className="font-medium text-slate-800 capitalize">{row.user?.role || "Employee"}</div>
-        <div className="text-[11px] text-slate-500 capitalize">{row.department} • {row.designation}</div>
+        <div className="font-bold text-slate-800 capitalize text-xs tracking-tight">{row.user?.role || "Employee"}</div>
+        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{row.department}</div>
       </div>
     )},
+    { name: "Center", sortable: true, cell: row => (
+      <div className="flex items-center gap-1.5">
+        <div className="p-1 px-2 text-indigo-700 rounded-md text-[10px] font-black uppercase tracking-widest border border-indigo-100">
+          {row.center?.name || "N/A"}
+        </div>
+      </div>
+    ), width: "150px"},
     { name: "Status", sortable: true, cell: row => (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
         row.status === "active" ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"
       }`}>
         <span className={`w-1.5 h-1.5 rounded-full ${row.status === "active" ? "bg-green-500" : "bg-yellow-500"}`}></span>

@@ -113,19 +113,35 @@ router.post(
         },
 
         profilePic: req.files?.profilePic
-          ? req.files.profilePic[0]
+          ? {
+            url: req.files.profilePic[0].path,
+            public_id: req.files.profilePic[0].filename,
+            name: req.files.profilePic[0].originalname,
+          }
           : null,
 
         idFile: req.files?.idFile
-          ? req.files.idFile[0]
+          ? {
+            url: req.files.idFile[0].path,
+            public_id: req.files.idFile[0].filename,
+            name: req.files.idFile[0].originalname,
+          }
           : null,
 
         certificateFile: req.files?.certificateFile
-          ? req.files.certificateFile[0]
+          ? {
+            url: req.files.certificateFile[0].path,
+            public_id: req.files.certificateFile[0].filename,
+            name: req.files.certificateFile[0].originalname,
+          }
           : null,
 
         contractFile: req.files?.contractFile
-          ? req.files.contractFile[0]
+          ? {
+            url: req.files.contractFile[0].path,
+            public_id: req.files.contractFile[0].filename,
+            name: req.files.contractFile[0].originalname,
+          }
           : null,
       });
 
@@ -345,17 +361,40 @@ router.put(
       // FILE UPDATE
       //////////////////////////////////////////////////////
       if (req.files) {
-        if (req.files.profilePic)
-          employee.profilePic = req.files.profilePic[0];
+        if (req.files.profilePic) {
+          const profilePicData = {
+            url: req.files.profilePic[0].path,
+            public_id: req.files.profilePic[0].filename,
+            name: req.files.profilePic[0].originalname,
+          };
+          employee.profilePic = profilePicData;
+
+          // Sync with User model
+          await User.findByIdAndUpdate(employee.user, {
+            profilePic: profilePicData
+          });
+        }
 
         if (req.files.idFile)
-          employee.idFile = req.files.idFile[0];
+          employee.idFile = {
+            url: req.files.idFile[0].path,
+            public_id: req.files.idFile[0].filename,
+            name: req.files.idFile[0].originalname,
+          };
 
         if (req.files.certificateFile)
-          employee.certificateFile = req.files.certificateFile[0];
+          employee.certificateFile = {
+            url: req.files.certificateFile[0].path,
+            public_id: req.files.certificateFile[0].filename,
+            name: req.files.certificateFile[0].originalname,
+          };
 
         if (req.files.contractFile)
-          employee.contractFile = req.files.contractFile[0];
+          employee.contractFile = {
+            url: req.files.contractFile[0].path,
+            public_id: req.files.contractFile[0].filename,
+            name: req.files.contractFile[0].originalname,
+          };
       }
 
       await employee.save();

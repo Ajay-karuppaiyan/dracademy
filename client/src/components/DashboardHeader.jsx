@@ -231,9 +231,11 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
             }
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-700 text-white flex items-center justify-center text-sm font-semibold">
-              {user?.name?.charAt(0) || (
-                <User size={14} />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-700 text-white flex items-center justify-center text-sm font-semibold overflow-hidden border border-slate-200 shadow-sm transition-transform hover:scale-105">
+              {user?.profilePic?.url ? (
+                <img src={user.profilePic.url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0) || <User size={14} />
               )}
             </div>
 

@@ -102,23 +102,30 @@ React.useEffect(() => {
   ];
 
   const adminStudentColumns = [
-    { name: 'Student Name', selector: row => row.studentNameEnglish, sortable: true, cell: row => <span className="font-medium text-slate-900">{row.studentNameEnglish}</span> },
-    { name: 'Email', selector: row => row.email, sortable: true, cell: row => <span className="text-slate-500">{row.email}</span> },
-    { name: 'Phone', selector: row => row.whatsapp || row.phone, cell: row => <span className="text-slate-500">{row.whatsapp || row.phone || "N/A"}</span> },
-    { name: 'Joining Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="text-slate-500">{new Date(row.createdAt).toLocaleDateString()}</span> },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
-        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-          {row.status}
+    { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
+    { name: "Student Name", selector: r => r.studentNameEnglish, sortable: true },
+    { name: "Email", selector: r => r.email, sortable: true },
+    { name: "Phone", selector: r => r.whatsapp || r.phone || "N/A" },
+    { name: "Joining Date", selector: r => new Date(r.createdAt).toLocaleDateString(), sortable: true },
+    { name: "Status", selector: r => r.status, cell: r => (
+        <span className={`px-2 py-0.5 rounded text-xs ${
+          r.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}>
+          {r.status}
         </span>
-      )
+      ),
     },
-    { name: 'Action', center: true, width: '80px', cell: row => (
-        <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={18} /></button>
-      )
-    }
+    { name: "Action", center: true, width: "70px",
+      cell: () => (
+        <button className="text-slate-400 hover:text-slate-600">
+          <MoreHorizontal size={18} />
+        </button>
+      ),
+    },
   ];
 
   const enrollmentColumns = [
+    { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
     { name: 'Student', selector: row => row.student?.studentNameEnglish, sortable: true, cell: row => (
         <div className="flex flex-col">
           <span className="font-medium text-slate-900">{row.student?.studentNameEnglish || "Unknown"}</span>
