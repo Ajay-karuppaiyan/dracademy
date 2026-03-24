@@ -7,13 +7,21 @@ const Payment = require("../models/Payment");
 ////////////////////////////////////////////////////////////
 router.get("/payments", async (req, res) => {
   try {
-    const { type } = req.query;
+    const { type, month, year, all } = req.query;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = all === "true" ? 1000 : (parseInt(req.query.limit) || 100);
     const skip = (page - 1) * limit;
 
     const filter = {};
     if (type) filter.type = type;
+
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      const startDate = new Date(y, m - 1, 1);
+      const endDate = new Date(y, m, 0, 23, 59, 59, 999);
+      filter.createdAt = { $gte: startDate, $lte: endDate };
+    }
 
     const total = await Payment.countDocuments(filter);
 

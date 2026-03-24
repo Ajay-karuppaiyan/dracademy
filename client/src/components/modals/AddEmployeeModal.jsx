@@ -472,6 +472,24 @@ const [formData, setFormData] = useState({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Employment Type
+                </label>
+                <select
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                  value={formData.employmentType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, employmentType: e.target.value })
+                  }
+                >
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                  <option value="freelance">Freelance</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
                   Role <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -492,40 +510,23 @@ const [formData, setFormData] = useState({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Employment Type
+                  Center <span className="text-red-500">*</span>
                 </label>
                 <select
+                  required
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  value={formData.employmentType}
+                  value={formData.center}
                   onChange={(e) =>
-                    setFormData({ ...formData, employmentType: e.target.value })
+                    setFormData({ ...formData, center: e.target.value })
                   }
                 >
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="contract">Contract</option>
-                  <option value="internship">Internship</option>
-                  <option value="freelance">Freelance</option>
+                  <option value="">Select Center</option>
+                  {centers.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} - {c.location}
+                    </option>
+                  ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Salary (Monthly CTC)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                    placeholder="0.00"
-                    value={formData.salary}
-                    onChange={(e) =>
-                      setFormData({ ...formData, salary: e.target.value })
-                    }
-                  />
-                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
@@ -554,26 +555,24 @@ const [formData, setFormData] = useState({
                   }
                 />
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Center <span className="text-red-500">*</span>
+                  Salary (Monthly CTC)
                 </label>
-                <select
-                  required
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  value={formData.center}
-                  onChange={(e) =>
-                    setFormData({ ...formData, center: e.target.value })
-                  }
-                >
-                  <option value="">Select Center</option>
-                  {centers.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} - {c.location}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                    placeholder="0.00"
+                    value={formData.salary}
+                    onChange={(e) =>
+                      setFormData({ ...formData, salary: e.target.value })
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>

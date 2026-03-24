@@ -12,6 +12,7 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [openStatusId, setOpenStatusId] = useState(null);
 
   // ================= FETCH LOGGED IN USER =================
   const fetchUser = async () => {
@@ -120,15 +121,35 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
     },
     { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
         user?.role === "admin" ? (
+          <div className="relative">
           <select
             value={row.status}
             onChange={(e) => handleStatusChange(row._id, e.target.value)}
-            className="border border-slate-200 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+            className={`appearance-none px-3 py-1.5 pr-8 rounded-full text-xs font-semibold border cursor-pointer transition
+              ${
+                row.status === "approved"
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : row.status === "rejected"
+                  ? "bg-red-50 text-red-600 border-red-200"
+                  : "bg-yellow-50 text-yellow-700 border-yellow-200"
+              }
+            `}
           >
-            <option value="pending">Pending</option>
+            {/* Only show pending if current status is pending */}
+            {row.status === "pending" && (
+              <option value="pending">Pending</option>
+            )}
+
+            {/* Always allow switching between approved & rejected */}
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
+
+            {/* dropdown arrow */}
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+              ▼
+            </span>
+          </div>
         ) : (
           <span className={`px-2.5 py-1 text-xs rounded-full font-semibold ${getStatusClass(row.status)}`}>
             {row.status}
@@ -238,8 +259,34 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
                 <p><strong>Employee:</strong> {selectedLeave.employeeName}</p>
                 <p><strong>Type:</strong> {selectedLeave.leaveType}</p>
                 <p><strong>Reason:</strong> {selectedLeave.reason}</p>
-                <p><strong>Start:</strong> {new Date(selectedLeave.startDate).toLocaleDateString()}</p>
-                <p><strong>End:</strong> {new Date(selectedLeave.endDate).toLocaleDateString()}</p>
+                {selectedLeave.mode === "permission" ? (
+                  <>
+                    <p>
+                      <strong>Date:</strong>{" "}
+                      {selectedLeave.permissionDate
+                        ? new Date(selectedLeave.permissionDate).toLocaleDateString()
+                        : "-"}
+                    </p>
+                    <p>
+                      <strong>Time:</strong> {selectedLeave.startTime} - {selectedLeave.endTime}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      <strong>Start:</strong>{" "}
+                      {selectedLeave.startDate
+                        ? new Date(selectedLeave.startDate).toLocaleDateString()
+                        : "-"}
+                    </p>
+                    <p>
+                      <strong>End:</strong>{" "}
+                      {selectedLeave.endDate
+                        ? new Date(selectedLeave.endDate).toLocaleDateString()
+                        : "-"}
+                    </p>
+                  </>
+                )}
                 <p>
                   <strong>Status:</strong>{" "}
                   <span className={`px-2 py-1 text-xs rounded-full font-semibold ${getStatusClass(selectedLeave.status)}`}>

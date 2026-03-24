@@ -9,23 +9,24 @@ const Finance = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Inward Filters
-  const [inwardSearch, setInwardSearch] = useState("");
-  const [inwardFromDate, setInwardFromDate] = useState("");
-  const [inwardToDate, setInwardToDate] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
-  // Outward Filters
+  // Search Filters
+  const [inwardSearch, setInwardSearch] = useState("");
   const [outwardSearch, setOutwardSearch] = useState("");
-  const [outwardFromDate, setOutwardFromDate] = useState("");
-  const [outwardToDate, setOutwardToDate] = useState("");
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [selectedMonth]);
 
   const fetchPayments = async () => {
     try {
-      const res = await api.get("/finance/payments");
+      setLoading(true);
+      const [year, month] = selectedMonth.split("-");
+      const res = await api.get(`/finance/payments?month=${month}&year=${year}&all=true`);
       setPayments(res.data.payments || []);
     } catch (err) {
       console.error("Error fetching payments:", err);
@@ -35,79 +36,68 @@ const Finance = () => {
     }
   };
 
-  const inwardPayments = payments.filter((p) => {
-    if (p.type?.toLowerCase() !== "inward") return false;
+  const inwardPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (p.type?.toLowerCase() !== "inward") return false;
+      const matchesSearch =
+        p.student?.studentNameEnglish
+          ?.toLowerCase()
+          ?.includes(inwardSearch.toLowerCase()) ||
+        p.recipientName?.toLowerCase()?.includes(inwardSearch.toLowerCase()) ||
+        inwardSearch === "";
+      return matchesSearch;
+    });
+  }, [payments, inwardSearch]);
 
-    const matchesSearch =
-      p.student?.studentNameEnglish
-        ?.toLowerCase()
-        ?.includes(inwardSearch.toLowerCase()) ||
-      p.recipientName?.toLowerCase()?.includes(inwardSearch.toLowerCase()) ||
-      inwardSearch === "";
+  const outwardPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (p.type?.toLowerCase() !== "outward") return false;
+      const matchesSearch =
+        p.recipientName?.toLowerCase()?.includes(outwardSearch.toLowerCase()) ||
+        outwardSearch === "";
+      return matchesSearch;
+    });
+  }, [payments, outwardSearch]);
 
-    const paymentDate = new Date(p.createdAt);
+  const totals = useMemo(() => {
+    const revenue = payments
+      .filter((p) => p.type === "inward" && p.status === "success")
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    const matchesFromDate = inwardFromDate
-      ? paymentDate >= new Date(inwardFromDate)
-      : true;
+    const expense = payments
+      .filter((p) => p.type === "outward" && p.status === "paid")
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    const matchesToDate = inwardToDate
-      ? paymentDate <= new Date(inwardToDate + "T23:59:59")
-      : true;
-
-    return matchesSearch && matchesFromDate && matchesToDate;
-  });
-
-  const outwardPayments = payments.filter((p) => {
-    if (p.type?.toLowerCase() !== "outward") return false;
-
-    const matchesSearch =
-      p.recipientName?.toLowerCase()?.includes(outwardSearch.toLowerCase()) ||
-      outwardSearch === "";
-
-    const paymentDate = new Date(p.createdAt);
-
-    const matchesFromDate = outwardFromDate
-      ? paymentDate >= new Date(outwardFromDate)
-      : true;
-
-    const matchesToDate = outwardToDate
-      ? paymentDate <= new Date(outwardToDate + "T23:59:59")
-      : true;
-
-    return matchesSearch && matchesFromDate && matchesToDate;
-  });
-
-  const totalRevenue = payments
-    .filter((p) => p.type === "inward" && p.status === "success")
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const totalExpense = payments
-    .filter((p) => p.type === "outward" && p.status === "paid")
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const profit = totalRevenue - totalExpense;
-
-  const monthlyRevenue = useMemo(() => {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-
-    return payments
-      .filter((p) => {
-        const d = new Date(p.createdAt);
-        return (
-          p.type === "inward" &&
-          p.status === "success" &&
-          d.getMonth() === month &&
-          d.getFullYear() === year
-        );
-      })
-      .reduce((sum, p) => sum + p.amount, 0);
+    return {
+      revenue,
+      expense,
+      profit: revenue - expense,
+    };
   }, [payments]);
 
+  const [lifetimeStats, setLifetimeStats] = useState({ revenue: 0, expense: 0, profit: 0 });
+
+  useEffect(() => {
+    const fetchLifetime = async () => {
+      try {
+        const res = await api.get("/finance/payments?all=true");
+        const allPayments = res.data.payments || [];
+        const revenue = allPayments
+          .filter((p) => p.type === "inward" && p.status === "success")
+          .reduce((sum, p) => sum + (p.amount || 0), 0);
+        const expense = allPayments
+          .filter((p) => p.type === "outward" && p.status === "paid")
+          .reduce((sum, p) => sum + (p.amount || 0), 0);
+        setLifetimeStats({ revenue, expense, profit: revenue - expense });
+      } catch (err) {
+        console.error("Error fetching lifetime stats:", err);
+      }
+    };
+    fetchLifetime();
+  }, []);
+
   const exportToExcel = () => {
-    const exportData = filteredPayments.map((p, index) => ({
+    const exportData = [...inwardPayments, ...outwardPayments].map((p, index) => ({
       "S.No": index + 1,
       Name: p.student?.studentNameEnglish || p.recipientName || "-",
       Course: p.course?.title || "-",
@@ -116,7 +106,6 @@ const Finance = () => {
       Status: p.status,
       Date: new Date(p.createdAt).toLocaleDateString(),
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
 
@@ -128,25 +117,10 @@ const Finance = () => {
     });
 
     const blob = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
-    saveAs(blob, "Finance_Report.xlsx");
-  };
-
-  const applyDateFilter = () => {
-    setFromDate(tempFromDate);
-    setToDate(tempToDate);
-    setShowDateFilter(false);
-  };
-
-  const clearDateFilter = () => {
-    setTempFromDate("");
-    setTempToDate("");
-    setFromDate("");
-    setToDate("");
-    setShowDateFilter(false);
+    saveAs(blob, `Finance_Report_${selectedMonth}.xlsx`);
   };
 
   const getStatusColor = (status) => {
@@ -173,63 +147,73 @@ const Finance = () => {
 return (
   <div className="p-6 space-y-8 bg-slate-50 min-h-screen">
 
-    {/* HEADING */}
-    <div className="flex justify-between items-center">
-      <h1 className="text-3xl font-bold">Finance Dashboard</h1>
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800">Finance Dashboard</h1>
+        <p className="text-slate-500 mt-1">Manage and track your school's financial health</p>
+      </div>
 
-      <button
-        onClick={exportToExcel}
-        className="bg-green-600 text-white px-6 py-2 rounded-xl"
-      >
-        Export Excel
-      </button>
+      <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+        <label className="text-sm font-semibold text-slate-600 ml-2">Filter Month:</label>
+        <input
+          type="month"
+          className="border-none focus:ring-0 text-slate-700 font-medium cursor-pointer"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        />
+        <button
+          onClick={exportToExcel}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors text-sm font-medium"
+        >
+          Export Excel
+        </button>
+      </div>
     </div>
 
     {/* CARDS */}
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card title="Total Revenue" value={`₹ ${totalRevenue}`} color="text-green-600" />
-      <Card title="Total Expense" value={`₹ ${totalExpense}`} color="text-red-600" />
-      <Card title="Profit" value={`₹ ${profit}`} color="text-blue-600" />
-      <Card title="Monthly Revenue" value={`₹ ${monthlyRevenue}`} color="text-purple-600" />
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <Card
+        title={`Revenue (${selectedMonth || 'Selected'})`}
+        value={`₹ ${totals.revenue.toLocaleString("en-IN")}`}
+        color="text-green-600"
+        subtitle="Current selection"
+      />
+      <Card
+        title={`Expense (${selectedMonth || 'Selected'})`}
+        value={`₹ ${totals.expense.toLocaleString("en-IN")}`}
+        color="text-red-600"
+        subtitle="Current selection"
+      />
+      <Card
+        title={`Profit (${selectedMonth || 'Selected'})`}
+        value={`₹ ${totals.profit.toLocaleString("en-IN")}`}
+        color="text-blue-600"
+        subtitle="Current selection"
+      />
+      <Card
+        title="Lifetime Profit"
+        value={`₹ ${lifetimeStats.profit.toLocaleString("en-IN")}`}
+        color="text-purple-600"
+        subtitle="All time total"
+      />
     </div>
 
     {/* ===================== INWARD SECTION ===================== */}
 
     <h2 className="text-2xl font-semibold">Inward Transactions</h2>
 
-    {/* INWARD FILTER */}
-    <div className="flex justify-between bg-white p-4 rounded-xl shadow items-center">
-
-      <input
-        type="text"
-        placeholder="Search Inward..."
-        className="border p-2 rounded-lg"
-        value={inwardSearch}
-        onChange={(e) => setInwardSearch(e.target.value)}
-      />
-
-      <div className="flex gap-3 items-center">
-
-        <div>
-          <label className="text-sm font-semibold text-gray-700">Start Date  :  </label>
-          <input
-            type="date"
-            className="border p-2 rounded-lg"
-            value={inwardFromDate}
-            onChange={(e) => setInwardFromDate(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-semibold text-gray-700">End Date  :  </label>
-          <input
-            type="date"
-            className="border p-2 rounded-lg"
-            value={inwardToDate}
-            onChange={(e) => setInwardToDate(e.target.value)}
-          />
-        </div>
-
+    <div className="flex flex-col md:flex-row justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100 items-start md:items-center gap-4">
+      <div className="relative flex-1 max-w-md">
+        <input
+          type="text"
+          placeholder="Search student or recipient..."
+          className="w-full border border-slate-200 p-2 pl-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
+          value={inwardSearch}
+          onChange={(e) => setInwardSearch(e.target.value)}
+        />
+      </div>
+      <div className="text-sm font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+        Showing inward data for: <span className="text-slate-900 font-bold">{selectedMonth}</span>
       </div>
     </div>
 
@@ -241,42 +225,19 @@ return (
     />
 
     {/* ===================== OUTWARD SECTION ===================== */}
-
     <h2 className="text-2xl font-semibold">Outward Transactions</h2>
-
-    {/* OUTWARD FILTER */}
-    <div className="flex justify-between bg-white p-4 rounded-xl shadow items-center">
-
-      <input
-        type="text"
-        placeholder="Search Outward..."
-        className="border p-2 rounded-lg"
-        value={outwardSearch}
-        onChange={(e) => setOutwardSearch(e.target.value)}
-      />
-
-      <div className="flex gap-3 items-center">
-
-        <div>
-          <label className="text-sm font-semibold text-gray-700">Start Date  :  </label>
-          <input
-            type="date"
-            className="border p-2 rounded-lg"
-            value={outwardFromDate}
-            onChange={(e) => setOutwardFromDate(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-semibold text-gray-700">End Date  :  </label>
-          <input
-            type="date"
-            className="border p-2 rounded-lg"
-            value={outwardToDate}
-            onChange={(e) => setOutwardToDate(e.target.value)}
-          />
-        </div>
-
+    <div className="flex flex-col md:flex-row justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100 items-start md:items-center gap-4">
+      <div className="relative flex-1 max-w-md">
+        <input
+          type="text"
+          placeholder="Search recipient..."
+          className="w-full border border-slate-200 p-2 pl-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+          value={outwardSearch}
+          onChange={(e) => setOutwardSearch(e.target.value)}
+        />
+      </div>
+      <div className="text-sm font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+        Showing outward data for: <span className="text-slate-900 font-bold">{selectedMonth}</span>
       </div>
     </div>
 
@@ -330,10 +291,11 @@ const Table = ({ title, payments, getStatusColor, showCourse }) => {
 
 // CARD
 
-const Card = ({ title, value, color }) => (
-  <div className="bg-white p-6 rounded-2xl shadow">
-    <p className="text-gray-500 text-sm">{title}</p>
-    <h2 className={`text-2xl font-bold mt-2 ${color}`}>{value}</h2>
+const Card = ({ title, value, color, subtitle }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{title}</p>
+    <h2 className={`text-3xl font-bold mt-2 ${color}`}>{value}</h2>
+    {subtitle && <p className="text-slate-400 text-[10px] mt-1 italic">{subtitle}</p>}
   </div>
 );
 
