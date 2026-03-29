@@ -21,6 +21,11 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Auto-detect type
+    const extension = file.name.split('.').pop().toLowerCase();
+    const isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(extension);
+    const isDoc = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'].includes(extension);
+
     setUploading(true);
     const formData = new FormData();
     formData.append("lessonFile", file);
@@ -29,7 +34,13 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
       const { data } = await api.post("/courses/upload-lesson-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setNewLesson((prev) => ({ ...prev, url: data.url }));
+      
+      setNewLesson((prev) => ({ 
+        ...prev, 
+        url: data.url,
+        type: isVideo ? "video" : isDoc ? "document" : prev.type,
+        title: prev.title || file.name.split('.').slice(0, -1).join('.')
+      }));
       toast.success("File uploaded successfully!");
     } catch (err) {
       toast.error("Failed to upload file");
@@ -40,6 +51,7 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
 
   const handleAddLesson = async () => {
     if (!newLesson.title) return toast.error("Title is required");
+    if (!newLesson.url) return toast.error("Resource URL or File is required");
     
     setLoading(true);
     try {
@@ -121,7 +133,7 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
                       value={newLesson.type}
                       onChange={e => setNewLesson({...newLesson, type: e.target.value})}
                     >
-                      <option value="video">Video Lesson</option>
+                      <option value="video">Video</option>
                       <option value="document">Document/PDF</option>
                     </select>
                   </div>
@@ -177,10 +189,12 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Duration</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                    {newLesson.type === 'video' ? 'Duration (mins)' : 'Reading Time (approx)'}
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. 10 mins"
+                    placeholder={newLesson.type === 'video' ? "e.g. 10 mins" : "e.g. 5 mins read"}
                     className="w-full bg-white border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm"
                     value={newLesson.duration}
                     onChange={e => setNewLesson({...newLesson, duration: e.target.value})}

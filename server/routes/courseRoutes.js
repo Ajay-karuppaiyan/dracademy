@@ -28,108 +28,64 @@ router.get('/', async (req, res) => {
 // @desc    Fetch courses enrolled by current user
 // @route   GET /api/courses/mine
 router.get('/mine', protect, async (req, res) => {
-
   try {
-
     let student;
+    const query = req.user.role === "student" ? { user: req.user._id } : { _id: req.query.studentId };
+    
+    // First find with all fields
+    student = await Student.findOne(query);
+    if (!student) return res.json([]);
 
-    //////////////////////////////////////
-    // STUDENT LOGIN
-    //////////////////////////////////////
+    // Check if we need to migrate or handle old IDs
+    let enrolledCourses = student.enrolledCourses || [];
+    
+    // We'll return them populated
+    // We use a manual approach to handle potential old string IDs
+    const courseIds = enrolledCourses.map(e => e.course || e);
+    
+    const coursesData = await Course.find({ _id: { $in: courseIds } })
+      .populate('instructor', 'name');
 
-    if (req.user.role === "student") {
+    // Combine with progress data
+    const results = enrolledCourses.map(e => {
+      const courseId = e.course || e;
+      const courseObj = coursesData.find(c => c._id.toString() === courseId.toString());
+      return {
+        _id: e._id || courseId, // use original e if its an ID
+        course: courseObj,
+        progress: e.progress || 0,
+        completed: e.completed || false,
+        completionDate: e.completionDate
+      };
+    }).filter(r => r.course); // remove if course not found
 
-      student = await Student.findOne({
-        user: req.user._id
-      }).populate({
-        path: "enrolledCourses",
-        populate: {
-          path: "instructor",
-          select: "name"
-        }
-      });
-
-    }
-
-    //////////////////////////////////////
-    // PARENT LOGIN
-    //////////////////////////////////////
-
-    if (req.user.role === "parent") {
-
-      const { studentId } = req.query;
-
-      student = await Student.findById(studentId).populate({
-        path: "enrolledCourses",
-        populate: {
-          path: "instructor",
-          select: "name"
-        }
-      });
-
-    }
-
-    res.json(student?.enrolledCourses || []);
-
+    res.json(results);
   } catch (error) {
-
-    res.status(500).json({
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
-
 });
 
 // @desc    Fetch courses available for enrollment (excluding already enrolled)
 // @route   GET /api/courses/available
 router.get('/available', protect, async (req, res) => {
-
   try {
-
     let student;
-
-    //////////////////////////////////////
-    // STUDENT LOGIN
-    //////////////////////////////////////
-
     if (req.user.role === "student") {
-
-      student = await Student.findOne({
-        user: req.user._id
-      });
-
-    }
-
-    //////////////////////////////////////
-    // PARENT LOGIN
-    //////////////////////////////////////
-
-    if (req.user.role === "parent") {
-
+      student = await Student.findOne({ user: req.user._id });
+    } else if (req.user.role === "parent") {
       const { studentId } = req.query;
-
       student = await Student.findById(studentId);
-
     }
-
-    const enrolledIds = student?.enrolledCourses || [];
-
+    
+    const enrolledIds = student?.enrolledCourses?.map(e => e.course || e) || [];
     const courses = await Course.find({
       _id: { $nin: enrolledIds },
       isActive: true
     }).populate("instructor", "name");
-
     res.json(courses);
-
   } catch (error) {
-
-    res.status(500).json({
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
-
 });
 
 // @desc    Fetch single course
@@ -151,78 +107,70 @@ router.get('/:id', async (req, res) => {
 // @desc    Enroll in a course
 // @route   POST /api/courses/:id/enroll
 router.post('/:id/enroll', protect, async (req, res) => {
-
   try {
-
     const { studentId } = req.body;
-
     const course = await Course.findById(req.params.id);
-
-    if (!course) {
-      return res.status(404).json({
-        message: "Course not found"
-      });
-    }
+    if (!course) return res.status(404).json({ message: "Course not found" });
 
     let student;
-
-    //////////////////////////////////////
-    // STUDENT LOGIN
-    //////////////////////////////////////
-
     if (req.user.role === "student") {
-
-      student = await Student.findOne({
-        user: req.user._id
-      });
-
-    }
-
-    //////////////////////////////////////
-    // PARENT LOGIN
-    //////////////////////////////////////
-
-    if (req.user.role === "parent") {
-
+      student = await Student.findOne({ user: req.user._id });
+    } else if (req.user.role === "parent") {
       student = await Student.findById(studentId);
-
     }
-
-    if (!student) {
-      return res.status(404).json({
-        message: "Student not found"
-      });
-    }
+    if (!student) return res.status(404).json({ message: "Student not found" });
 
     const alreadyEnrolled = student.enrolledCourses.some(
-      id => id.toString() === course._id.toString()
+      e => (e.course ? e.course.toString() : e.toString()) === course._id.toString()
     );
+    if (alreadyEnrolled) return res.status(400).json({ message: "Already enrolled" });
 
-    if (alreadyEnrolled) {
-
-      return res.status(400).json({
-        message: "Already enrolled"
-      });
-
-    }
-
-    student.enrolledCourses.push(course._id);
+    student.enrolledCourses.push({
+      course: course._id,
+      progress: 0,
+      completed: false
+    });
 
     await student.save();
-
-    res.json({
-      message: "Successfully enrolled",
-      courseId: course._id
-    });
-
+    res.json({ message: "Successfully enrolled", courseId: course._id });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    res.status(500).json({
-      message: error.message
+// @desc    Enroll in a free course
+// @route   POST /api/courses/:id/enroll-free
+router.post('/:id/enroll-free', protect, async (req, res) => {
+  try {
+    const { studentId } = req.body;
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+    if (course.price !== 0) return res.status(400).json({ message: "Not a free course" });
+
+    let student;
+    if (req.user.role === "student") {
+      student = await Student.findOne({ user: req.user._id });
+    } else if (req.user.role === "parent") {
+      student = await Student.findById(studentId);
+    }
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    const alreadyEnrolled = student.enrolledCourses.some(
+      e => (e.course ? e.course.toString() : e.toString()) === course._id.toString()
+    );
+    if (alreadyEnrolled) return res.status(400).json({ message: "Already enrolled" });
+
+    student.enrolledCourses.push({
+      course: course._id,
+      progress: 0,
+      completed: false
     });
 
+    await student.save();
+    res.json({ message: "Successfully enrolled in free course", courseId: course._id });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
 });
 
 // @desc    Create a course
@@ -380,6 +328,9 @@ router.get('/:id/students', async (req, res) => {
     }
 });
 
+const Feedback = require('../models/Feedback');
+const Certificate = require('../models/Certificate');
+
 // @desc    Upload lesson resource (video/doc)
 // @route   POST /api/courses/upload-lesson-file
 router.post('/upload-lesson-file', protect, upload.single('lessonFile'), async (req, res) => {
@@ -394,6 +345,145 @@ router.post('/upload-lesson-file', protect, upload.single('lessonFile'), async (
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+});
+
+// @desc    Update progress in a course
+// @route   POST /api/courses/:id/progress
+router.post('/:id/progress', protect, async (req, res) => {
+  try {
+    const { progress } = req.body;
+    const student = await Student.findOne({ user: req.user._id });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const enrollmentIdx = student.enrolledCourses.findIndex(
+      e => (e.course ? e.course.toString() : e.toString()) === req.params.id
+    );
+
+    if (enrollmentIdx === -1) {
+      return res.status(400).json({ message: "Not enrolled in this course" });
+    }
+
+    // Migrate to object if it's still a string ID
+    if (!student.enrolledCourses[enrollmentIdx].course) {
+      const courseId = student.enrolledCourses[enrollmentIdx];
+      student.enrolledCourses[enrollmentIdx] = {
+        course: courseId,
+        progress: 0,
+        completed: false
+      };
+    }
+
+    const enrollment = student.enrolledCourses[enrollmentIdx];
+    enrollment.progress = progress;
+
+    if (progress >= 100 && !enrollment.completed) {
+      enrollment.completed = true;
+      enrollment.completionDate = new Date();
+    }
+
+    await student.save();
+    res.json({ message: "Progress updated", enrollment });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Submit feedback/review for a course
+// @route   POST /api/courses/:id/feedback
+router.post('/:id/feedback', protect, async (req, res) => {
+  try {
+    const { rating, comment, isAnonymous } = req.body;
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const feedback = new Feedback({
+      student: req.user._id,
+      course: course._id,
+      instructor: course.instructor,
+      rating,
+      comment,
+      isAnonymous
+    });
+
+    await feedback.save();
+
+    // Update Course rating and review count
+    const allFeedbacks = await Feedback.find({ course: course._id });
+    course.numReviews = allFeedbacks.length;
+    course.rating = allFeedbacks.reduce((acc, f) => acc + f.rating, 0) / course.numReviews;
+    await course.save();
+
+    res.status(201).json({ message: "Feedback submitted", feedback });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get all reviews for a course
+// @route   GET /api/courses/:id/reviews
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find({ course: req.params.id })
+      .populate('student', 'name profilePic')
+      .sort({ createdAt: -1 });
+
+    res.json(feedbacks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get or issue a certificate
+// @route   GET /api/courses/:id/certificate
+router.get('/:id/certificate', protect, async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id }).populate('user');
+    const course = await Course.findById(req.params.id).populate('instructor', 'name');
+
+    if (!student || !course) {
+      return res.status(404).json({ message: "Information not found" });
+    }
+
+    const enrollment = student.enrolledCourses.find(
+      e => (e.course ? e.course.toString() : e.toString()) === req.params.id
+    );
+
+    if (!enrollment || (enrollment.course ? !enrollment.completed : true)) {
+      return res.status(400).json({ message: "Course not yet completed or not enrolled properly" });
+    }
+
+    let certificate = await Certificate.findOne({
+      student: req.user._id,
+      course: course._id
+    });
+
+    if (!certificate) {
+      // Issue new certificate
+      const certId = `CERT-${new Date().getTime()}-${req.user._id.toString().slice(-4)}`;
+      certificate = new Certificate({
+        student: req.user._id,
+        course: course._id,
+        certificateId: certId,
+        data: {
+          studentName: student.studentNameEnglish || req.user.name,
+          courseTitle: course.title,
+          instructorName: course.instructor?.name || 'Academic Board',
+          completionDate: enrollment.completionDate || new Date()
+        }
+      });
+      await certificate.save();
+    }
+
+    res.json(certificate);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;

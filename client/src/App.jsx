@@ -18,6 +18,8 @@ import Login from "./pages/Login";
 import CourseCatalog from "./pages/lms/CourseCatalog";
 import ForgotPassword from "./components/ForgotPassword";
 
+import CertificateView from "./pages/lms/CertificateView";
+
 // Dashboard Pages
 import Dashboard from "./pages/Dashboard";
 import MyLearning from "./pages/lms/MyLearning";
@@ -151,6 +153,7 @@ function App() {
             {/* LMS */}
             <Route path="lms" element={<MyLearning />} />
             <Route path="lms/course/:id" element={<CoursePlayer />} />
+            <Route path="lms/certificate/:courseId" element={<CertificateView />} />
             <Route path="enroll" element={<EnrollClass />} />
 
             {/* Parent */}

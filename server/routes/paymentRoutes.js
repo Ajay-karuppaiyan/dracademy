@@ -77,7 +77,7 @@ router.post("/create-order", protect, async (req, res) => {
     }
 
     const alreadyEnrolled = student.enrolledCourses.some(
-      (id) => id.toString() === courseId
+      (e) => (e.course ? e.course.toString() : e.toString()) === courseId
     );
 
     if (alreadyEnrolled) {
@@ -204,11 +204,15 @@ router.post("/verify-payment", protect, async (req, res) => {
     }
 
     const alreadyEnrolled = student.enrolledCourses.some(
-      (id) => id.toString() === payment.course.toString()
+      (e) => (e.course ? e.course.toString() : e.toString()) === payment.course.toString()
     );
 
     if (!alreadyEnrolled) {
-      student.enrolledCourses.push(payment.course);
+      student.enrolledCourses.push({
+        course: payment.course,
+        progress: 0,
+        completed: false
+      });
       await student.save();
     }
 

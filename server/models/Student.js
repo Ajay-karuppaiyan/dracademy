@@ -135,13 +135,19 @@ mobile: String,
 },
 ],
 
-// COURSE INFO
-enrolledCourses: [
-{
-type: mongoose.Schema.Types.ObjectId,
-ref: "Course",
-},
-],
+  // COURSE INFO
+  enrolledCourses: [
+    {
+      course: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+      },
+      completed: { type: Boolean, default: false },
+      completionDate: Date,
+      progress: { type: Number, default: 0 }, // 0-100%
+      certificateUrl: String,
+    },
+  ],
 
 center: {
 type: mongoose.Schema.Types.ObjectId,

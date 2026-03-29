@@ -142,7 +142,6 @@ return (
         </h3>
 
         <div className="grid md:grid-cols-2 gap-3">
-
           <div>
             <label className="block text-xs text-gray-600 mb-1">
               Employee Name
@@ -150,7 +149,7 @@ return (
             <input
               type="text"
               value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
+              readOnly
               className="w-full border p-2 rounded-lg"
             />
           </div>
