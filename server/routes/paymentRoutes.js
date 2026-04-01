@@ -26,9 +26,6 @@ router.post("/create-order", protect, async (req, res) => {
   try {
     const { courseId, studentId } = req.body;
 
-    console.log("BODY:", req.body);
-    console.log("USER:", req.user.role);
-
     /////////////////////////////////////////////////////////////
     // FIND COURSE
     /////////////////////////////////////////////////////////////

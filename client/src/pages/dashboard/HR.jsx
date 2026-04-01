@@ -44,7 +44,7 @@ const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) 
       const rect = event.currentTarget.getBoundingClientRect();
       setMenuPosition({
         top: rect.bottom + window.scrollY,
-        left: rect.right - 180, // width adjust
+        left: rect.right - 180,
       });
       setOpenMenuId(id);
     }

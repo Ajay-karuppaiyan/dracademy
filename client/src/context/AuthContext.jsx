@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         error: error.response?.data?.message || "Network error",
+        action: error.response?.data?.action
       };
     }
   };
@@ -53,6 +54,8 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         error: error.response?.data?.message || "Google auth error",
+        action: error.response?.data?.action,
+        googleData: error.response?.data?.googleData,
       };
     }
   };

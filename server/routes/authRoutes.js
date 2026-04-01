@@ -32,7 +32,11 @@ router.post('/google', async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ message: 'Google login failed. Email not found.' });
+            return res.status(404).json({
+                message: 'Account not found. Please complete registration.',
+                action: 'REGISTER_GOOGLE',
+                googleData: { name, email, googleId }
+            });
         } 
         
         if (!user.googleId) {
@@ -307,6 +311,18 @@ router.post('/register', async (req, res) => {
 
         if (!user) {
             return res.status(400).json({ message: 'Invalid user data' });
+        }
+
+        if (user.role === 'student') {
+            const Student = require('../models/Student');
+            const studentProfile = await Student.create({
+                user: user._id,
+                studentNameEnglish: user.name,
+                email: user.email,
+                phone: user.mobile
+            });
+            user.studentProfile = studentProfile._id;
+            await user.save();
         }
 
         // If parent and children provided, update students to link to this parent

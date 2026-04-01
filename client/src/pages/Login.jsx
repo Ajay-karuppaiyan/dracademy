@@ -22,7 +22,7 @@ const Login = () => {
     email: "",
     mobile: "",
     password: "",
-    role: "parent",
+    role: "student",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -59,7 +59,17 @@ const Login = () => {
         toast.success("Login successful!");
         navigate("/dashboard");
       } else {
-        toast.error(result.error);
+        if (result.action === 'REGISTER_GOOGLE') {
+          toast.error("Account not found. Please complete registration.");
+          setIsLogin(false);
+          setFormData(prev => ({
+            ...prev,
+            name: result.googleData?.name || "",
+            email: result.googleData?.email || ""
+          }));
+        } else {
+          toast.error(result.error);
+        }
       }
     } catch (err) {
       toast.error("Google login failed");
@@ -88,17 +98,17 @@ const handleSubmit = async (e) => {
         toast.error(result.error);
       }
     } else {
-      // SIGN UP (always parent)
+      // SIGN UP
       const result = await register(
         formData.name,
         formData.email,
         formData.mobile,
         formData.password,
-        formData.role // pass role as well
+        formData.role 
       );
 
       if (result.success) {
-        toast.success("Parent account created successfully!");
+        toast.success("Account created successfully!");
         navigate("/dashboard");
       } else {
         toast.error(result.error);

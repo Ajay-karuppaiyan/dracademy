@@ -55,7 +55,7 @@ const storage = new CloudinaryStorage({
 
         const options = {
             folder: folder,
-            resource_type: 'auto', // Detect video vs image vs raw
+            resource_type: 'auto',
             allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'docx', 'webp', 'mp4', 'mkv', 'xls', 'xlsx'],
             public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
         };
@@ -70,7 +70,7 @@ const storage = new CloudinaryStorage({
         // Forum image optimization (NEW)
         if (file.fieldname === 'forumImage') {
             options.transformation = [
-                { width: 1000, crop: 'limit' },  // prevent oversized images
+                { width: 1000, crop: 'limit' },
                 { quality: 'auto' },
                 { fetch_format: 'auto' }
             ];

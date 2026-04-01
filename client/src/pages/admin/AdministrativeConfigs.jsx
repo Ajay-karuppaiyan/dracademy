@@ -440,7 +440,7 @@ const columns = [
                 <input
                   type="password"
                   className="w-full rounded-xl border border-gray-200 p-3"
-                  placeholder={loginExists ? "•••••••• (Leave blank to keep current)" : "Enter new password..."}
+                  placeholder={loginExists ? "••••••••" : "Enter new password..."}
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                 />
