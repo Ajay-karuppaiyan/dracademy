@@ -45,6 +45,7 @@ const AdministrativeConfigs = () => {
     password: "",
   });
   const [isSavingLogin, setIsSavingLogin] = useState(false);
+  const [loginExists, setLoginExists] = useState(false);
 
   const config = {
     departments: {
@@ -161,6 +162,7 @@ const AdministrativeConfigs = () => {
   const openLoginModal = async (center) => {
     setCurrentId(center._id);
     setLoginData({ name: center.name, email: "", password: "" });
+    setLoginExists(false);
     try {
       const { data } = await api.get(`/centers/${center._id}/login`);
       if (data) {
@@ -169,6 +171,7 @@ const AdministrativeConfigs = () => {
           email: data.email || "",
           password: "", // Don't show password
         });
+        setLoginExists(true);
       }
     } catch (error) {
       console.error("Error fetching login:", error);
@@ -209,11 +212,23 @@ const columns = [
   ...(activeTab === "centers"
     ? [
         {
+          name: "Center ID",
+          selector: r => r.centerId,
+          sortable: true,
+          width: "150px",
+          center: true,
+          cell: r => (
+            <span className="font-mono text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-1 rounded">
+              {r.centerId || "N/A"}
+            </span>
+          ),
+        },
+        {
           name: "Location",
           selector: r => r.location,
           sortable: true,
           cell: r => (
-            <span className="text-gray-500">
+            <span className="text-gray-500 font-medium">
               {r.location || "N/A"}
             </span>
           ),
@@ -401,7 +416,8 @@ const columns = [
                 <input
                   type="text"
                   required
-                  className="w-full rounded-xl border border-gray-200 p-3"
+                  readOnly={loginExists}
+                  className={`w-full rounded-xl border border-gray-200 p-3 ${loginExists ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
                   value={loginData.name}
                   onChange={(e) => setLoginData({ ...loginData, name: e.target.value })}
                 />
@@ -411,22 +427,28 @@ const columns = [
                 <input
                   type="email"
                   required
-                  className="w-full rounded-xl border border-gray-200 p-3"
+                  readOnly={loginExists}
+                  className={`w-full rounded-xl border border-gray-200 p-3 ${loginExists ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Password {loginData.email && "(Leave blank to keep current)"}
+                  {loginExists ? "Update Password" : "Password"}
                 </label>
                 <input
                   type="password"
                   className="w-full rounded-xl border border-gray-200 p-3"
-                  placeholder="Enter new password..."
+                  placeholder={loginExists ? "•••••••• (Leave blank to keep current)" : "Enter new password..."}
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                 />
+                {loginExists && (
+                  <p className="mt-1 text-xs text-brand-600 font-medium">
+                    * Password is already set. Enter a new one only if you wish to change it.
+                  </p>
+                )}
               </div>
               <div className="flex justify-end gap-3 mt-8">
                 <button

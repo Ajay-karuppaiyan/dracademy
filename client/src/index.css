@@ -25,4 +25,27 @@ body {
     scrollbar-width: none;  /* Firefox */
 }
 
+/* Premium Animations */
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.shadow-glow {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+
+
 
