@@ -407,10 +407,10 @@ const Profile = () => {
         {/* Tab Contents */}
         <div className="animate-in fade-in duration-300">
           {activeTab === "personal" && (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className={`grid grid-cols-1 gap-8 ${studentProfile ? "lg:grid-cols-4" : ""}`}>
               {/* Left Column - Sub nav for Students */}
-              <div className="lg:col-span-1 border-r border-gray-200/60 pr-4">
-                {studentProfile && (
+              {studentProfile && (
+                <div className="lg:col-span-1 border-r border-gray-200/60 pr-4">
                   <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto pb-4 lg:pb-0 sticky top-24">
                     {["personal", "academic", "family", "references"].map(tab => (
                         <button 
@@ -422,14 +422,11 @@ const Profile = () => {
                         </button>
                     ))}
                   </div>
-                )}
-                {!studentProfile && (
-                   <div className="text-sm text-gray-500 italic p-4">Settings & Information</div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Right Column - Forms */}
-              <div className="lg:col-span-3 space-y-8">
+              <div className={studentProfile ? "lg:col-span-3 space-y-8" : "space-y-8"}>
                 {/* Always show base Account box */}
                 <SectionCard title="Account Details" icon={<User size={20} />}>
                   <div className="grid md:grid-cols-2 gap-5">
@@ -442,181 +439,20 @@ const Profile = () => {
                 {/* Role Specific */}
                 {studentProfile && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {childEditorTab === "personal" && (
-                      <div className="space-y-8">
-                        <SectionCard title="Identity & Demographics" icon={<User size={20} />}>
-                          <div className="grid md:grid-cols-3 gap-5">
-                            <InputCard label="Mother Tongue Name" value={studentProfile.studentNameMotherTongue} onChange={(e)=>updateStudentField("studentNameMotherTongue", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Father's Name" value={studentProfile.fatherName} onChange={(e)=>updateStudentField("fatherName", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Date of Birth" value={studentProfile.dob?.substring(0,10)} onChange={(e)=>updateStudentField("dob", e.target.value)} isEditing={isEditingPersonal} type="date" />
-                            <InputCard label="Age" value={studentProfile.age} onChange={(e)=>updateStudentField("age", e.target.value)} isEditing={isEditingPersonal} type="number" />
-                            <InputCard label="Gender" value={studentProfile.gender} onChange={(e)=>updateStudentField("gender", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Nationality" value={studentProfile.nationality} onChange={(e)=>updateStudentField("nationality", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Aadhar No" value={studentProfile.aadharNo} onChange={(e)=>updateStudentField("aadharNo", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="WhatsApp" value={studentProfile.whatsapp} onChange={(e)=>updateStudentField("whatsapp", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="KCET Reg No" value={studentProfile.kcetRegNo} onChange={(e)=>updateStudentField("kcetRegNo", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="NEET Reg No" value={studentProfile.neetRegNo} onChange={(e)=>updateStudentField("neetRegNo", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="APAAR ID" value={studentProfile.apaarId} onChange={(e)=>updateStudentField("apaarId", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Religion" value={studentProfile.religion} onChange={(e)=>updateStudentField("religion", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Community" value={studentProfile.community} onChange={(e)=>updateStudentField("community", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Marital Status" value={studentProfile.maritalStatus} onChange={(e)=>updateStudentField("maritalStatus", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="English Fluency" value={studentProfile.englishFluency} onChange={(e)=>updateStudentField("englishFluency", e.target.value)} isEditing={isEditingPersonal} />
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard title="Contact Address" icon={<MapPin size={20} />}>
-                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            <InputCard label="Village/Area" value={studentProfile.address?.village} onChange={(e)=>updateStudentAddress("village", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Post" value={studentProfile.address?.post} onChange={(e)=>updateStudentAddress("post", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Taluk" value={studentProfile.address?.taluk} onChange={(e)=>updateStudentAddress("taluk", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="District" value={studentProfile.address?.district} onChange={(e)=>updateStudentAddress("district", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="PIN Code" value={studentProfile.address?.pin} onChange={(e)=>updateStudentAddress("pin", e.target.value)} isEditing={isEditingPersonal} />
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard title="Banking Information" icon={<CreditCard size={20} />}>
-                          <div className="grid md:grid-cols-2 gap-5">
-                            <InputCard label="Account Holder" value={studentProfile.bankDetails?.accountHolderName} onChange={(e)=>updateStudentBank("accountHolderName", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Account No" value={studentProfile.bankDetails?.accountNumber} onChange={(e)=>updateStudentBank("accountNumber", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="IFSC Code" value={studentProfile.bankDetails?.ifscCode} onChange={(e)=>updateStudentBank("ifscCode", e.target.value)} isEditing={isEditingPersonal} />
-                            <InputCard label="Bank & Branch" value={studentProfile.bankDetails?.bankNameBranch} onChange={(e)=>updateStudentBank("bankNameBranch", e.target.value)} isEditing={isEditingPersonal} />
-                          </div>
-                        </SectionCard>
-                      </div>
-                    )}
-
-                    {childEditorTab === "academic" && (
-                      <div className="space-y-8">
-                        <SectionCard title="SSLC Records" icon={<GraduationCap size={20} />}>
-                          <div className="grid md:grid-cols-3 gap-5 mb-8">
-                            <InputCard label="Register No" value={studentProfile.sslcDetails?.registerNo} onChange={(e)=>updateStudentField("sslcDetails", {...studentProfile.sslcDetails, registerNo: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Year Of Passing" value={studentProfile.sslcDetails?.yearOfPassing} onChange={(e)=>updateStudentField("sslcDetails", {...studentProfile.sslcDetails, yearOfPassing: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="School Name" value={studentProfile.sslcDetails?.schoolName} onChange={(e)=>updateStudentField("sslcDetails", {...studentProfile.sslcDetails, schoolName: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Place" value={studentProfile.sslcDetails?.placeOfSchool} onChange={(e)=>updateStudentField("sslcDetails", {...studentProfile.sslcDetails, placeOfSchool: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Board" value={studentProfile.sslcDetails?.boardOfExamination} onChange={(e)=>updateStudentField("sslcDetails", {...studentProfile.sslcDetails, boardOfExamination: e.target.value})} isEditing={isEditingPersonal} />
-                          </div>
-                          <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-                              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mark Registry</h4>
-                              {isEditingPersonal && <button onClick={()=>addStudentArrayItem("sslcSubjects", {subject: "", totalMark: "", securedMark: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
-                            </div>
-                            <table className="w-full text-sm">
-                              <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
-                                <th className="py-2 px-4 text-left font-medium">Subject</th><th className="py-2 px-4 text-left font-medium w-24">Total</th><th className="py-2 px-4 text-left font-medium w-24">Secured</th>{isEditingPersonal && <th></th>}
-                              </tr></thead>
-                              <tbody className="bg-white">{studentProfile.sslcSubjects?.map((s, i) => (
-                                <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.subject} onChange={(e)=>updateStudentArray("sslcSubjects", i, "subject", e.target.value)} /></td>
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.totalMark} onChange={(e)=>updateStudentArray("sslcSubjects", i, "totalMark", e.target.value)} /></td>
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.securedMark} onChange={(e)=>updateStudentArray("sslcSubjects", i, "securedMark", e.target.value)} /></td>
-                                  {isEditingPersonal && <td className="py-2 px-4 text-right"><button onClick={()=>removeStudentArrayItem("sslcSubjects", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
-                                </tr>
-                              ))}</tbody>
-                            </table>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard title="HSC / PU Records" icon={<BookOpen size={20} />}>
-                          <div className="grid md:grid-cols-3 gap-5 mb-8">
-                            <InputCard label="Register No" value={studentProfile.hscDetails?.registerNo} onChange={(e)=>updateStudentField("hscDetails", {...studentProfile.hscDetails, registerNo: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Year Of Passing" value={studentProfile.hscDetails?.yearOfPassing} onChange={(e)=>updateStudentField("hscDetails", {...studentProfile.hscDetails, yearOfPassing: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="School Name" value={studentProfile.hscDetails?.schoolName} onChange={(e)=>updateStudentField("hscDetails", {...studentProfile.hscDetails, schoolName: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Place" value={studentProfile.hscDetails?.placeOfSchool} onChange={(e)=>updateStudentField("hscDetails", {...studentProfile.hscDetails, placeOfSchool: e.target.value})} isEditing={isEditingPersonal} />
-                            <InputCard label="Board" value={studentProfile.hscDetails?.boardOfExamination} onChange={(e)=>updateStudentField("hscDetails", {...studentProfile.hscDetails, boardOfExamination: e.target.value})} isEditing={isEditingPersonal} />
-                          </div>
-                          <div className="border border-gray-200 rounded-xl overflow-hidden">
-                             <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-                              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mark Registry</h4>
-                              {isEditingPersonal && <button onClick={()=>addStudentArrayItem("hscSubjects", {subject: "", totalMark: "", securedMark: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
-                            </div>
-                            <table className="w-full text-sm">
-                              <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
-                                <th className="py-2 px-4 text-left font-medium">Subject</th><th className="py-2 px-4 text-left font-medium w-24">Total</th><th className="py-2 px-4 text-left font-medium w-24">Secured</th>{isEditingPersonal && <th></th>}
-                              </tr></thead>
-                              <tbody className="bg-white">{studentProfile.hscSubjects?.map((s, i) => (
-                                <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.subject} onChange={(e)=>updateStudentArray("hscSubjects", i, "subject", e.target.value)} /></td>
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.totalMark} onChange={(e)=>updateStudentArray("hscSubjects", i, "totalMark", e.target.value)} /></td>
-                                  <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.securedMark} onChange={(e)=>updateStudentArray("hscSubjects", i, "securedMark", e.target.value)} /></td>
-                                  {isEditingPersonal && <td className="py-2 px-4 text-right"><button onClick={()=>removeStudentArrayItem("hscSubjects", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
-                                </tr>
-                              ))}</tbody>
-                            </table>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard title="Other Educational History" icon={<History size={20} />}>
-                           <div className="border border-gray-200 rounded-xl overflow-hidden">
-                             <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-                               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Timeline</h4>
-                               {isEditingPersonal && <button onClick={()=>addStudentArrayItem("educationBackground", {examinationPassed: "", instituteName: "", yearOfPassing: "", marksPercentage: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
-                             </div>
-                             <div className="overflow-x-auto">
-                               <table className="w-full text-sm">
-                                 <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
-                                   <th className="py-2 px-4 text-left font-medium">Exam</th><th className="py-2 px-4 text-left font-medium">Institute</th><th className="py-2 px-4 text-left font-medium">Year</th><th className="py-2 px-4 text-left font-medium">%</th>{isEditingPersonal && <th></th>}
-                                 </tr></thead>
-                                 <tbody className="bg-white">{studentProfile.educationBackground?.map((e, i) => (
-                                   <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                     <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={e.examinationPassed} onChange={(ev)=>updateStudentArray("educationBackground", i, "examinationPassed", ev.target.value)} /></td>
-                                     <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={e.instituteName} onChange={(ev)=>updateStudentArray("educationBackground", i, "instituteName", ev.target.value)} /></td>
-                                     <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-20 outline-none focus:text-indigo-600 font-medium" value={e.yearOfPassing} onChange={(ev)=>updateStudentArray("educationBackground", i, "yearOfPassing", ev.target.value)} /></td>
-                                     <td className="py-2 px-4"><input disabled={!isEditingPersonal} className="bg-transparent text-gray-800 w-20 outline-none focus:text-indigo-600 font-medium" value={e.marksPercentage} onChange={(ev)=>updateStudentArray("educationBackground", i, "marksPercentage", ev.target.value)} /></td>
-                                     {isEditingPersonal && <td className="py-2 px-4 text-right"><button onClick={()=>removeStudentArrayItem("educationBackground", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
-                                   </tr>
-                                 ))}</tbody>
-                               </table>
-                             </div>
-                           </div>
-                        </SectionCard>
-                      </div>
-                    )}
-
-                    {childEditorTab === "family" && (
-                      <div className="space-y-8">
-                        <SectionCard title="Family Connections" icon={<Users size={20} />}>
-                           <div className="flex justify-end mb-4">
-                              {isEditingPersonal && <button onClick={()=>addStudentArrayItem("familyBackground", {relationship: "", name: "", occupation: "", phone: ""})} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><Plus size={16} /> Add Member</button>}
-                           </div>
-                           <div className="grid md:grid-cols-2 gap-6">
-                              {studentProfile.familyBackground?.map((f, i) => (
-                                <div key={i} className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl relative group/card">
-                                  {isEditingPersonal && <button onClick={()=>removeStudentArrayItem("familyBackground", i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>}
-                                  <div className="grid gap-4">
-                                    <InputCard label="Relation" value={f.relationship} onChange={(e)=>updateStudentArray("familyBackground", i, "relationship", e.target.value)} isEditing={isEditingPersonal} />
-                                    <InputCard label="Name" value={f.name} onChange={(e)=>updateStudentArray("familyBackground", i, "name", e.target.value)} isEditing={isEditingPersonal} />
-                                    <InputCard label="Occupation" value={f.occupation} onChange={(e)=>updateStudentArray("familyBackground", i, "occupation", e.target.value)} isEditing={isEditingPersonal} />
-                                    <InputCard label="Phone" value={f.phone} onChange={(e)=>updateStudentArray("familyBackground", i, "phone", e.target.value)} isEditing={isEditingPersonal} />
-                                  </div>
-                                </div>
-                              ))}
-                              {studentProfile.familyBackground?.length === 0 && <p className="col-span-2 text-gray-400 italic text-sm py-4">No family members listed.</p>}
-                           </div>
-                        </SectionCard>
-                      </div>
-                    )}
-
-                    {childEditorTab === "references" && (
-                      <div className="space-y-8">
-                        <SectionCard title="Personal References" icon={<Shield size={20} />}>
-                           <div className="flex justify-end mb-4">
-                              {isEditingPersonal && <button onClick={()=>addStudentArrayItem("references", {name: "", mobile: ""})} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><Plus size={16} /> Add Reference</button>}
-                           </div>
-                           <div className="grid md:grid-cols-2 gap-6">
-                              {studentProfile.references?.map((r, i) => (
-                                <div key={i} className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl relative group/card">
-                                  {isEditingPersonal && <button onClick={()=>removeStudentArrayItem("references", i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>}
-                                  <div className="grid gap-4">
-                                    <InputCard label="Reference Name" value={r.name} onChange={(e)=>updateStudentArray("references", i, "name", e.target.value)} isEditing={isEditingPersonal} />
-                                    <InputCard label="Contact Mobile" value={r.mobile} onChange={(e)=>updateStudentArray("references", i, "mobile", e.target.value)} isEditing={isEditingPersonal} />
-                                  </div>
-                                </div>
-                              ))}
-                              {studentProfile.references?.length === 0 && <p className="col-span-2 text-gray-400 italic text-sm py-4">No references listed.</p>}
-                           </div>
-                        </SectionCard>
-                      </div>
-                    )}
+                      <StudentFormContent 
+                          data={studentProfile} 
+                          isEditing={isEditingPersonal}
+                          activeTab={childEditorTab}
+                          handlers={{
+                              updateField: updateStudentField,
+                              updateAddress: updateStudentAddress,
+                              updateBank: updateStudentBank,
+                              updateArray: updateStudentArray,
+                              addArrayItem: addStudentArrayItem,
+                              removeArrayItem: removeStudentArrayItem
+                          }}
+                          centers={centers}
+                      />
                   </div>
                 )}
 
@@ -659,7 +495,7 @@ const Profile = () => {
                        </div>
                        <div className="flex-1 space-y-2 text-sm mb-6">
                           <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">WhatsApp</span><span className="font-medium text-gray-800">{child.whatsapp || "N/A"}</span></div>
-                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">Center</span><span className="font-medium text-indigo-600">{child.center?.name || "N/A"}</span></div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">Center</span><span className="font-medium text-indigo-600">{child.center?.name || centers?.find(c => c._id === child.center)?.name || "N/A"}</span></div>
                        </div>
                        <button 
                          onClick={() => openChildEditor(child)}
@@ -698,37 +534,33 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    <div className="p-6 sm:px-8 max-h-[60vh] overflow-y-auto bg-white">
-                        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-                            <InputCard label="Name (English)" value={childData.studentNameEnglish} onChange={(e)=>updateChildField("studentNameEnglish", e.target.value)} isEditing={true} />
-                            <InputCard label="Email" value={childData.email} onChange={(e)=>updateChildField("email", e.target.value)} isEditing={true} type="email" />
-                            <InputCard label="Phone / WhatsApp" value={childData.whatsapp} onChange={(e)=>updateChildField("whatsapp", e.target.value)} isEditing={true} />
-                            <InputCard label="Date of Birth" value={childData.dob} onChange={(e)=>updateChildField("dob", e.target.value)} isEditing={true} type="date" />
-                            <InputCard label="Aadhar No" value={childData.aadharNo} onChange={(e)=>updateChildField("aadharNo", e.target.value)} isEditing={true} />
-                            
-                            <div className="flex flex-col gap-1.5 focus-within:text-indigo-600 transition-colors">
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned Center</label>
-                                <select 
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-gray-800"
-                                    value={childData.center?._id || childData.center || ""}
-                                    onChange={(e) => updateChildField("center", e.target.value)}
-                                >
-                                    <option value="">Select Center...</option>
-                                    {centers.map(c => (
-                                        <option key={c._id} value={c._id}>{c.name} - {c.location}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
+                    <div className="border-b border-gray-200 bg-gray-50 flex shadow-sm">
+                        {["personal", "academic", "family", "references"].map(tab => (
+                          <button 
+                            key={tab}
+                            onClick={() => setChildEditorTab(tab)}
+                            className={`flex-1 py-3 text-sm font-medium transition-colors ${childEditorTab === tab ? "bg-white text-indigo-700 border-t-2 border-t-indigo-600 border-x border-x-gray-200 -mb-px" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"}`}
+                          >
+                              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                          </button>
+                        ))}
+                    </div>
 
-                        <div className="mt-8 pt-8 border-t border-gray-100">
-                           <h4 className="font-semibold text-gray-800 mb-4">Location</h4>
-                           <div className="grid md:grid-cols-3 gap-6">
-                              <InputCard label="District" value={childData.address?.district} onChange={(e)=>updateChildAddress("district", e.target.value)} isEditing={true} />
-                              <InputCard label="PIN / Zip Code" value={childData.address?.pin} onChange={(e)=>updateChildAddress("pin", e.target.value)} isEditing={true} />
-                              <InputCard label="Taluk / Area" value={childData.address?.taluk} onChange={(e)=>updateChildAddress("taluk", e.target.value)} isEditing={true} />
-                           </div>
-                        </div>
+                    <div className="p-6 sm:px-8 max-h-[60vh] overflow-y-auto bg-white relative">
+                      <StudentFormContent 
+                          data={childData} 
+                          isEditing={true}
+                          activeTab={childEditorTab}
+                          handlers={{
+                              updateField: updateChildField,
+                              updateAddress: updateChildAddress,
+                              updateBank: updateChildBank,
+                              updateArray: updateChildArray,
+                              addArrayItem: addChildArrayItem,
+                              removeArrayItem: removeChildArrayItem
+                          }}
+                          centers={centers}
+                      />
                     </div>
                  </div>
                )}
@@ -774,4 +606,200 @@ const InputCard = ({ label, value, onChange, isEditing, type = "text" }) => (
     </div>
 );
 
+
+
+const StudentFormContent = ({ data, isEditing, activeTab, handlers, centers }) => {
+    const { updateField, updateAddress, updateBank, updateArray, addArrayItem, removeArrayItem } = handlers;
+    
+    return (
+        <div className="animate-in fade-in duration-300">
+            {activeTab === "personal" && (
+                <div className="space-y-8">
+                <SectionCard title="Identity & Demographics" icon={<User size={20} />}>
+                    <div className="grid md:grid-cols-3 gap-5">
+                    <InputCard label="Mother Tongue Name" value={data.studentNameMotherTongue} onChange={(e)=>updateField("studentNameMotherTongue", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Father's Name" value={data.fatherName} onChange={(e)=>updateField("fatherName", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Date of Birth" value={data.dob?.substring(0,10)} onChange={(e)=>updateField("dob", e.target.value)} isEditing={isEditing} type="date" />
+                    <InputCard label="Age" value={data.age} onChange={(e)=>updateField("age", e.target.value)} isEditing={isEditing} type="number" />
+                    <InputCard label="Gender" value={data.gender} onChange={(e)=>updateField("gender", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Nationality" value={data.nationality} onChange={(e)=>updateField("nationality", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Aadhar No" value={data.aadharNo} onChange={(e)=>updateField("aadharNo", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="WhatsApp" value={data.whatsapp} onChange={(e)=>updateField("whatsapp", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="KCET Reg No" value={data.kcetRegNo} onChange={(e)=>updateField("kcetRegNo", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="NEET Reg No" value={data.neetRegNo} onChange={(e)=>updateField("neetRegNo", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="APAAR ID" value={data.apaarId} onChange={(e)=>updateField("apaarId", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Religion" value={data.religion} onChange={(e)=>updateField("religion", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Community" value={data.community} onChange={(e)=>updateField("community", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Marital Status" value={data.maritalStatus} onChange={(e)=>updateField("maritalStatus", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="English Fluency" value={data.englishFluency} onChange={(e)=>updateField("englishFluency", e.target.value)} isEditing={isEditing} />
+                    
+                    <div className="flex flex-col gap-1.5 focus-within:text-indigo-600 transition-colors">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Assigned Center</label>
+                        <div className="px-3.5 py-2 bg-gray-50/50 border border-gray-100 rounded-lg text-gray-800 text-sm break-words min-h-[38px] flex items-center">
+                            {(() => {
+                                const childCenterId = data.center?._id || data.center;
+                                const centerObj = centers?.find(c => c._id === childCenterId) || (typeof data.center === 'object' ? data.center : null);
+                                return centerObj?.name ? `${centerObj.name} - ${centerObj.location || "Location unlisted"}` : <span className="text-gray-400 italic">Not specified</span>;
+                            })()}
+                        </div>
+                    </div>
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="Contact Address" icon={<MapPin size={20} />}>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <InputCard label="Village/Area" value={data.address?.village} onChange={(e)=>updateAddress("village", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Post" value={data.address?.post} onChange={(e)=>updateAddress("post", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Taluk" value={data.address?.taluk} onChange={(e)=>updateAddress("taluk", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="District" value={data.address?.district} onChange={(e)=>updateAddress("district", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="PIN Code" value={data.address?.pin} onChange={(e)=>updateAddress("pin", e.target.value)} isEditing={isEditing} />
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="Banking Information" icon={<CreditCard size={20} />}>
+                    <div className="grid md:grid-cols-2 gap-5">
+                    <InputCard label="Account Holder" value={data.bankDetails?.accountHolderName} onChange={(e)=>updateBank("accountHolderName", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Account No" value={data.bankDetails?.accountNumber} onChange={(e)=>updateBank("accountNumber", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="IFSC Code" value={data.bankDetails?.ifscCode} onChange={(e)=>updateBank("ifscCode", e.target.value)} isEditing={isEditing} />
+                    <InputCard label="Bank & Branch" value={data.bankDetails?.bankNameBranch} onChange={(e)=>updateBank("bankNameBranch", e.target.value)} isEditing={isEditing} />
+                    </div>
+                </SectionCard>
+                </div>
+            )}
+
+            {activeTab === "academic" && (
+                <div className="space-y-8">
+                <SectionCard title="SSLC Records" icon={<GraduationCap size={20} />}>
+                    <div className="grid md:grid-cols-3 gap-5 mb-8">
+                    <InputCard label="Register No" value={data.sslcDetails?.registerNo} onChange={(e)=>updateField("sslcDetails", {...data.sslcDetails, registerNo: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Year Of Passing" value={data.sslcDetails?.yearOfPassing} onChange={(e)=>updateField("sslcDetails", {...data.sslcDetails, yearOfPassing: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="School Name" value={data.sslcDetails?.schoolName} onChange={(e)=>updateField("sslcDetails", {...data.sslcDetails, schoolName: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Place" value={data.sslcDetails?.placeOfSchool} onChange={(e)=>updateField("sslcDetails", {...data.sslcDetails, placeOfSchool: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Board" value={data.sslcDetails?.boardOfExamination} onChange={(e)=>updateField("sslcDetails", {...data.sslcDetails, boardOfExamination: e.target.value})} isEditing={isEditing} />
+                    </div>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mark Registry</h4>
+                        {isEditing && <button onClick={()=>addArrayItem("sslcSubjects", {subject: "", totalMark: "", securedMark: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
+                    </div>
+                    <table className="w-full text-sm">
+                        <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
+                        <th className="py-2 px-4 text-left font-medium">Subject</th><th className="py-2 px-4 text-left font-medium w-24">Total</th><th className="py-2 px-4 text-left font-medium w-24">Secured</th>{isEditing && <th></th>}
+                        </tr></thead>
+                        <tbody className="bg-white">{data.sslcSubjects?.map((s, i) => (
+                        <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.subject} onChange={(e)=>updateArray("sslcSubjects", i, "subject", e.target.value)} /></td>
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.totalMark} onChange={(e)=>updateArray("sslcSubjects", i, "totalMark", e.target.value)} /></td>
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.securedMark} onChange={(e)=>updateArray("sslcSubjects", i, "securedMark", e.target.value)} /></td>
+                            {isEditing && <td className="py-2 px-4 text-right"><button onClick={()=>removeArrayItem("sslcSubjects", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
+                        </tr>
+                        ))}</tbody>
+                    </table>
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="HSC / PU Records" icon={<BookOpen size={20} />}>
+                    <div className="grid md:grid-cols-3 gap-5 mb-8">
+                    <InputCard label="Register No" value={data.hscDetails?.registerNo} onChange={(e)=>updateField("hscDetails", {...data.hscDetails, registerNo: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Year Of Passing" value={data.hscDetails?.yearOfPassing} onChange={(e)=>updateField("hscDetails", {...data.hscDetails, yearOfPassing: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="School Name" value={data.hscDetails?.schoolName} onChange={(e)=>updateField("hscDetails", {...data.hscDetails, schoolName: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Place" value={data.hscDetails?.placeOfSchool} onChange={(e)=>updateField("hscDetails", {...data.hscDetails, placeOfSchool: e.target.value})} isEditing={isEditing} />
+                    <InputCard label="Board" value={data.hscDetails?.boardOfExamination} onChange={(e)=>updateField("hscDetails", {...data.hscDetails, boardOfExamination: e.target.value})} isEditing={isEditing} />
+                    </div>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mark Registry</h4>
+                        {isEditing && <button onClick={()=>addArrayItem("hscSubjects", {subject: "", totalMark: "", securedMark: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
+                    </div>
+                    <table className="w-full text-sm">
+                        <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
+                        <th className="py-2 px-4 text-left font-medium">Subject</th><th className="py-2 px-4 text-left font-medium w-24">Total</th><th className="py-2 px-4 text-left font-medium w-24">Secured</th>{isEditing && <th></th>}
+                        </tr></thead>
+                        <tbody className="bg-white">{data.hscSubjects?.map((s, i) => (
+                        <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.subject} onChange={(e)=>updateArray("hscSubjects", i, "subject", e.target.value)} /></td>
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.totalMark} onChange={(e)=>updateArray("hscSubjects", i, "totalMark", e.target.value)} /></td>
+                            <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={s.securedMark} onChange={(e)=>updateArray("hscSubjects", i, "securedMark", e.target.value)} /></td>
+                            {isEditing && <td className="py-2 px-4 text-right"><button onClick={()=>removeArrayItem("hscSubjects", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
+                        </tr>
+                        ))}</tbody>
+                    </table>
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="Other Educational History" icon={<History size={20} />}>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Timeline</h4>
+                        {isEditing && <button onClick={()=>addArrayItem("educationBackground", {examinationPassed: "", instituteName: "", yearOfPassing: "", marksPercentage: ""})} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Add Entry +</button>}
+                        </div>
+                        <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead><tr className="bg-white text-gray-400 border-b border-gray-100">
+                            <th className="py-2 px-4 text-left font-medium">Exam</th><th className="py-2 px-4 text-left font-medium">Institute</th><th className="py-2 px-4 text-left font-medium">Year</th><th className="py-2 px-4 text-left font-medium">%</th>{isEditing && <th></th>}
+                            </tr></thead>
+                            <tbody className="bg-white">{data.educationBackground?.map((e, i) => (
+                            <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                                <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={e.examinationPassed} onChange={(ev)=>updateArray("educationBackground", i, "examinationPassed", ev.target.value)} /></td>
+                                <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-full outline-none focus:text-indigo-600 font-medium" value={e.instituteName} onChange={(ev)=>updateArray("educationBackground", i, "instituteName", ev.target.value)} /></td>
+                                <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-20 outline-none focus:text-indigo-600 font-medium" value={e.yearOfPassing} onChange={(ev)=>updateArray("educationBackground", i, "yearOfPassing", ev.target.value)} /></td>
+                                <td className="py-2 px-4"><input disabled={!isEditing} className="bg-transparent text-gray-800 w-20 outline-none focus:text-indigo-600 font-medium" value={e.marksPercentage} onChange={(ev)=>updateArray("educationBackground", i, "marksPercentage", ev.target.value)} /></td>
+                                {isEditing && <td className="py-2 px-4 text-right"><button onClick={()=>removeArrayItem("educationBackground", i)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></td>}
+                            </tr>
+                            ))}</tbody>
+                        </table>
+                        </div>
+                    </div>
+                </SectionCard>
+                </div>
+            )}
+
+            {activeTab === "family" && (
+                <div className="space-y-8">
+                <SectionCard title="Family Connections" icon={<Users size={20} />}>
+                    <div className="flex justify-end mb-4">
+                        {isEditing && <button onClick={()=>addArrayItem("familyBackground", {relationship: "", name: "", occupation: "", phone: ""})} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><Plus size={16} /> Add Member</button>}
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {data.familyBackground?.map((f, i) => (
+                        <div key={i} className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl relative group/card">
+                            {isEditing && <button onClick={()=>removeArrayItem("familyBackground", i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>}
+                            <div className="grid gap-4">
+                            <InputCard label="Relation" value={f.relationship} onChange={(e)=>updateArray("familyBackground", i, "relationship", e.target.value)} isEditing={isEditing} />
+                            <InputCard label="Name" value={f.name} onChange={(e)=>updateArray("familyBackground", i, "name", e.target.value)} isEditing={isEditing} />
+                            <InputCard label="Occupation" value={f.occupation} onChange={(e)=>updateArray("familyBackground", i, "occupation", e.target.value)} isEditing={isEditing} />
+                            <InputCard label="Phone" value={f.phone} onChange={(e)=>updateArray("familyBackground", i, "phone", e.target.value)} isEditing={isEditing} />
+                            </div>
+                        </div>
+                        ))}
+                        {(!data.familyBackground || data.familyBackground.length === 0) && <p className="col-span-2 text-gray-400 italic text-sm py-4">No family members listed.</p>}
+                    </div>
+                </SectionCard>
+                </div>
+            )}
+
+            {activeTab === "references" && (
+                <div className="space-y-8">
+                <SectionCard title="Personal References" icon={<Shield size={20} />}>
+                    <div className="flex justify-end mb-4">
+                        {isEditing && <button onClick={()=>addArrayItem("references", {name: "", mobile: ""})} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><Plus size={16} /> Add Reference</button>}
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {data.references?.map((r, i) => (
+                        <div key={i} className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl relative group/card">
+                            {isEditing && <button onClick={()=>removeArrayItem("references", i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>}
+                            <div className="grid gap-4">
+                            <InputCard label="Reference Name" value={r.name} onChange={(e)=>updateArray("references", i, "name", e.target.value)} isEditing={isEditing} />
+                            <InputCard label="Contact Mobile" value={r.mobile} onChange={(e)=>updateArray("references", i, "mobile", e.target.value)} isEditing={isEditing} />
+                            </div>
+                        </div>
+                        ))}
+                        {(!data.references || data.references.length === 0) && <p className="col-span-2 text-gray-400 italic text-sm py-4">No references listed.</p>}
+                    </div>
+                </SectionCard>
+                </div>
+            )}
+        </div>
+    );
+};
 export default Profile;
