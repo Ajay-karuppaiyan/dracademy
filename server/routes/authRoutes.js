@@ -32,13 +32,10 @@ router.post('/google', async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
-            user = await User.create({
-                name,
-                email,
-                googleId,
-                role: 'student', // Default role for new Google logins
-            });
-        } else if (!user.googleId) {
+            return res.status(404).json({ message: 'Google login failed. Email not found.' });
+        } 
+        
+        if (!user.googleId) {
             // Link existing account to Google
             user.googleId = googleId;
             await user.save();
