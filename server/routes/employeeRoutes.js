@@ -4,7 +4,8 @@ const { upload } = require("../config/cloudinary");
 const Employee = require("../models/Employee");
 const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
-const Center = require("../models/Center"); 
+const Center = require("../models/Center");
+const Otp = require("../models/Otp");
 
 //////////////////////////////////////////////////////
 // CREATE EMPLOYEE
@@ -24,6 +25,7 @@ router.post(
         firstName,
         lastName,
         email,
+        otp,
         phone,
         dob,
         gender,
@@ -73,6 +75,16 @@ router.post(
           return res.status(400).json({ message: "Invalid center" });
         }
       }
+
+      //////////////////////////////////////////////////////
+      // OTP VERIFICATION
+      //////////////////////////////////////////////////////
+      const otpRecord = await Otp.findOne({ email, otp });
+      if (!otpRecord) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+      // Delete OTP after verification
+      await Otp.deleteOne({ _id: otpRecord._id });
 
       //////////////////////////////////////////////////////
       // CREATE USER

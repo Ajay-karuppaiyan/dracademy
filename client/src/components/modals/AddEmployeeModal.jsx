@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
 
 const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
   const isEdit = !!employee;
@@ -22,6 +23,9 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
   const [designations, setDesignations] = useState([]);
   const [preview, setPreview] = useState(null);
   const [centers, setCenters] = useState([]);
+  const { sendOtp } = useAuth();
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
 
 const [formData, setFormData] = useState({
   firstName: "",
@@ -168,8 +172,25 @@ const [formData, setFormData] = useState({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isEdit && !showOtp) {
+      const loading = toast.loading("Sending verification OTP...");
+      try {
+        const result = await sendOtp(formData.email);
+        if (result.success) {
+          setShowOtp(true);
+          toast.success("Verification OTP sent to employee email!", { id: loading });
+        } else {
+          toast.error(result.error, { id: loading });
+        }
+      } catch (err) {
+        toast.error("Failed to send OTP", { id: loading });
+      }
+      return;
+    }
+
     const loadingToast = toast.loading(
-      "Creating employee and uploading documents...",
+      isEdit ? "Updating employee records..." : "Creating employee and uploading documents...",
     );
 
     try {
@@ -195,6 +216,10 @@ const [formData, setFormData] = useState({
       if (formData.contractFile)
         data.append("contractFile", formData.contractFile);
 
+      if (!isEdit && showOtp) {
+        data.append("otp", otpCode);
+      }
+
       const url = isEdit ? `/employees/${employee._id}` : "/employees";
       const method = isEdit ? "put" : "post";
 
@@ -212,6 +237,8 @@ const [formData, setFormData] = useState({
         },
       );
       onClose();
+      setShowOtp(false);
+      setOtpCode("");
 
     } catch (error) {
       const message =
@@ -238,7 +265,11 @@ const [formData, setFormData] = useState({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              setShowOtp(false);
+              setOtpCode("");
+            }}
             className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X size={20} />
@@ -247,6 +278,57 @@ const [formData, setFormData] = useState({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {showOtp ? (
+            <div className="space-y-6 flex flex-col items-center py-10">
+              <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
+                <ShieldCheck size={32} />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-slate-900">Email Verification</h3>
+                <p className="text-slate-500 text-sm mt-1">Enter the 6-digit OTP sent to {formData.email}</p>
+              </div>
+              <div className="w-full max-w-xs">
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 text-center border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all font-mono text-2xl tracking-[0.5em]"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+              <div className="flex flex-col w-full gap-3">
+                <button
+                  type="submit"
+                  disabled={otpCode.length !== 6}
+                  className="w-full py-3 rounded-xl bg-brand-600 text-white font-bold text-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 disabled:opacity-50"
+                >
+                  Verify & Create
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const loading = toast.loading("Resending OTP...");
+                    const result = await sendOtp(formData.email);
+                    if (result.success) toast.success("OTP Resent!", { id: loading });
+                    else toast.error(result.error, { id: loading });
+                  }}
+                  className="text-brand-600 font-bold text-sm hover:text-brand-700"
+                >
+                  Resend OTP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowOtp(false)}
+                  className="text-slate-400 text-sm hover:text-slate-600"
+                >
+                  Edit Details
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Section: Profile Picture */}
           <div className="flex flex-col items-center gap-4 py-2">
             <div className="relative group">
@@ -661,6 +743,8 @@ const [formData, setFormData] = useState({
               {isEdit ? "Save Changes" : "Create Employee"}
             </button>
           </div>
+            </>
+          )}
         </form>
       </div>
     </div>

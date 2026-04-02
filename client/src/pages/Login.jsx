@@ -28,8 +28,12 @@ const Login = () => {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [tempUserId, setTempUserId] = useState(null);
-  const { login, googleLogin, register, verifyTwoFactor } = useAuth();
+  const { login, googleLogin, register, verifyTwoFactor, sendOtp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
+  const [tempGoogleId, setTempGoogleId] = useState("");
   const navigate = useNavigate();
   
   const handleTwoFactorVerify = async (e) => {
@@ -62,6 +66,8 @@ const Login = () => {
         if (result.action === 'REGISTER_GOOGLE') {
           toast.error("Account not found. Please complete registration.");
           setIsLogin(false);
+          setIsGoogleSignup(true);
+          setTempGoogleId(result.googleData?.googleId || "");
           setFormData(prev => ({
             ...prev,
             name: result.googleData?.name || "",
@@ -99,19 +105,33 @@ const handleSubmit = async (e) => {
       }
     } else {
       // SIGN UP
-      const result = await register(
-        formData.name,
-        formData.email,
-        formData.mobile,
-        formData.password,
-        formData.role 
-      );
-
-      if (result.success) {
-        toast.success("Account created successfully!");
-        navigate("/dashboard");
+      if (!isGoogleSignup && !showOtp) {
+        // First step: Send OTP
+        const result = await sendOtp(formData.email);
+        if (result.success) {
+          setShowOtp(true);
+          toast.success("Verification OTP sent to your email!");
+        } else {
+          toast.error(result.error);
+        }
       } else {
-        toast.error(result.error);
+        // Second step: Verify OTP and Register (or direct register for Google)
+        const result = await register(
+          formData.name,
+          formData.email,
+          formData.mobile,
+          formData.password,
+          formData.role,
+          showOtp ? otpCode : null,
+          isGoogleSignup ? tempGoogleId : null
+        );
+
+        if (result.success) {
+          toast.success("Account created successfully!");
+          navigate("/dashboard");
+        } else {
+          toast.error(result.error);
+        }
       }
     }
   } catch {
@@ -174,50 +194,69 @@ const handleSubmit = async (e) => {
               onSubmit={showTwoFactor ? handleTwoFactorVerify : handleSubmit}
               className="space-y-4"
             >
-              {showTwoFactor ? (
-                // 2FA Input View
+              {showTwoFactor || showOtp ? (
+                // OTP / 2FA Input View
                 <div className="space-y-4">
                   <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-50 text-brand-600 mb-4">
                       <Lock size={32} />
                     </div>
                     <h3 className="text-xl font-bold text-gray-800">
-                      Two-Factor Auth
+                      {showOtp ? "Email Verification" : "Two-Factor Auth"}
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      Enter the code from your app
+                      {showOtp ? "Enter the OTP sent to your email" : "Enter the code from your app"}
                     </p>
                   </div>
                   <div className="relative">
                     <input
                       type="text"
                       required
-                      name="2faCode"
                       className="block w-full px-4 py-3 text-center border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all tracking-[0.5em] font-mono text-xl"
                       placeholder="000000"
                       maxLength={6}
-                      value={twoFactorCode}
-                      onChange={(e) =>
-                        setTwoFactorCode(e.target.value.replace(/\D/g, ""))
-                      }
+                      value={showOtp ? otpCode : twoFactorCode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        if (showOtp) setOtpCode(val);
+                        else setTwoFactorCode(val);
+                      }}
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={isLoading || twoFactorCode.length !== 6}
+                    disabled={isLoading || (showOtp ? otpCode.length !== 6 : twoFactorCode.length !== 6)}
                     className="w-full block py-3 px-6 bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                   >
-                    {isLoading ? "Verifying..." : "Verify"}
+                    {isLoading ? "Verifying..." : "Verify & Sign Up"}
                   </button>
+
+                  {showOtp && (
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={async () => {
+                        const result = await sendOtp(formData.email);
+                        if (result.success) toast.success("OTP Resent!");
+                        else toast.error(result.error);
+                      }}
+                      className="w-full text-center text-sm text-brand-500 hover:text-brand-600 mt-2 font-medium"
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
                       setShowTwoFactor(false);
+                      setShowOtp(false);
                       setTwoFactorCode("");
+                      setOtpCode("");
                     }}
                     className="w-full text-center text-sm text-gray-400 hover:text-gray-600 mt-4"
                   >
-                    Back to Login
+                    Back to {isLogin ? "Login" : "Sign Up"}
                   </button>
                 </div>
               ) : (
@@ -346,7 +385,11 @@ const handleSubmit = async (e) => {
                   ? "Don't have an account?"
                   : "Already have an account?"}
                 <button
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setShowOtp(false);
+                    setIsGoogleSignup(false);
+                  }}
                   className="text-gray-400 font-bold hover:text-brand-500 ml-1 underline"
                 >
                   {isLogin ? "Sign up!" : "Log In!"}

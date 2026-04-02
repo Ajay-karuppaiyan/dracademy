@@ -76,15 +76,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, mobile, password, role = "student") => {
+  const sendOtp = async (email) => {
     try {
-      const { data } = await api.post("/auth/register", {
+      const { data } = await api.post("/auth/send-otp", { email });
+      return { success: true, message: data.message };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Failed to send OTP",
+      };
+    }
+  };
+
+  const register = async (name, email, mobile, password, role = "student", otp, googleId) => {
+    try {
+      const payload = {
         name,
         email,
         mobile,
         password,
         role,
-      });
+      };
+
+      if (otp) payload.otp = otp;
+      if (googleId) payload.googleId = googleId;
+
+      const { data } = await api.post("/auth/register", payload);
 
       setUser(data);
       localStorage.setItem("user", JSON.stringify(data));
@@ -110,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     googleLogin,
     logout,
     register,
+    sendOtp,
     verifyTwoFactor,
     loading,
   };

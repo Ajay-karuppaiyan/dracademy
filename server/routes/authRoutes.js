@@ -8,6 +8,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const { protect } = require('../middleware/authMiddleware');
+const Otp = require('../models/Otp');
+const nodemailer = require('nodemailer');
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -57,6 +59,48 @@ router.post('/google', async (req, res) => {
     } catch (error) {
         console.error('GOOGLE LOGIN ERROR:', error);
         res.status(401).json({ message: 'Google authentication failed' });
+    }
+});
+
+// @desc    Send OTP for registration
+// @route   POST /api/auth/send-otp
+// @access  Public
+router.post('/send-otp', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await Otp.findOneAndUpdate(
+            { email },
+            { otp, createdAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Email Verification OTP',
+            text: `Your OTP for registration is: ${otp}. It will expire in 10 minutes.`,
+        });
+
+        res.json({ message: 'OTP sent to your email' });
+    } catch (error) {
+        console.error('SEND OTP ERROR:', error);
+        res.status(500).json({ message: 'Failed to send OTP' });
     }
 });
 
@@ -284,7 +328,7 @@ router.put('/password', protect, async (req, res) => {
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { name, email, mobile, password, role, children } = req.body;
+    const { name, email, mobile, password, role, children, otp, googleId } = req.body;
 
     try {
         // Check if user already exists
@@ -293,12 +337,23 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
+        // OTP verification (skip if Google registration)
+        if (!googleId) {
+            const otpRecord = await Otp.findOne({ email, otp });
+            if (!otpRecord) {
+                return res.status(400).json({ message: 'Invalid or expired OTP' });
+            }
+            // Delete OTP after verification
+            await Otp.deleteOne({ _id: otpRecord._id });
+        }
+
         // Create user object safely
         const userData = {
             name,
             email,
             mobile,
             password,
+            googleId,
             role: role || 'student',
         };
 
