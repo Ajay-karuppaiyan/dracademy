@@ -23,6 +23,9 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [students, setStudents] = React.useState([]);
   const [enrollments, setEnrollments] = React.useState([]);
+  const [studentStats, setStudentStats] = React.useState(null);
+  const [studentActivity, setStudentActivity] = React.useState([]);
+  const [studentAnnouncements, setStudentAnnouncements] = React.useState([]);
 
 const [stats, setStats] = React.useState({
   totalStudents: 0,
@@ -32,11 +35,9 @@ const [stats, setStats] = React.useState({
   loading: true,
 });
 
-React.useEffect(() => {
   const fetchStats = async () => {
     try {
       const { data } = await api.get("/dashboard-stats");
-
       setStats({
         totalStudents: data.totalStudents,
         activeCourses: data.activeCourses,
@@ -68,18 +69,29 @@ React.useEffect(() => {
     }
   };
 
-  fetchStats();
-  fetchStudents();
-  fetchEnrollments();
-}, []);
+  const fetchStudentStats = async () => {
+    try {
+      const { data } = await api.get("/dashboard-stats/student");
+      setStudentStats(data);
+      setStudentActivity(data.recentActivity || []);
+      setStudentAnnouncements(data.announcements || []);
+    } catch (err) {
+      console.error("Failed to fetch student stats", err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (user?.role === "student") {
+      fetchStudentStats();
+    } else {
+      fetchStats();
+      fetchStudents();
+      fetchEnrollments();
+    }
+  }, [user]);
 
 
-  const studentActivityData = [
-    { course: "UI/UX Design", activity: "Completed Module 3", date: "Oct 24, 2026", status: "Completed" },
-    { course: "Full Stack Dev", activity: "Submitted Assignment 2", date: "Oct 23, 2026", status: "Graded" },
-    { course: "Data Science", activity: "Started Module 1", date: "Oct 22, 2026", status: "In Progress" },
-    { course: "Cyber Security", activity: "Viewed Lecture 5", date: "Oct 21, 2026", status: "Viewed" },
-  ];
+  const studentActivityData = studentActivity;
 
   const studentActivityColumns = [
     { name: 'Course', selector: row => row.course, sortable: true, cell: row => <span className="font-medium text-slate-900">{row.course}</span> },
@@ -183,34 +195,34 @@ React.useEffect(() => {
           {[
             {
               label: "Course Progress",
-              value: "75%",
+              value: studentStats?.avgProgress || "0%",
               icon: Play,
-              change: "+5%",
-              trend: "up",
+              change: "Recent",
+              trend: "neutral",
               color: "blue",
             },
             {
               label: "Attendance",
-              value: "92%",
+              value: studentStats?.attendance || "0%",
               icon: CheckCircle,
-              change: "0%",
+              change: "Last 30d",
               trend: "neutral",
               color: "green",
             },
             {
-              label: "Upcoming Lessons",
-              value: "3",
+              label: "Alerts & Events",
+              value: studentStats?.upcoming || "0",
               icon: Calendar,
-              change: "0",
+              change: "New",
               trend: "neutral",
               color: "purple",
             },
             {
-              label: "Certificates Earned",
-              value: "1",
+              label: "Courses Completed",
+              value: studentStats?.certificates || "0",
               icon: Award,
-              change: "+1",
-              trend: "up",
+              change: "Total",
+              trend: "neutral",
               color: "yellow",
             },
           ].map((stat, idx) => (
@@ -325,46 +337,27 @@ React.useEffect(() => {
                 </h3>
               </div>
               <ul className="divide-y divide-slate-100">
-                {[
-                  {
-                    title: "Live Session: UI/UX Principles",
-                    time: "Today, 10:00 AM",
-                    course: "UI/UX Design",
-                    icon: Play,
-                    color: "blue",
-                  },
-                  {
-                    title: "Assignment Due: Full Stack Project",
-                    time: "Tomorrow, 05:00 PM",
-                    course: "Full Stack Dev",
-                    icon: FileText,
-                    color: "green",
-                  },
-                  {
-                    title: "Webinar: Data Science Trends",
-                    time: "Nov 1, 02:00 PM",
-                    course: "Data Science",
-                    icon: Calendar,
-                    color: "purple",
-                  },
-                ].map((item, i) => (
+                {studentAnnouncements.map((item, i) => (
                   <li
                     key={i}
                     className="flex items-center gap-4 p-6 hover:bg-slate-50 transition-colors"
                   >
                     <div
-                      className={`p-3 rounded-xl bg-${item.color}-50 text-${item.color}-600`}
+                      className={`p-3 rounded-xl bg-blue-50 text-blue-600`}
                     >
-                      <item.icon size={20} />
+                      <Play size={20} />
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">{item.title}</p>
                       <p className="text-sm text-slate-500">
-                        {item.time} &bull; {item.course}
+                        {item.time} &bull; Announcement
                       </p>
                     </div>
                   </li>
                 ))}
+                {studentAnnouncements.length === 0 && (
+                   <li className="p-6 text-center text-slate-400 text-sm">No upcoming updates</li>
+                )}
               </ul>
               <div className="p-6 border-t border-slate-100">
                 <button className="w-full text-brand-600 text-sm font-bold hover:text-brand-700">

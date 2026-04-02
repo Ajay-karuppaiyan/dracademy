@@ -3,6 +3,8 @@ const router = express.Router();
 const Student = require("../models/Student");
 const Course = require("../models/Course");
 const Payment = require("../models/Payment");
+const Attendance = require("../models/Attendance");
+const Announcement = require("../models/Announcement");
 
 const { protect } = require("../middleware/authMiddleware");
 
@@ -80,6 +82,64 @@ router.get("/recent-enrollments", protect, async (req, res) => {
       .limit(5);
 
     res.json(enrollments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET /api/dashboard-stats/student
+router.get("/student", protect, async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id }).populate("enrolledCourses.course");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student profile not found" });
+    }
+
+    // 1. Progress stats
+    const progressTotal = student.enrolledCourses.reduce((sum, c) => sum + (c.progress || 0), 0);
+    const avgProgress = student.enrolledCourses.length > 0 ? (progressTotal / student.enrolledCourses.length).toFixed(0) : 0;
+
+    // 2. Attendance stats (last 30 days attendance %)
+    const totalDays = 30; // 30 days window
+    const attendanceCount = await Attendance.countDocuments({
+      userId: req.user._id,
+      date: { $gte: new Date(Date.now() - totalDays * 24 * 60 * 60 * 1000) }
+    });
+    // For now simple attendance count or %
+    const attendanceVal = attendanceCount > 0 ? ((attendanceCount / totalDays) * 100).toFixed(0) : 0;
+
+    // 3. Upcoming events/lessons (mock or check announcements)
+    const announcements = await Announcement.find({
+      $or: [{ target: "all" }, { target: "student" }]
+    }).sort({ createdAt: -1 }).limit(3);
+
+    // 4. Certificates
+    const certificatesCount = student.enrolledCourses.filter(c => c.completed).length;
+
+    // Recent activity (mock for now or based on progress updates)
+    const recentActivity = student.enrolledCourses.slice(0, 4).map(c => ({
+      course: c.course?.title || "Course",
+      activity: c.progress === 100 ? "Completed" : `Reached ${c.progress}%`,
+      date: new Date().toLocaleDateString(),
+      status: c.completed ? "Completed" : "In Progress"
+    }));
+
+    res.json({
+      avgProgress: `${avgProgress}%`,
+      attendance: `${attendanceVal}%`,
+      upcoming: announcements.length,
+      certificates: certificatesCount,
+      recentActivity,
+      announcements: announcements.map(a => ({
+        title: a.title,
+        time: new Date(a.createdAt).toLocaleDateString(),
+        course: "Admin", // for now
+        icon: "Play",
+        color: "blue"
+      }))
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

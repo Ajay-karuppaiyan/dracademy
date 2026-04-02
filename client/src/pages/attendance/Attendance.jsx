@@ -112,19 +112,29 @@ const handleSubmit = async (e) => {
   setLoading(false);
 };
 
-  const handleSetLogout = async (record) => {
-    try {
-      const logoutTime = new Date().toLocaleTimeString();
-      await api.patch(
-        `${API_URL}/attendance/logout/${record._id}`,
-        { logoutTime },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setAttendanceList(prev =>
-        prev.map(a => (a._id === record._id ? { ...a, logoutTime } : a))
-      );
-    } catch {}
-  };
+const handleSetLogout = async (record) => {
+  const confirmLogout = window.confirm("Are you sure you want to logout?");
+
+  if (!confirmLogout) return;
+
+  try {
+    const logoutTime = new Date().toLocaleTimeString();
+
+    await api.patch(
+      `${API_URL}/attendance/logout/${record._id}`,
+      { logoutTime },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setAttendanceList(prev =>
+      prev.map(a =>
+        a._id === record._id ? { ...a, logoutTime } : a
+      )
+    );
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+};
 
   const formatTime12Hour = (time) => {
     if (!time) return "-";
@@ -172,11 +182,11 @@ const handleSubmit = async (e) => {
     { name: 'Login', selector: row => row.loginTime, sortable: true, cell: row => formatTime12Hour(row.loginTime) },
     { name: 'Logout', selector: row => row.logoutTime, sortable: true, cell: row => formatTime12Hour(row.logoutTime) },
     { name: 'Hours', selector: row => calculateWorkingHours(row.loginTime, row.logoutTime), center: true },
-    { name: 'Action', center: true, width: '160px', cell: row => (
-        <div className="flex justify-center gap-2">
+    { name: 'Action', center: true, width: '200px', cell: row => (
+        <div className="flex justify-center gap-2 flex-nowrap">
           <button
             onClick={() => setViewModal(row)}
-            className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-600 transition shadow-sm"
+            className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-600 transition shadow-sm whitespace-nowrap"
           >
             View
           </button>
