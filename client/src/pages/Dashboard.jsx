@@ -401,6 +401,129 @@ const [stats, setStats] = React.useState({
     );
   }
 
+  if (user && user.role === "coach") {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+        {/* Coach Welcome Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Coach Dashboard
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Welcome back, {user.name}. Here are the metrics for your assigned courses.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+             <span className="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              Instructor Mode
+            </span>
+            <button 
+              onClick={() => window.location.href='/dashboard/coach/my-courses'}
+              className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors shadow-lg shadow-brand-600/20"
+            >
+              My Courses
+            </button>
+          </div>
+        </div>
+
+        {/* Coach Stats Grid */}
+        {stats.loading ? (
+          <div className="lg:col-span-4 bg-white/50 backdrop-blur-md p-10 rounded-2xl border border-slate-100 flex items-center justify-center">
+            <Loading message="Fetching your performance metrics..." />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                label: "Total Students",
+                value: (stats.totalStudents || 0).toLocaleString(),
+                icon: Users,
+                change: "Enrolled in your courses",
+                trend: "neutral",
+                color: "blue",
+              },
+              {
+                label: "Active Courses",
+                value: stats.activeCourses || 0,
+                icon: BookOpen,
+                change: "Assigned to you",
+                trend: "neutral",
+                color: "purple",
+              },
+              {
+                label: "Course Enrollments",
+                value: (stats.totalEnrollments || 0).toLocaleString(),
+                icon: CheckCircle,
+                change: "Course-wise total",
+                trend: "neutral",
+                color: "orange",
+              },
+            ].map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}>
+                    <stat.icon size={24} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</h3>
+                  <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                  <p className="text-[10px] text-slate-400 mt-2 italic">{stat.change}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Coach Tables Section */}
+        <div className="flex flex-col gap-8">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-900">Recent Students</h3>
+              <button 
+                onClick={() => window.location.href='/dashboard/students'}
+                className="text-brand-600 text-sm font-bold hover:text-brand-700"
+              >
+                View All
+              </button>
+            </div>
+            <div className="overflow-x-auto pb-4">
+              <CustomDataTable 
+                columns={adminStudentColumns}
+                data={students}
+                pagination
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-900">Recent Enrollments</h3>
+              <button 
+                onClick={() => window.location.href='/dashboard/coach/my-courses'}
+                className="text-brand-600 text-sm font-bold hover:text-brand-700"
+              >
+                Manage Courses
+              </button>
+            </div>
+            <div className="overflow-x-auto pb-4">
+              <CustomDataTable 
+                columns={enrollmentColumns}
+                data={enrollments}
+                pagination
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Default (Admin/Other) Dashboard content
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -431,7 +554,8 @@ const [stats, setStats] = React.useState({
             <Loading message="Fetching metrics and trends..." />
           </div>
         ) : (
-          [
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
             {
               label: "Total Students",
               value: (stats.totalStudents || 0).toLocaleString(),
@@ -501,8 +625,9 @@ const [stats, setStats] = React.useState({
                   {stat.label}
                 </p>
               </div>
-            </div>
-          ))
+              </div>
+            ))}
+          </div>
         )}
 
       {/* Main Content Split */}

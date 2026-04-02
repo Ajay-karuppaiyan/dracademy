@@ -80,12 +80,15 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
   ];
 
   // ================= COACH MENU =================
-  const coachItems = adminItems.filter(
-    (item) =>
-      item.label !== "Employee Management" &&
-      item.label !== "Finance" &&
-      item.label !== "Expenses"
-  );
+  const coachItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <MonitorPlay size={22} />, label: "My Courses", path: "/dashboard/coach/my-courses" },
+    { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
+    { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
+    { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
+  ];
 
   // ================= PARENT MENU =================
   const parentItems = [

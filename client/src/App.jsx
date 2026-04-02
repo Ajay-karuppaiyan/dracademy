@@ -41,6 +41,7 @@ import Finance from "./pages/Finance";
 import Announcement from "./pages/dashboard/Announcement";
 import DiscussionForum from "./pages/dashboard/DiscussionForum";
 import Expenses from "./pages/expenses/Expenses";
+import MyCourses from "./pages/coach/MyCourses";
 
 // Leave
 import LeaveRequestList from "./components/LeaveRequestList";
@@ -182,6 +183,9 @@ function App() {
 
             {/* Students */}
             <Route path="students" element={<Students />} />
+
+            {/* Coach */}
+            <Route path="coach/my-courses" element={<MyCourses />} />
 
             {/* Profile */}
             <Route path="profile" element={<Profile />} />

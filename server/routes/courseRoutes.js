@@ -318,7 +318,7 @@ router.delete('/:id', async (req, res) => {
 // @route   GET /api/courses/:id/students
 router.get('/:id/students', async (req, res) => {
     try {
-        const students = await Student.find({ enrolledCourses: req.params.id })
+        const students = await Student.find({ "enrolledCourses.course": req.params.id })
             .select('studentNameEnglish email phone whatsapp profilePic status createdAt')
             .populate('parent', 'name email');
         res.json(students);
