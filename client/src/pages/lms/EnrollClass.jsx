@@ -3,6 +3,7 @@ import { BookOpen, IndianRupee, GraduationCap, Clock } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import Loading from "../../components/Loading";
 
 const EnrollClass = () => {
   const { user } = useAuth();
@@ -180,11 +181,7 @@ const EnrollClass = () => {
   // LOADING UI
   /////////////////////////////////////////////////////////////
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loading fullPage message="Discovering available classes..." />;
   }
 
   /////////////////////////////////////////////////////////////

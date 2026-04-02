@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Loader2, Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
+import Loading from "../../components/Loading";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
@@ -356,12 +357,6 @@ const generatePayslip = async (payrollId, employeeName) => {
         ref={tableRef}
         className="bg-white border rounded-xl shadow-sm overflow-hidden"
       >
-        {loading ? (
-          <div className="flex justify-center flex-col items-center py-20 gap-3">
-            <Loader2 className="animate-spin text-blue-600" size={40} />
-            <p className="text-gray-500 font-medium">Loading payroll data...</p>
-          </div>
-        ) : (
             <CustomDataTable 
               columns={payrollColumns} 
               data={filteredPayrolls} 
@@ -372,7 +367,6 @@ const generatePayslip = async (payrollId, employeeName) => {
               pointerOnHover={false}
               paginationPerPage={15}
             />
-        )}
       </div>
 
       {/* ATTENDANCE MODAL */}
@@ -400,9 +394,7 @@ const generatePayslip = async (payrollId, employeeName) => {
 
             <div className="p-0 overflow-hidden flex-1 flex flex-col">
               {attendanceLoading ? (
-                <div className="flex justify-center items-center py-20">
-                  <Loader2 className="animate-spin text-blue-600" size={32} />
-                </div>
+                <Loading message="Syncing attendance logs..." />
               ) : (
                 <div className="overflow-hidden flex-1 w-full bg-white">
                   <CustomDataTable 

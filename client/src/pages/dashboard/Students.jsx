@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { Eye, Trash2, Edit2 } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
 import api from "../../services/api";
+import Loading from "../../components/Loading";
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -177,7 +178,6 @@ const handleUpdate = async () => {
     ), width: "160px"}
   ];
 
-  if (loading) return <div className="p-6">Loading...</div>;
 
   return (
     <div className="p-4 sm:p-6 w-full max-w-full overflow-x-hidden h-[calc(100vh-80px)]">
@@ -185,6 +185,7 @@ const handleUpdate = async () => {
       <CustomDataTable 
         columns={columns}
         data={filtered}
+        progressPending={loading}
         search={search}
         setSearch={setSearch}
         searchPlaceholder="Search by name, email, phone..."

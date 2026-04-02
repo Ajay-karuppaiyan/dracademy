@@ -13,6 +13,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import Loading from "../../components/Loading";
 
 const DiscussionForum = () => {
   const { user } = useAuth();
@@ -237,8 +238,8 @@ const handleSubmitPost = async () => {
 
       {/* LOADING */}
       {loading && (
-        <div className="text-center text-gray-500 py-10">
-          Loading discussions...
+        <div className="py-20 flex justify-center w-full">
+          <Loading message="Fetching the latest discussions..." />
         </div>
       )}
 

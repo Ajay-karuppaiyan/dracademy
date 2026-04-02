@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
-import { Loader2 } from "lucide-react";
+import Loading from "../components/Loading";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import CustomDataTable from "../components/DataTable";
@@ -137,12 +137,6 @@ const Finance = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-60">
-        <Loader2 className="animate-spin w-8 h-8 text-green-600" />
-      </div>
-    );
 
 return (
   <div className="p-6 space-y-8 bg-slate-50 min-h-screen">
@@ -222,6 +216,7 @@ return (
       payments={inwardPayments}
       getStatusColor={getStatusColor}
       showCourse
+      loading={loading}
     />
 
     {/* ===================== OUTWARD SECTION ===================== */}
@@ -245,6 +240,7 @@ return (
     <Table
       payments={outwardPayments}
       getStatusColor={getStatusColor}
+      loading={loading}
     />
 
   </div>
@@ -255,7 +251,7 @@ return (
 // TABLE COMPONENT
 ////////////////////////////////////////////////////////////
 
-const Table = ({ title, payments, getStatusColor, showCourse }) => {
+const Table = ({ title, payments, getStatusColor, showCourse, loading }) => {
   const columns = [
     { name: 'S.No', selector: (row, index) => index + 1, width: '80px', center: true },
     { name: 'Name', selector: row => row.student?.studentNameEnglish || row.recipientName || row.student?.email || "N/A", sortable: true, cell: row => <span className="font-medium text-gray-800">{row.student?.studentNameEnglish || row.recipientName || row.student?.email || "N/A"}</span> },
@@ -282,6 +278,7 @@ const Table = ({ title, payments, getStatusColor, showCourse }) => {
         <CustomDataTable 
           columns={columns}
           data={payments}
+          progressPending={loading}
           pagination
         />
       </div>

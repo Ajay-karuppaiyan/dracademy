@@ -22,6 +22,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import LessonManagementModal from "../../components/modals/LessonManagementModal";
+import Loading from "../../components/Loading";
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -320,7 +321,6 @@ const CourseManagement = () => {
     setShowModal(false);
   };
 
-  if (loading && !showModal) return <div className="p-8 text-center text-gray-500">Loading courses...</div>;
 
   const columns = [
     { name: 'S.No', selector: (row, index) => index + 1, width: '80px', sortable: true, center: true },
@@ -392,6 +392,7 @@ const CourseManagement = () => {
           columns={columns}
           data={filteredCourses}
           progressPending={loading}
+          progressComponent={<Loading message="Loading courses..." />}
           search={searchQuery}
           setSearch={setSearchQuery}
           searchPlaceholder="Search courses by title or category..."
@@ -420,7 +421,7 @@ const CourseManagement = () => {
 
             <div className="flex-1 overflow-y-auto p-6">
               {fetchingStudents ? (
-                <div className="text-center py-20 text-gray-400 font-medium">Loading students...</div>
+                <Loading message={`Retreiving students for ${currentCourseTitle}...`} />
               ) : enrolledStudents.length === 0 ? (
                 <div className="text-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                   <p className="text-slate-500">No students enrolled in this course yet.</p>

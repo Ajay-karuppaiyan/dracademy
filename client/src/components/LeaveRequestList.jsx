@@ -10,6 +10,7 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [user, setUser] = useState(null);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [openStatusId, setOpenStatusId] = useState(null);
@@ -28,12 +29,15 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   // ================= FETCH LEAVE LIST =================
   const fetchRequests = async (role) => {
     try {
+      setLoadingList(true);
       const url = role === "admin" ? "/leave/all" : "/leave";
       const res = await api.get(url);
       setRequests(res.data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load leave requests");
+    } finally {
+      setLoadingList(false);
     }
   };
 
@@ -205,7 +209,7 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
           <CustomDataTable 
              columns={columns}
              data={filteredRequests}
-             progressPending={loadingDetails}
+             progressPending={loadingList}
              pagination
              search={searchTerm}
              setSearch={setSearchTerm}

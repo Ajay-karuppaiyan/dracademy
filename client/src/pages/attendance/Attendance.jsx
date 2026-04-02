@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import Payroll from "../../pages/payroll/Payroll";
 import CustomDataTable from "../../components/DataTable";
+import Loading from "../../components/Loading";
 
 const Attendance = () => {
   const { user, token } = useAuth();
@@ -59,6 +60,7 @@ const Attendance = () => {
   const fetchAttendance = async () => {
     if (!user) return;
     try {
+      setLoading(true);
       const params = ["admin", "center"].includes(user.role) ? {} : { name: user.name };
       const res = await api.get(`${API_URL}/attendance`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -67,6 +69,8 @@ const Attendance = () => {
       setAttendanceList(res.data);
     } catch {
       setAttendanceList([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +122,8 @@ const handleSetLogout = async (record) => {
   if (!confirmLogout) return;
 
   try {
-    const logoutTime = new Date().toLocaleTimeString();
+    // Use toTimeString().slice(0, 8) for consistent HH:mm:ss format across all browsers
+    const logoutTime = new Date().toTimeString().slice(0, 8);
 
     await api.patch(
       `${API_URL}/attendance/logout/${record._id}`,
@@ -138,8 +143,18 @@ const handleSetLogout = async (record) => {
 
   const formatTime12Hour = (time) => {
     if (!time) return "-";
-    const d = new Date(`1970-01-01T${time}`);
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+    // Check if it already has AM/PM - some old records might
+    if (time.includes("AM") || time.includes("PM")) return time;
+    
+    // Safely parse HH:mm:ss
+    try {
+      const [hours, minutes, seconds] = time.split(":");
+      const d = new Date();
+      d.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds || 0));
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+    } catch (e) {
+      return time;
+    }
   };
 
   // FILTERED ATTENDANCE
@@ -166,13 +181,32 @@ const handleSetLogout = async (record) => {
   // COLUMNS
   const calculateWorkingHours = (loginTime, logoutTime) => {
     if (!loginTime || !logoutTime) return "-";
-    const start = new Date(`1970-01-01T${loginTime}`);
-    const end = new Date(`1970-01-01T${logoutTime}`);
-    const diffMs = end - start;
-    if (diffMs < 0) return "-";
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
+    
+    const parseTime = (t) => {
+      // Handle "HH:mm:ss" or locale specific formats if they exist in DB
+      if (t.includes("AM") || t.includes("PM")) {
+         // This is harder to parse manually without a library, but let's try a fallback
+         const d = new Date(`1970-01-01 ${t}`);
+         return d.getTime();
+      }
+      const [h, m, s] = t.split(":").map(Number);
+      const d = new Date(1970, 0, 1, h, m, s || 0);
+      return d.getTime();
+    };
+
+    try {
+      const startMs = parseTime(loginTime);
+      const endMs = parseTime(logoutTime);
+      
+      const diffMs = endMs - startMs;
+      if (isNaN(diffMs) || diffMs < 0) return "-";
+      
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}h ${minutes}m`;
+    } catch (e) {
+      return "-";
+    }
   };
 
   const columns = [
@@ -344,10 +378,14 @@ const handleSetLogout = async (record) => {
 
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow flex items-center justify-center gap-2"
                     >
-                      {loading ? "Submitting..." : "Submit"}
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Submitting...
+                        </>
+                      ) : "Submit"}
                     </button>
                   </>
                 )}
@@ -406,6 +444,7 @@ const handleSetLogout = async (record) => {
             columns={columns}
             data={filteredAttendance}
             progressPending={loading}
+            progressComponent={<Loading message="Loading attendance records..." />}
             pagination
           />
         </div>

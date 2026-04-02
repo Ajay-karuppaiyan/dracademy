@@ -22,6 +22,7 @@ import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import ReactDOM from "react-dom";
+import Loading from "../../components/Loading";
 
 import CustomDataTable from "../../components/DataTable";
 
@@ -171,12 +172,12 @@ const EmployeeList = ({ employees, loading, onEdit, onToggleStatus, onDelete }) 
     ), width: "90px"}
   ];
 
-  if (loading) return <div className="p-10 flex flex-col items-center gap-3 text-slate-500"><Clock className="animate-spin" size={24} /> Loading employees...</div>;
 
   return (
     <CustomDataTable 
       columns={columns}
       data={filteredEmployees}
+      progressPending={loading}
       search={search}
       setSearch={setSearch}
       searchPlaceholder="Search employees by name, ID, or role..."

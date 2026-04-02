@@ -45,13 +45,15 @@ import Expenses from "./pages/expenses/Expenses";
 // Leave
 import LeaveRequestList from "./components/LeaveRequestList";
 
+import Loading from "./components/Loading";
+
 // ---------------------------
 // Private Route Wrapper
 // ---------------------------
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (loading) return <Loading fullPage />;
 
   return user ? children : <Navigate to="/login" replace />;
 };

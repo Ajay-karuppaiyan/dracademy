@@ -1,6 +1,7 @@
 import React from 'react';
 import DataTable from 'react-data-table-component';
 import { Search } from 'lucide-react';
+import Loading from './Loading';
 
 const customStyles = {
   headRow: {
@@ -88,6 +89,11 @@ const CustomDataTable = ({
             <div className="p-12 text-center text-slate-500">
               <span className="text-4xl block mb-2">📄</span>
               <p className="font-medium text-lg">No records found</p>
+            </div>
+          }
+          progressComponent={
+            <div className="py-20 flex justify-center items-center w-full">
+              <Loading message="Syncing data..." />
             </div>
           }
           {...props}

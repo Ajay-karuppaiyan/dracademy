@@ -9,6 +9,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import Loading from "../../components/Loading";
 
 const Announcement = () => {
   const { user } = useAuth();
@@ -177,7 +178,9 @@ const Announcement = () => {
       {/* ================= LIST ================= */}
       <div className="space-y-4">
         {loading && (
-          <p className="text-gray-500">Loading...</p>
+          <div className="py-12 flex justify-center">
+             <Loading message="Tuning into academy broadcast..." />
+          </div>
         )}
 
         {!loading && announcements.length === 0 && (
