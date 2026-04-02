@@ -4,6 +4,7 @@ import api from "../../services/api";
 import Payroll from "../../pages/payroll/Payroll";
 import CustomDataTable from "../../components/DataTable";
 import Loading from "../../components/Loading";
+import { Search } from "lucide-react";
 
 const Attendance = () => {
   const { user, token } = useAuth();
@@ -394,56 +395,62 @@ const Attendance = () => {
                 </div>
               )}
 
-              {/* Filter */}
-              <div className="flex flex-col md:flex-row items-end justify-between mb-6 gap-4">
-                <div className="flex flex-col w-full md:w-1/3">
-                  <input
-                    id="search"
-                    type="text"
-                    placeholder="Search by name or role..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                  />
-                </div>
+              {/* Additional content only when NOT marking attendance */}
+              {!showForm && (
+                <>
+                  {/* Filter */}
+                  <div className="flex flex-col md:flex-row items-end justify-between mb-6 gap-4 mt-6">
+                    <div className="relative flex flex-col w-full md:w-1/3 group">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+                      <input
+                        id="search"
+                        type="text"
+                        placeholder="Search by name or role..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
+                      />
+                    </div>
 
-                <div className="flex gap-4 w-full md:w-auto">
-                  <div className="flex flex-col">
-                    <label htmlFor="filterFrom" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
-                      Start Date :
-                    </label>
-                    <input
-                      id="filterFrom"
-                      type="date"
-                      value={filterFrom}
-                      onChange={(e) => setFilterFrom(e.target.value)}
-                      className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                    />
+                    <div className="flex gap-4 w-full md:w-auto">
+                      <div className="flex flex-col">
+                        <label htmlFor="filterFrom" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                          Start Date :
+                        </label>
+                        <input
+                          id="filterFrom"
+                          type="date"
+                          value={filterFrom}
+                          onChange={(e) => setFilterFrom(e.target.value)}
+                          className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                        />
+                      </div>
+
+                      <div className="flex flex-col">
+                        <label htmlFor="filterTo" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                          End Date :
+                        </label>
+                        <input
+                          id="filterTo"
+                          type="date"
+                          value={filterTo}
+                          onChange={(e) => setFilterTo(e.target.value)}
+                          className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col">
-                    <label htmlFor="filterTo" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
-                      End Date :
-                    </label>
-                    <input
-                      id="filterTo"
-                      type="date"
-                      value={filterTo}
-                      onChange={(e) => setFilterTo(e.target.value)}
-                      className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
+                    <CustomDataTable
+                      columns={columns}
+                      data={filteredAttendance}
+                      progressPending={loading}
+                      pagination
                     />
                   </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
-                <CustomDataTable
-                  columns={columns}
-                  data={filteredAttendance}
-                  progressPending={loading}
-                  pagination
-                />
-              </div>
+                </>
+              )}
             </>
           )}
 

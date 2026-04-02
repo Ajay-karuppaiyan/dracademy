@@ -66,14 +66,14 @@ const CustomDataTable = ({
       {(setSearch || exportButton) && (
         <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
           {setSearch && (
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <div className="relative w-full sm:w-72 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
               />
             </div>
           )}
@@ -96,8 +96,9 @@ const CustomDataTable = ({
           highlightOnHover
           pointerOnHover={false}
           responsive
+          persistTableHead
           noDataComponent={
-            <div className="p-12 text-center text-slate-500">
+            <div className="p-12 text-center text-slate-500 bg-white w-full border-b border-slate-200">
               <span className="text-4xl block mb-2">📄</span>
               <p className="font-medium text-lg">No records found</p>
             </div>

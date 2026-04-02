@@ -126,11 +126,19 @@ router.get("/", protect, async (req, res) => {
     const role = req.user.role?.toLowerCase();
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
+    const search = req.query.search || "";
 
     const query =
       role === "admin"
         ? {}
         : { targetRoles: { $in: [role, "all"] } };
+
+    if (search.trim()) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { message: { $regex: search, $options: "i" } },
+      ];
+    }
 
     const announcements = await Announcement.find(query)
       .sort({ createdAt: -1 })
@@ -185,6 +193,42 @@ router.patch("/:id/read", protect, async (req, res) => {
     res.json({
       success: true,
       message: "Marked as read",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+
+/* =====================================================
+   PIN ANNOUNCEMENT
+===================================================== */
+router.patch("/:id/pin", protect, async (req, res) => {
+  try {
+    if (req.user.role?.toLowerCase() !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin can pin announcements",
+      });
+    }
+
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    announcement.isPinned = !announcement.isPinned;
+    await announcement.save();
+
+    res.json({
+      success: true,
+      message: announcement.isPinned ? "Pinned successfully" : "Unpinned successfully",
     });
   } catch (error) {
     res.status(500).json({

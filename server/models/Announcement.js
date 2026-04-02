@@ -20,6 +20,16 @@ const announcementSchema = new mongoose.Schema(
       index: true,
     },
 
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
+
+    expiryDate: {
+      type: Date,
+      default: null,
+    },
+
     createdBy: {
       userId: {
         type: mongoose.Schema.Types.ObjectId,

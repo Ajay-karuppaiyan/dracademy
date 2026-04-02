@@ -7,6 +7,7 @@ import {
   CreditCard,
   Award,
   LogOut,
+  Search,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -195,13 +196,16 @@ const ParentDashboard = () => {
 
       {/* Child Selector with Search */}
       <div className="flex flex-col gap-2 p-3 bg-white shadow-sm">
-        <input
-          type="text"
-          placeholder="Search child..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border px-2 py-1 rounded text-sm w-full sm:w-1/3"
-        />
+        <div className="relative flex flex-col w-full sm:w-1/3 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search child..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
+          />
+        </div>
         <div className="flex overflow-x-auto gap-2 mt-2">
           {filteredChildren.map((child) => (
             <button

@@ -168,54 +168,56 @@ const Subscription = () => {
       </div>
 
       {/* Main Table Display */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex flex-col">
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Purchase History</h2>
-            <p className="text-slate-500 text-sm font-medium">All your successful transactions</p>
+      {subscriptions.length > 0 || loading ? (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Purchase History</h2>
+              <p className="text-slate-500 text-sm font-medium">All your successful transactions</p>
+            </div>
+            {/* <div className="relative w-full md:w-80 group"> ... </div> */}
           </div>
 
-          {/* <div className="relative w-full md:w-80 group">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-600 transition-colors" size={18} />
-             <input 
-               type="text" 
-               placeholder="Search by course name..."
-               value={searchQuery}
-               onChange={(e) => setSearchQuery(e.target.value)}
-               className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand-600/5 focus:border-brand-600 transition-all shadow-sm font-medium"
-             />
-          </div> */}
-        </div>
-
-        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-          <CustomDataTable 
-            columns={columns}
-            data={subscriptions.filter(s => s.course?.title?.toLowerCase().includes(searchQuery.toLowerCase()))}
-            pagination
-            progressPending={loading}
-            search={searchQuery}
-            setSearch={setSearchQuery}
-          />
-        </div>
-
-        {subscriptions.length === 0 && !loading && (
-          <div className="py-20 text-center bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-inner">
-             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                <CreditCard size={32} className="text-slate-300" />
-             </div>
-             <h3 className="text-xl font-black text-slate-800">No subscriptions found</h3>
-             <p className="text-slate-500 text-sm max-w-xs mx-auto mb-8">
-                You haven't purchased any courses yet. Start your journey today!
-             </p>
-             <button 
-               onClick={() => window.location.href='/dashboard/enroll'}
-               className="inline-flex items-center gap-2 bg-brand-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 active:scale-95"
-             >
-                Enroll in a Course <ExternalLink size={16} />
-             </button>
+          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+            <CustomDataTable 
+              columns={columns}
+              data={subscriptions.filter(s => s.course?.title?.toLowerCase().includes(searchQuery.toLowerCase()))}
+              pagination
+              progressPending={loading}
+              search={searchQuery}
+              setSearch={setSearchQuery}
+              noDataComponent={
+                <div className="py-20 text-center bg-white w-full border-b border-slate-200">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <Search size={32} className="text-slate-300" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-800">No matching results</h3>
+                  <p className="text-slate-500 text-sm max-w-xs mx-auto">
+                    Try adjusting your search criteria.
+                  </p>
+                </div>
+              }
+            />
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="py-20 text-center bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-inner">
+           <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+              <CreditCard size={32} className="text-slate-300" />
+           </div>
+           <h3 className="text-xl font-black text-slate-800">No subscriptions found</h3>
+           <p className="text-slate-500 text-sm max-w-xs mx-auto mb-8">
+              You haven't purchased any courses yet. Start your journey today!
+           </p>
+           <button 
+             onClick={() => window.location.href='/dashboard/enroll'}
+             className="inline-flex items-center gap-2 bg-brand-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 active:scale-95"
+           >
+              Enroll in a Course <ExternalLink size={16} />
+           </button>
+        </div>
+      )}
+
 
       {/* Security Banner */}
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">

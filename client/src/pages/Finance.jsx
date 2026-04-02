@@ -4,6 +4,7 @@ import Loading from "../components/Loading";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import CustomDataTable from "../components/DataTable";
+import { Search } from "lucide-react";
 
 const Finance = () => {
   const [payments, setPayments] = useState([]);
@@ -197,11 +198,12 @@ return (
     <h2 className="text-2xl font-semibold">Inward Transactions</h2>
 
     <div className="flex flex-col md:flex-row justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100 items-start md:items-center gap-4">
-      <div className="relative flex-1 max-w-md">
+      <div className="relative flex flex-col max-w-md w-full group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
         <input
           type="text"
           placeholder="Search student or recipient..."
-          className="w-full border border-slate-200 p-2 pl-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
           value={inwardSearch}
           onChange={(e) => setInwardSearch(e.target.value)}
         />
@@ -222,11 +224,12 @@ return (
     {/* ===================== OUTWARD SECTION ===================== */}
     <h2 className="text-2xl font-semibold">Outward Transactions</h2>
     <div className="flex flex-col md:flex-row justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100 items-start md:items-center gap-4">
-      <div className="relative flex-1 max-w-md">
+      <div className="relative flex flex-col max-w-md w-full group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
         <input
           type="text"
           placeholder="Search recipient..."
-          className="w-full border border-slate-200 p-2 pl-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
           value={outwardSearch}
           onChange={(e) => setOutwardSearch(e.target.value)}
         />

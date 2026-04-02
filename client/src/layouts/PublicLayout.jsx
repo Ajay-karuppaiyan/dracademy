@@ -61,15 +61,15 @@ const PublicLayout = () => {
               <button className="flex items-center gap-1 bg-brand-600 text-white px-4 py-2.5 rounded text-sm font-semibold hover:bg-brand-700 transition-colors">
                 Explore <ChevronDown size={14} />
               </button>
-              <div className="flex-1 relative">
+              <div className="flex-1 relative flex flex-col group">
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors"
+                  size={18}
+                />
                 <input
                   type="text"
                   placeholder="What do you want to learn?"
-                  className="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent shadow-sm"
-                />
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
                 />
               </div>
             </div>
@@ -126,11 +126,14 @@ const PublicLayout = () => {
         {isMenuOpen && (
           <div className="md:hidden bg-white border-b border-gray-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
-              <input
-                type="text"
-                placeholder="Search courses..."
-                className="w-full bg-slate-50 border border-slate-200 p-3 rounded text-sm"
-              />
+              <div className="relative flex flex-col w-full group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search courses..."
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all shadow-sm text-sm font-medium"
+                />
+              </div>
               <Link
                 to="/degrees"
                 className="block text-base font-semibold text-slate-700 py-2 border-b border-gray-100"
