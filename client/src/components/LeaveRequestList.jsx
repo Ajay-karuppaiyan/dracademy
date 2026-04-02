@@ -107,7 +107,8 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
     { name: 'Type', selector: row => row.leaveType, sortable: true },
     { name: 'Reason', selector: row => row.reason, wrap: true, cell: row => <span className="text-slate-600">{row.reason}</span> },
     { name: 'Applied Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="text-slate-600">{new Date(row.createdAt).toLocaleDateString()}</span> },
-    { name: 'Range', selector: row => row.startDate, cell: row => (
+    {
+      name: 'Range', selector: row => row.startDate, cell: row => (
         <span className="text-slate-600">
           {row.mode === "permission" ? (
             <div>
@@ -123,31 +124,31 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
         </span>
       )
     },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+    {
+      name: 'Status', selector: row => row.status, sortable: true, cell: row => (
         user?.role === "admin" ? (
           <div className="relative">
-          <select
-            value={row.status}
-            onChange={(e) => handleStatusChange(row._id, e.target.value)}
-            className={`appearance-none px-3 py-1.5 pr-8 rounded-full text-xs font-semibold border cursor-pointer transition
-              ${
-                row.status === "approved"
+            <select
+              value={row.status}
+              onChange={(e) => handleStatusChange(row._id, e.target.value)}
+              className={`appearance-none px-3 py-1.5 pr-8 rounded-full text-xs font-semibold border cursor-pointer transition
+              ${row.status === "approved"
                   ? "bg-green-50 text-green-700 border-green-200"
                   : row.status === "rejected"
-                  ? "bg-red-50 text-red-600 border-red-200"
-                  : "bg-yellow-50 text-yellow-700 border-yellow-200"
-              }
+                    ? "bg-red-50 text-red-600 border-red-200"
+                    : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                }
             `}
-          >
-            {/* Only show pending if current status is pending */}
-            {row.status === "pending" && (
-              <option value="pending">Pending</option>
-            )}
+            >
+              {/* Only show pending if current status is pending */}
+              {row.status === "pending" && (
+                <option value="pending">Pending</option>
+              )}
 
-            {/* Always allow switching between approved & rejected */}
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
+              {/* Always allow switching between approved & rejected */}
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
 
             {/* dropdown arrow */}
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -161,7 +162,8 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
         )
       )
     },
-    { name: 'Action', center: true, width: '120px', cell: row => (
+    {
+      name: 'Action', center: true, width: '120px', cell: row => (
         <div className="flex justify-center gap-3">
           <button onClick={() => fetchLeaveDetails(row._id)} className="text-blue-600 hover:text-blue-800 transition">
             <Eye size={18} />
@@ -206,14 +208,14 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
 
         {/* ===== TABLE CARD ===== */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden pb-4">
-          <CustomDataTable 
-             columns={columns}
-             data={filteredRequests}
-             progressPending={loadingList}
-             pagination
-             search={searchTerm}
-             setSearch={setSearchTerm}
-             searchPlaceholder="Search by employee, leave type or reason..."
+          <CustomDataTable
+            columns={columns}
+            data={filteredRequests}
+            progressPending={loadingList}
+            pagination
+            search={searchTerm}
+            setSearch={setSearchTerm}
+            searchPlaceholder="Search by employee, leave type or reason..."
           />
         </div>
       </div>

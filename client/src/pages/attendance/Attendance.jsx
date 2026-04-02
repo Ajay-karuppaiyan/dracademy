@@ -11,7 +11,7 @@ const Attendance = () => {
   const [attendanceList, setAttendanceList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewModal, setViewModal] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -80,72 +80,72 @@ const Attendance = () => {
   useEffect(() => {
     if (!showForm && videoRef.current?.srcObject) {
       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null; 
+      videoRef.current.srcObject = null;
       setCameraActive(false);
     }
   }, [showForm]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const loginTime = new Date().toTimeString().slice(0, 8);
+    try {
+      const loginTime = new Date().toTimeString().slice(0, 8);
 
-    const res = await api.post(
-      `${API_URL}/attendance`,
-      { loginTime, photo }, // ✅ only send required fields
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      const res = await api.post(
+        `${API_URL}/attendance`,
+        { loginTime, photo }, // ✅ only send required fields
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    setAttendanceList([res.data, ...attendanceList]);
+      setAttendanceList([res.data, ...attendanceList]);
 
-    if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+
+      setPhoto(null);
+      setCameraActive(false);
+      setShowForm(false);
+
+    } catch (err) {
+      console.error("Attendance submit error:", err.response?.data || err.message);
     }
 
-    setPhoto(null);
-    setCameraActive(false);
-    setShowForm(false);
+    setLoading(false);
+  };
 
-  } catch (err) {
-    console.error("Attendance submit error:", err.response?.data || err.message);
-  }
+  const handleSetLogout = async (record) => {
+    const confirmLogout = window.confirm("Are you sure you want to logout?");
 
-  setLoading(false);
-};
+    if (!confirmLogout) return;
 
-const handleSetLogout = async (record) => {
-  const confirmLogout = window.confirm("Are you sure you want to logout?");
+    try {
+      // Use toTimeString().slice(0, 8) for consistent HH:mm:ss format across all browsers
+      const logoutTime = new Date().toTimeString().slice(0, 8);
 
-  if (!confirmLogout) return;
+      await api.patch(
+        `${API_URL}/attendance/logout/${record._id}`,
+        { logoutTime },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  try {
-    // Use toTimeString().slice(0, 8) for consistent HH:mm:ss format across all browsers
-    const logoutTime = new Date().toTimeString().slice(0, 8);
-
-    await api.patch(
-      `${API_URL}/attendance/logout/${record._id}`,
-      { logoutTime },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    setAttendanceList(prev =>
-      prev.map(a =>
-        a._id === record._id ? { ...a, logoutTime } : a
-      )
-    );
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-};
+      setAttendanceList(prev =>
+        prev.map(a =>
+          a._id === record._id ? { ...a, logoutTime } : a
+        )
+      );
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   const formatTime12Hour = (time) => {
     if (!time) return "-";
     // Check if it already has AM/PM - some old records might
     if (time.includes("AM") || time.includes("PM")) return time;
-    
+
     // Safely parse HH:mm:ss
     try {
       const [hours, minutes, seconds] = time.split(":");
@@ -164,7 +164,7 @@ const handleSetLogout = async (record) => {
         // SEARCH: match name or role
         const matchSearch = searchTerm
           ? a.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.role?.toLowerCase().includes(searchTerm.toLowerCase())
+          a.role?.toLowerCase().includes(searchTerm.toLowerCase())
           : true;
 
         // DATE FILTER
@@ -181,13 +181,13 @@ const handleSetLogout = async (record) => {
   // COLUMNS
   const calculateWorkingHours = (loginTime, logoutTime) => {
     if (!loginTime || !logoutTime) return "-";
-    
+
     const parseTime = (t) => {
       // Handle "HH:mm:ss" or locale specific formats if they exist in DB
       if (t.includes("AM") || t.includes("PM")) {
-         // This is harder to parse manually without a library, but let's try a fallback
-         const d = new Date(`1970-01-01 ${t}`);
-         return d.getTime();
+        // This is harder to parse manually without a library, but let's try a fallback
+        const d = new Date(`1970-01-01 ${t}`);
+        return d.getTime();
       }
       const [h, m, s] = t.split(":").map(Number);
       const d = new Date(1970, 0, 1, h, m, s || 0);
@@ -197,10 +197,10 @@ const handleSetLogout = async (record) => {
     try {
       const startMs = parseTime(loginTime);
       const endMs = parseTime(logoutTime);
-      
+
       const diffMs = endMs - startMs;
       if (isNaN(diffMs) || diffMs < 0) return "-";
-      
+
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       return `${hours}h ${minutes}m`;
@@ -216,7 +216,8 @@ const handleSetLogout = async (record) => {
     { name: 'Login', selector: row => row.loginTime, sortable: true, cell: row => formatTime12Hour(row.loginTime) },
     { name: 'Logout', selector: row => row.logoutTime, sortable: true, cell: row => formatTime12Hour(row.logoutTime) },
     { name: 'Hours', selector: row => calculateWorkingHours(row.loginTime, row.logoutTime), center: true },
-    { name: 'Action', center: true, width: '200px', cell: row => (
+    {
+      name: 'Action', center: true, width: '200px', cell: row => (
         <div className="flex justify-center gap-2 flex-nowrap">
           <button
             onClick={() => setViewModal(row)}
@@ -229,11 +230,10 @@ const handleSetLogout = async (record) => {
               <button
                 disabled={!!row.logoutTime}
                 onClick={() => handleSetLogout(row)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm ${
-                  row.logoutTime
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm ${row.logoutTime
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-green-500 text-white hover:bg-green-600"
-                }`}
+                  }`}
               >
                 {row.logoutTime ? "Logged Out" : "Logout"}
               </button>
@@ -296,166 +296,160 @@ const handleSetLogout = async (record) => {
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
 
-{/* Tabs */}
-{user.role !== "student" && (
-<div className="border-b border-slate-200 mb-4">
-  <div className="flex gap-6">
-    {["attendance", "payroll"].map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${
-          activeTab === tab
-            ? "border-indigo-600 text-indigo-700"
-            : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-        }`}
-      >
-        {tab.replace("_", " ")}
-      </button>
-    ))}
-  </div>
-</div>
-)}
-
-{/* Tab Content */}
-<div className="animate-in fade-in duration-300">
-  {activeTab === "attendance" && (
-    <>
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
-            <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
-          </div>
-
-          {user.role !== "admin" && !showForm && (
-            <button
-              onClick={() => setShowForm(true)}
-              disabled={hasMarkedToday}
-              className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${
-                hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
-            </button>
-          )}
-        </div>
-
-        {/* FORM */}
-        {user.role !== "admin" && showForm && (
-          <div className="bg-white rounded-2xl shadow-lg border p-6 w-full max-w-md mx-auto">
-            <form onSubmit={handleSubmit} className="flex flex-col items-center gap-5">
-              <div className="w-full aspect-video rounded-2xl overflow-hidden border bg-black flex items-center justify-center shadow">
-                {cameraActive ? (
-                  <video ref={videoRef} autoPlay className="w-full h-full object-cover" />
-                ) : photo ? (
-                  <img src={photo} alt="Attendance" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-white text-sm opacity-60">Starting camera...</span>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 w-full">
-                {cameraActive && (
-                  <button
-                    type="button"
-                    onClick={handleCapture}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-2 rounded-xl shadow"
-                  >
-                    Capture
-                  </button>
-                )}
-
-                {photo && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleRecapture}
-                      className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
-                    >
-                      Retake
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Submitting...
-                        </>
-                      ) : "Submit"}
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <canvas ref={canvasRef} className="hidden" />
-            </form>
+        {/* Tabs */}
+        {user.role !== "student" && (
+          <div className="border-b border-slate-200 mb-4">
+            <div className="flex gap-6">
+              {["attendance", "payroll"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize ${activeTab === tab
+                      ? "border-indigo-600 text-indigo-700"
+                      : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                    }`}
+                >
+                  {tab.replace("_", " ")}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-        
-        {/* Filter */}
-        <div className="flex flex-col md:flex-row items-end justify-between mb-6 gap-4">
-          <div className="flex flex-col w-full md:w-1/3">
-            <input
-              id="search"
-              type="text"
-              placeholder="Search by name or role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            />
-          </div>
 
-          <div className="flex gap-4 w-full md:w-auto">
-            <div className="flex flex-col">
-              <label htmlFor="filterFrom" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
-                Start Date : 
-              </label>
-              <input
-                id="filterFrom"
-                type="date"
-                value={filterFrom}
-                onChange={(e) => setFilterFrom(e.target.value)}
-                className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              />
-            </div>
+        {/* Tab Content */}
+        <div className="animate-in fade-in duration-300">
+          {activeTab === "attendance" && (
+            <>
+              {/* HEADER */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
+                  <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
+                </div>
 
-            <div className="flex flex-col">
-              <label htmlFor="filterTo" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
-                End Date : 
-              </label>
-              <input
-                id="filterTo"
-                type="date"
-                value={filterTo}
-                onChange={(e) => setFilterTo(e.target.value)}
-                className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              />
-            </div>
-          </div>
+                {user.role !== "admin" && !showForm && (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    disabled={hasMarkedToday}
+                    className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                  >
+                    {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
+                  </button>
+                )}
+              </div>
+
+              {/* FORM */}
+              {user.role !== "admin" && showForm && (
+                <div className="bg-white rounded-2xl shadow-lg border p-6 w-full max-w-md mx-auto">
+                  <form onSubmit={handleSubmit} className="flex flex-col items-center gap-5">
+                    <div className="w-full aspect-video rounded-2xl overflow-hidden border bg-black flex items-center justify-center shadow">
+                      {cameraActive ? (
+                        <video ref={videoRef} autoPlay className="w-full h-full object-cover" />
+                      ) : photo ? (
+                        <img src={photo} alt="Attendance" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white text-sm opacity-60">Starting camera...</span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 w-full">
+                      {cameraActive && (
+                        <button
+                          type="button"
+                          onClick={handleCapture}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-2 rounded-xl shadow"
+                        >
+                          Capture
+                        </button>
+                      )}
+
+                      {photo && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleRecapture}
+                            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+                          >
+                            Retake
+                          </button>
+
+                          <button
+                            type="submit"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow flex items-center justify-center gap-2"
+                          >
+                            {loading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Submitting...
+                              </>
+                            ) : "Submit"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    <canvas ref={canvasRef} className="hidden" />
+                  </form>
+                </div>
+              )}
+
+              {/* Filter */}
+              <div className="flex flex-col md:flex-row items-end justify-between mb-6 gap-4">
+                <div className="flex flex-col w-full md:w-1/3">
+                  <input
+                    id="search"
+                    type="text"
+                    placeholder="Search by name or role..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  />
+                </div>
+
+                <div className="flex gap-4 w-full md:w-auto">
+                  <div className="flex flex-col">
+                    <label htmlFor="filterFrom" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                      Start Date :
+                    </label>
+                    <input
+                      id="filterFrom"
+                      type="date"
+                      value={filterFrom}
+                      onChange={(e) => setFilterFrom(e.target.value)}
+                      className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label htmlFor="filterTo" className="text-sm pl-2 font-semibold text-slate-700 mb-1">
+                      End Date :
+                    </label>
+                    <input
+                      id="filterTo"
+                      type="date"
+                      value={filterTo}
+                      onChange={(e) => setFilterTo(e.target.value)}
+                      className="border border-slate-300 px-4 py-2 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
+                <CustomDataTable
+                  columns={columns}
+                  data={filteredAttendance}
+                  progressPending={loading}
+                  pagination
+                />
+              </div>
+            </>
+          )}
+
+          {activeTab === "payroll" && <Payroll />}
         </div>
 
-        {/* TABLE */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
-          <CustomDataTable 
-            columns={columns}
-            data={filteredAttendance}
-            progressPending={loading}
-            progressComponent={<Loading message="Loading attendance records..." />}
-            pagination
-          />
-        </div>
-    </>
-  )}
-
-  {activeTab === "payroll" && <Payroll />}
-</div>
-
-
-    
         {/* MODAL */}
         {viewModal && (
           <div

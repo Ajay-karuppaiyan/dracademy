@@ -67,7 +67,7 @@ const CertificateView = () => {
         <div className="absolute bottom-0 right-0 w-32 h-32 border-b-[10px] border-r-[10px] border-brand-600 m-4 rounded-br-3xl opacity-20" />
 
         {/* Logo/Header */}
-        <div className="mt-8 space-y-4">
+        <div className="mt-4 space-y-3">
           <div className="flex items-center justify-center gap-3">
             <div className="h-16 w-16 bg-brand-600 rounded-2xl flex items-center justify-center -rotate-12 shadow-xl shadow-brand-600/20">
               <Award size={40} className="text-white" />
@@ -77,13 +77,13 @@ const CertificateView = () => {
           <div className="h-1 w-24 bg-brand-200 mx-auto rounded-full" />
         </div>
 
-        <div className="mt-16 space-y-6">
+        <div className="mt-10 space-y-4">
           <h2 className="text-2xl uppercase tracking-[0.3em] font-light text-slate-500">Certificate of Completion</h2>
           <p className="text-xl italic text-slate-600">This is to certify that</p>
-          <h3 className="text-6xl font-black text-slate-900 border-b-2 border-slate-200 inline-block pb-4 min-w-[400px]">
+          <h3 className="text-5xl font-black text-slate-900 border-b-2 border-slate-200 inline-block pb-2 min-w-[400px]">
             {cert.data.studentName}
           </h3>
-          <p className="text-xl italic text-slate-600 max-w-xl mx-auto pt-6">
+          <p className="text-xl italic text-slate-600 max-w-xl mx-auto pt-4">
             has successfully fulfilled all requirements and completed the course
           </p>
           <h4 className="text-3xl font-black text-brand-600 tracking-tight">
@@ -92,7 +92,7 @@ const CertificateView = () => {
         </div>
 
         {/* Footer/Signatures */}
-        <div className="mt-auto mb-12 w-full flex justify-between items-end px-12">
+        <div className="mt-auto mb-8 w-full flex justify-between items-end px-12 z-10">
           <div className="text-left space-y-2">
             <p className="border-b border-slate-900 font-bold min-w-[200px] text-lg text-slate-900">
                {cert.data.instructorName}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import {
-  Loader2,
   User,
   BookOpen,
   Clock,
@@ -12,6 +11,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
+import Loading from "../../components/Loading";
 
 const ParentDashboard = () => {
   const [children, setChildren] = useState([]);
@@ -128,23 +128,23 @@ const ParentDashboard = () => {
     { name: 'Login', selector: row => row.loginTime },
     { name: 'Logout', selector: row => row.logoutTime },
     { name: 'Hours', selector: row => row.totalHours, center: true, cell: row => <span className="font-medium text-blue-600">{row.totalHours}</span> },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
-        <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full ${
-          row.status === "Present" ? "text-green-700 bg-green-100" :
-          row.status === "Leave" ? "text-yellow-700 bg-yellow-100" :
-          "text-red-700 bg-red-100"
-        }`}>
+    {
+      name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full ${row.status === "Present" ? "text-green-700 bg-green-100" :
+            row.status === "Leave" ? "text-yellow-700 bg-yellow-100" :
+              "text-red-700 bg-red-100"
+          }`}>
           {row.status}
         </span>
-      ) 
+      )
     }
   ];
 
   // Loading Screen
   if (loading && !children.length) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loading message="Syncing parent dashboard..." />
       </div>
     );
   }
@@ -207,13 +207,12 @@ const ParentDashboard = () => {
             <button
               key={child._id}
               onClick={() => setSelectedChild(child)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm ${
-                selectedChild?._id === child._id
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm ${selectedChild?._id === child._id
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
-              }`}
+                }`}
             >
-             {child.studentNameEnglish}
+              {child.studentNameEnglish}
             </button>
           ))}
           <a
@@ -274,7 +273,7 @@ const ParentDashboard = () => {
                   <User className="text-blue-600" size={28} />
                 </div>
                 <div>
-                 <h2 className="font-bold text-lg">{overview.student.studentNameEnglish}</h2>
+                  <h2 className="font-bold text-lg">{overview.student.studentNameEnglish}</h2>
                   <p className="text-xs text-gray-500">
                     Email: {selectedChild?.user?.email}
                   </p>

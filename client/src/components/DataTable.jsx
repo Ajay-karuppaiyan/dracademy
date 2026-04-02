@@ -6,20 +6,25 @@ import Loading from './Loading';
 const customStyles = {
   headRow: {
     style: {
-      backgroundColor: '#f8fafc',
-      borderBottomWidth: '1px',
-      borderBottomColor: '#f1f5f9',
+      backgroundColor: '#f1f5f9',
+      borderTop: '1px solid #e2e8f0',
+      borderBottomWidth: '2px',
+      borderBottomColor: '#e2e8f0',
+      minHeight: '52px',
     },
   },
   headCells: {
     style: {
-      color: '#64748b',
-      fontSize: '0.75rem',
-      fontWeight: '600',
+      color: '#0f172a',
+      fontSize: '0.85rem',
+      fontWeight: '700',
       textTransform: 'uppercase',
-      letterSpacing: '0.05em',
       paddingLeft: '16px',
       paddingRight: '16px',
+      borderRight: '1px solid #e2e8f0',
+      '&:last-child': {
+        borderRight: 'none',
+      },
     },
   },
   cells: {
@@ -28,13 +33,19 @@ const customStyles = {
       paddingRight: '16px',
       fontSize: '0.875rem',
       color: '#334155',
+      borderRight: '1px solid #f1f5f9',
+      '&:last-child': {
+        borderRight: 'none',
+      },
     },
   },
   rows: {
     style: {
+      minHeight: '60px',
+      borderBottomColor: '#f1f5f9',
       transition: 'all 0.2s',
       '&:hover': {
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#f8fafc',
       },
     },
   },

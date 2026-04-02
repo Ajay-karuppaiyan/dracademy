@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
+import Loading from "../../components/Loading";
 
 const ChildLeave = () => {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ const ChildLeave = () => {
         );
         childRes.data.forEach((leave) => {
           allLeaves.push({
-            childName: child.firstName,
+            childName: child.studentNameEnglish || child.firstName,
             ...leave, // startDate, endDate, reason, status, etc.
           });
         });
@@ -91,12 +92,12 @@ const ChildLeave = () => {
     { name: 'Start Date', selector: row => row.startDate, sortable: true, cell: row => row.startDate?.slice(0, 10) },
     { name: 'End Date', selector: row => row.endDate, sortable: true, cell: row => row.endDate?.slice(0, 10) },
     { name: 'Reason', selector: row => row.reason, wrap: true },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
-        <span className={`px-2.5 py-1 inline-flex text-[11px] font-bold uppercase tracking-wider rounded-full ${
-          row.status === "approved" ? "bg-green-100 text-green-800" :
-          row.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-          "bg-red-100 text-red-800"
-        }`}>
+    {
+      name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`px-2.5 py-1 inline-flex text-[11px] font-bold uppercase tracking-wider rounded-full ${row.status === "approved" ? "bg-green-100 text-green-800" :
+            row.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+              "bg-red-100 text-red-800"
+          }`}>
           {row.status?.charAt(0).toUpperCase() + row.status?.slice(1)}
         </span>
       )
@@ -105,8 +106,8 @@ const ChildLeave = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loading message="Fetching leave requests..." />
       </div>
     );
   }

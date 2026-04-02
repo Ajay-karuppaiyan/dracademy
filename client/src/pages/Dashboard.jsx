@@ -429,56 +429,50 @@ const [stats, setStats] = React.useState({
         </div>
 
         {/* Coach Stats Grid */}
-        {stats.loading ? (
-          <div className="lg:col-span-4 bg-white/50 backdrop-blur-md p-10 rounded-2xl border border-slate-100 flex items-center justify-center">
-            <Loading message="Fetching your performance metrics..." />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                label: "Total Students",
-                value: (stats.totalStudents || 0).toLocaleString(),
-                icon: Users,
-                change: "Enrolled in your courses",
-                trend: "neutral",
-                color: "blue",
-              },
-              {
-                label: "Active Courses",
-                value: stats.activeCourses || 0,
-                icon: BookOpen,
-                change: "Assigned to you",
-                trend: "neutral",
-                color: "purple",
-              },
-              {
-                label: "Course Enrollments",
-                value: (stats.totalEnrollments || 0).toLocaleString(),
-                icon: CheckCircle,
-                change: "Course-wise total",
-                trend: "neutral",
-                color: "orange",
-              },
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}>
-                    <stat.icon size={24} />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</h3>
-                  <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                  <p className="text-[10px] text-slate-400 mt-2 italic">{stat.change}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              label: "Total Students",
+              value: (stats.totalStudents || 0).toLocaleString(),
+              icon: Users,
+              change: "Enrolled in your courses",
+              trend: "neutral",
+              color: "blue",
+            },
+            {
+              label: "Active Courses",
+              value: stats.activeCourses || 0,
+              icon: BookOpen,
+              change: "Assigned to you",
+              trend: "neutral",
+              color: "purple",
+            },
+            {
+              label: "Course Enrollments",
+              value: (stats.totalEnrollments || 0).toLocaleString(),
+              icon: CheckCircle,
+              change: "Course-wise total",
+              trend: "neutral",
+              color: "orange",
+            },
+          ].map((stat, idx) => (
+            <div
+              key={idx}
+              className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}>
+                  <stat.icon size={24} />
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              <div>
+                <h3 className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</h3>
+                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                <p className="text-[10px] text-slate-400 mt-2 italic">{stat.change}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* Coach Tables Section */}
         <div className="flex flex-col gap-8">
@@ -549,86 +543,80 @@ const [stats, setStats] = React.useState({
       </div>
 
       {/* Stats Grid */}
-        {stats.loading ? (
-          <div className="lg:col-span-4 bg-white/50 backdrop-blur-md p-10 rounded-2xl border border-slate-100 flex items-center justify-center">
-            <Loading message="Fetching metrics and trends..." />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          {
+            label: "Total Students",
+            value: (stats.totalStudents || 0).toLocaleString(),
+            icon: Users,
+            change: "+12.5%",
+            trend: "up",
+            color: "blue",
+          },
+          {
+            label: "Total Revenue",
+            value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
+            icon: DollarSign,
+            change: "+8.2%",
+            trend: "up",
+            color: "green",
+          },
+          {
+            label: "Active Courses",
+            value: stats.activeCourses || 0,
+            icon: BookOpen,
+            change: "0%",
+            trend: "neutral",
+            color: "purple",
+          },
+          {
+            label: "Course Enrollments",
+            value: (stats.totalEnrollments || 0).toLocaleString(),
+            icon: CheckCircle,
+            change: "+15.3%",
+            trend: "up",
+            color: "orange",
+          },
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div
+                className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}
+              >
+                <stat.icon size={24} />
+              </div>
+              <span
+                className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${
+                  stat.trend === "up"
+                    ? "bg-green-50 text-green-700"
+                    : stat.trend === "down"
+                      ? "bg-red-50 text-red-700"
+                      : "bg-slate-50 text-slate-600"
+                }`}
+              >
+                {stat.trend === "up" && (
+                  <ArrowUpRight size={14} className="mr-1" />
+                )}
+                {stat.trend === "down" && (
+                  <ArrowDownRight size={14} className="mr-1" />
+                )}
+                {stat.change}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-1">
+                {stat.value}
+              </h3>
+              <p className="text-sm font-medium text-slate-500">
+                {stat.label}
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-            {
-              label: "Total Students",
-              value: (stats.totalStudents || 0).toLocaleString(),
-              icon: Users,
-              change: "+12.5%",
-              trend: "up",
-              color: "blue",
-            },
-            {
-              label: "Total Revenue",
-              value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
-              icon: DollarSign,
-              change: "+8.2%",
-              trend: "up",
-              color: "green",
-            },
-            {
-              label: "Active Courses",
-              value: stats.activeCourses,
-              icon: BookOpen,
-              change: "0%",
-              trend: "neutral",
-              color: "purple",
-            },
-            {
-              label: "Course Enrollments",
-              value: (stats.totalEnrollments || 0).toLocaleString(),
-              icon: CheckCircle,
-              change: "+15.3%",
-              trend: "up",
-              color: "orange",
-            },
-          ].map((stat, idx) => (
-            <div
-              key={idx}
-              className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div
-                  className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}
-                >
-                  <stat.icon size={24} />
-                </div>
-                <span
-                  className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${
-                    stat.trend === "up"
-                      ? "bg-green-50 text-green-700"
-                      : stat.trend === "down"
-                        ? "bg-red-50 text-red-700"
-                        : "bg-slate-50 text-slate-600"
-                  }`}
-                >
-                  {stat.trend === "up" && (
-                    <ArrowUpRight size={14} className="mr-1" />
-                  )}
-                  {stat.trend === "down" && (
-                    <ArrowDownRight size={14} className="mr-1" />
-                  )}
-                  {stat.change}
-                </span>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-slate-900 mb-1">
-                  {stat.value}
-                </h3>
-                <p className="text-sm font-medium text-slate-500">
-                  {stat.label}
-                </p>
-              </div>
-              </div>
-            ))}
-          </div>
-        )}
+        ))}
+      </div>
 
       {/* Main Content Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -289,4 +289,36 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
+/////////////////////////////////////////////////////////////
+// GET MY SUBSCRIPTIONS (For Student)
+/////////////////////////////////////////////////////////////
+
+router.get("/my-subscriptions", protect, async (req, res) => {
+  try {
+    let student;
+    if (req.user.role === "student") {
+      student = await Student.findOne({ user: req.user._id });
+    } else if (req.user.role === "parent") {
+      // Parents can see their children's subscriptions too if we wanted, 
+      // but for now let's focus on the logged in student.
+      return res.status(403).json({ message: "Not authorized as student" });
+    }
+
+    if (!student) {
+      return res.status(404).json({ message: "Student record not found" });
+    }
+
+    const subscriptions = await Payment.find({ 
+      student: student._id,
+      type: "inward",
+      status: "success"
+    }).populate("course", "title thumbnail price category");
+
+    res.json(subscriptions);
+  } catch (error) {
+    console.error("Fetch subscriptions error:", error);
+    res.status(500).json({ message: "Failed to fetch subscriptions" });
+  }
+});
+
 module.exports = router;

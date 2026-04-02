@@ -42,6 +42,7 @@ import Announcement from "./pages/dashboard/Announcement";
 import DiscussionForum from "./pages/dashboard/DiscussionForum";
 import Expenses from "./pages/expenses/Expenses";
 import MyCourses from "./pages/coach/MyCourses";
+import Subscription from "./pages/dashboard/Subscription";
 
 // Leave
 import LeaveRequestList from "./components/LeaveRequestList";
@@ -171,6 +172,8 @@ function App() {
             {/* Attendance */}
             <Route path="attendance" element={<Attendance />} />
 
+            {/* Subscription */}
+            <Route path="subscription" element={<PrivateRoute> <Subscription /> </PrivateRoute>} />
             {/* Admin */}
             <Route path="admin/courses" element={<CourseManagement />} />
             <Route path="admin/configs" element={<AdministrativeConfigs />} />

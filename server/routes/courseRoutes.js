@@ -77,7 +77,12 @@ router.get('/available', protect, async (req, res) => {
       student = await Student.findById(studentId);
     }
     
-    const enrolledIds = student?.enrolledCourses?.map(e => e.course || e) || [];
+    const enrolledIds = student?.enrolledCourses?.map(e => (e.course?._id || e.course || e)) || [];
+    
+    if (!student && req.user.role === "student") {
+       return res.json([]);
+    }
+
     const courses = await Course.find({
       _id: { $nin: enrolledIds },
       isActive: true

@@ -180,9 +180,6 @@ const EnrollClass = () => {
   /////////////////////////////////////////////////////////////
   // LOADING UI
   /////////////////////////////////////////////////////////////
-  if (loading) {
-    return <Loading fullPage message="Discovering available classes..." />;
-  }
 
   /////////////////////////////////////////////////////////////
   // UI
@@ -213,17 +210,34 @@ const EnrollClass = () => {
       )}
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {courses.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+        {loading ? 
+          <div className="col-span-full py-20 flex flex-col items-center justify-center opacity-40 animate-pulse">
             <BookOpen size={50} className="text-slate-300 mb-4" />
-            <h2 className="text-xl font-bold text-slate-700">
+            <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Scanning Catalog...</p>
+          </div>
+         : courses.length === 0 ? 
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 shadow-inner">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+               <BookOpen size={40} className="text-slate-300" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800">
               No Courses Available
             </h2>
-            <p className="text-sm text-slate-500 mt-2">
-              You have already enrolled in all available courses 🎉
+            <p className="text-slate-500 mt-2 mb-8 max-w-sm mx-auto">
+              Great job! You have already enrolled in all our currently available courses. 🎉
             </p>
+            {user?.role !== "parent" && (
+              <div className="flex gap-4">
+                 <button 
+                   onClick={() => window.location.href='/dashboard/lms'}
+                   className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95"
+                 >
+                    Go to My Learning <GraduationCap size={18} />
+                 </button>
+              </div>
+            )}
           </div>
-        ) : (
+         : 
           courses.map((course) => (
             <div
               key={course._id}
@@ -291,7 +305,7 @@ const EnrollClass = () => {
               </div>
             </div>
           ))
-        )}
+        }
       </div>
 
       {viewCourse && (

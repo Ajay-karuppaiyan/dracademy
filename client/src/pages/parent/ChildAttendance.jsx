@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
+import Loading from "../../components/Loading";
 
 const ChildAttendance = () => {
   const { user } = useAuth();
@@ -40,19 +41,19 @@ const ChildAttendance = () => {
         );
         childRes.data.forEach((att) => {
           allAttendance.push({
-            childName: child.firstName,
+            childName: child.studentNameEnglish || child.firstName,
             date: att.date.slice(0, 10),
             loginTime: att.loginTime || "-",
             logoutTime: att.logoutTime || "-",
             totalHours:
               att.loginTime && att.logoutTime
                 ? (
-                    (new Date(`1970-01-01T${att.logoutTime}`) -
-                      new Date(`1970-01-01T${att.loginTime}`)) /
-                    1000 /
-                    60 /
-                    60
-                  ).toFixed(2)
+                  (new Date(`1970-01-01T${att.logoutTime}`) -
+                    new Date(`1970-01-01T${att.loginTime}`)) /
+                  1000 /
+                  60 /
+                  60
+                ).toFixed(2)
                 : "-",
             status: att.leave ? "Leave" : att.status || "Absent",
           });
@@ -103,12 +104,12 @@ const ChildAttendance = () => {
     { name: 'Login', selector: row => row.loginTime },
     { name: 'Logout', selector: row => row.logoutTime },
     { name: 'Hours', selector: row => row.totalHours, center: true, cell: row => <span className="font-semibold text-blue-600">{row.totalHours}</span> },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
-        <span className={`px-2.5 py-1 inline-flex text-[11px] font-bold uppercase tracking-wider rounded-full ${
-          row.status === "Present" ? "bg-green-100 text-green-700" :
-          row.status === "Leave" ? "bg-yellow-100 text-yellow-700" :
-          "bg-red-100 text-red-700"
-        }`}>
+    {
+      name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+        <span className={`px-2.5 py-1 inline-flex text-[11px] font-bold uppercase tracking-wider rounded-full ${row.status === "Present" ? "bg-green-100 text-green-700" :
+            row.status === "Leave" ? "bg-yellow-100 text-yellow-700" :
+              "bg-red-100 text-red-700"
+          }`}>
           {row.status}
         </span>
       )
@@ -117,8 +118,8 @@ const ChildAttendance = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loading message="Fetching child attendance..." />
       </div>
     );
   }

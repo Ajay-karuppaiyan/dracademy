@@ -1,12 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import DashboardHeader from "../components/DashboardHeader";
+import Loading from "../components/Loading";
 
 const DashboardLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    setIsNavigating(true);
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 600); // Premium short transition delay
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Helper to determine page title
   const getPageTitle = () => {
@@ -43,8 +53,14 @@ const DashboardLayout = () => {
           toggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
           title={getPageTitle()}
         />
-        <main className="flex-1 p-6 overflow-y-auto no-scrollbar">
-          <Outlet />
+        <main className="flex-1 p-6 overflow-y-auto no-scrollbar relative">
+          {isNavigating ? (
+            <div className="flex items-center justify-center h-full">
+              <Loading message="Loading..." />
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>

@@ -54,9 +54,6 @@ const MyLearning = () => {
     certificates: courses.filter(e => e.completed).length, // assuming 1 per completed course
   };
 
-  if (loading) {
-    return <Loading fullPage message="Resuming your learning journey..." />;
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-700">
