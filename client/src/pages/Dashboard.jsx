@@ -167,6 +167,19 @@ const [stats, setStats] = React.useState({
     }
   ];
 
+  const colorClasses = {
+    blue: "bg-blue-100 text-blue-800",
+    green: "bg-green-100 text-green-800",
+    yellow: "bg-yellow-100 text-yellow-800",
+    red: "bg-red-100 text-red-800",
+    purple: "bg-purple-100 text-purple-800",
+    pink: "bg-pink-100 text-pink-800",
+    orange: "bg-orange-100 text-orange-800",
+    indigo: "bg-indigo-100 text-indigo-800",
+    teal: "bg-teal-100 text-teal-800",
+    slate: "bg-slate-100 text-slate-800",
+  };
+
   if (user && user.role === "student") {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
@@ -233,7 +246,7 @@ const [stats, setStats] = React.useState({
             >
               <div className="flex items-start justify-between mb-4">
                 <div
-                  className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}
+                  className={`p-3 rounded-xl ${colorClasses[stat.color]} group-hover:text-white transition-colors`}
                 >
                   <stat.icon size={24} />
                 </div>
