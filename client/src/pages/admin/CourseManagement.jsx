@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import LessonManagementModal from "../../components/modals/LessonManagementModal";
 import Loading from "../../components/Loading";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -40,6 +41,7 @@ const CourseManagement = () => {
   const [currentCourseTitle, setCurrentCourseTitle] = useState("");
   const [showManageLessons, setShowManageLessons] = useState(false);
   const [manageCourse, setManageCourse] = useState(null);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -153,14 +155,23 @@ const CourseManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await api.delete(`/courses/${id}`);
-        setCourses(courses.filter((course) => course._id !== id));
-      } catch (error) {
-        console.error("Error deleting:", error);
-      }
+  const handleDelete = (id) => {
+    setConfirmConfig({ isOpen: true, id });
+  };
+
+  const confirmCourseDelete = async () => {
+    const id = confirmConfig.id;
+    if (!id) return;
+    
+    try {
+      await api.delete(`/courses/${id}`);
+      setCourses(courses.filter((course) => course._id !== id));
+      toast.success("Course deleted successfully");
+    } catch (error) {
+      console.error("Error deleting:", error);
+      toast.error("Failed to delete course");
+    } finally {
+      setConfirmConfig({ isOpen: false, id: null });
     }
   };
   
@@ -398,6 +409,16 @@ const CourseManagement = () => {
           searchPlaceholder="Search courses by title or category..."
         />
       </div>
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Course"
+        message="Are you sure you want to delete this course? This will permanently remove all associated lessons and data."
+        confirmText="Delete Permanently"
+        onConfirm={confirmCourseDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, id: null })}
+        type="danger"
+      />
 
       {/* Enrolled Students Modal */}
       {showStudentsModal && (

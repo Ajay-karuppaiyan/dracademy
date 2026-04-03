@@ -248,9 +248,10 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
           {showProfileMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
               <button
-                onClick={() =>
+                onClick={() => {
+                  setShowProfileMenu(false);
                   navigate("/dashboard/profile")
-                }
+                }}
                 className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
               >
                 <User size={14} />
@@ -258,9 +259,10 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
               </button>
 
               <button
-                onClick={() =>
+                onClick={() => {
+                  setShowProfileMenu(false);
                   navigate("/dashboard/settings")
-                }
+                }}
                 className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
               >
                 <Settings

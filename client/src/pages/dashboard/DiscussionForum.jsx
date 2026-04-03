@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import Loading from "../../components/Loading";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const DiscussionForum = () => {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ const DiscussionForum = () => {
   const [expandedReplies, setExpandedReplies] = useState({});
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: "", postId: null, replyId: null, message: "" });
 
   // FETCH POSTS
   const fetchPosts = async () => {
@@ -95,9 +97,23 @@ const DiscussionForum = () => {
     fetchPosts();
   };
 
-  const deletePost = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this discussion?")) return;
-    await api.delete(`/forum/${id}`);
+  const deletePost = (id) => {
+    setConfirmConfig({ 
+      isOpen: true, 
+      type: "post", 
+      postId: id, 
+      message: "Are you sure you want to delete this discussion topic?" 
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { type, postId, replyId } = confirmConfig;
+    if (type === "post") {
+      await api.delete(`/forum/${postId}`);
+    } else if (type === "reply") {
+      await api.delete(`/forum/${postId}/reply/${replyId}`);
+    }
+    setConfirmConfig({ isOpen: false, type: "", postId: null, replyId: null, message: "" });
     fetchPosts();
   };
 
@@ -115,10 +131,14 @@ const DiscussionForum = () => {
     fetchPosts();
   };
 
-  const deleteReply = async (postId, replyId) => {
-    if (!window.confirm("Are you sure you want to delete this reply?")) return;
-    await api.delete(`/forum/${postId}/reply/${replyId}`);
-    fetchPosts();
+  const deleteReply = (postId, replyId) => {
+    setConfirmConfig({ 
+      isOpen: true, 
+      type: "reply", 
+      postId, 
+      replyId, 
+      message: "Are you sure you want to delete this reply?" 
+    });
   };
 
   const toggleReplies = (postId) => {
@@ -527,6 +547,16 @@ const DiscussionForum = () => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.type === "post" ? "Delete Discussion" : "Delete Reply"}
+        message={confirmConfig.message}
+        confirmText="Confirm Delete"
+        onConfirm={confirmDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, type: "", postId: null, replyId: null, message: "" })}
+        type="danger"
+      />
     </div>
   );
 };

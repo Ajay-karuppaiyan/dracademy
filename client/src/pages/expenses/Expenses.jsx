@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef} from "react";
 import {
   Plus,
   CheckCircle,
@@ -15,6 +15,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import AddExpenseModal from "./AddExpenseModel";
 import CustomDataTable from "../../components/DataTable";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -22,6 +23,8 @@ const Expenses = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchExpense, setSearchExpense] = useState("");
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
+  const menuRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user")) || { role: "employee" };
 
@@ -66,8 +69,14 @@ const Expenses = () => {
   };
 
   /* ================= DELETE ================= */
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
+  const handleDelete = (id) => {
+    setConfirmConfig({ isOpen: true, id });
+  };
+
+  const confirmExpenseDelete = async () => {
+    const id = confirmConfig.id;
+    if (!id) return;
+    
     try {
       await api.delete(`/expenses/${id}`);
       toast.success("Expense deleted");
@@ -75,11 +84,25 @@ const Expenses = () => {
       fetchExpenses();
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setConfirmConfig({ isOpen: false, id: null });
     }
   };
 
   useEffect(() => {
     fetchExpenses();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   /* ================= COLUMNS ================= */
@@ -91,7 +114,7 @@ const Expenses = () => {
     { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-gray-600 font-mono">{new Date(row.date).toLocaleDateString("en-IN")}</span> },
     { name: 'Status', selector: row => row.status, sortable: true, center: true, width: '120px', cell: row => <StatusBadge status={row.status} /> },
     { name: 'Action', center: true, width: '80px', cell: row => (
-        <div className="relative flex justify-center w-full">
+        <div className="relative flex justify-center w-full" ref={menuRef}>
           <button
             onClick={() => setOpenMenuId(openMenuId === row._id ? null : row._id)}
             className="p-2 hover:bg-slate-100 rounded-lg text-gray-600 transition"
@@ -175,6 +198,16 @@ const Expenses = () => {
           searchPlaceholder="Search by employee or category..."
         />
       </div>
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Expense Claim"
+        message="Are you sure you want to delete this expense record? This action cannot be reversed."
+        confirmText="Confirm Delete"
+        onConfirm={confirmExpenseDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, id: null })}
+        type="danger"
+      />
     </div>
   );
 };

@@ -4,12 +4,14 @@ import { Eye, Trash2, Edit2 } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 5;
@@ -62,8 +64,14 @@ const Students = () => {
   const currentStudents = filtered.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filtered.length / studentsPerPage);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this student?")) return;
+  const handleDelete = (id) => {
+    setConfirmConfig({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    const id = confirmConfig.id;
+    if (!id) return;
+    
     try {
       await api.delete(`/students/${id}`);
       setStudents((prev) => prev.filter((s) => s._id !== id));
@@ -194,6 +202,16 @@ const handleUpdate = async () => {
             Export to Excel
           </button>
         }
+      />
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Student"
+        message="Are you sure you want to delete this student? This action cannot be undone."
+        confirmText="Delete Now"
+        onConfirm={confirmDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, id: null })}
+        type="danger"
       />
 
       {/* VIEW MODAL */}

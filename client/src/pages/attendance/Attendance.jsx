@@ -22,6 +22,7 @@ const Attendance = () => {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [activeTab, setActiveTab] = useState("attendance");
+  const [logoutModal, setLogoutModal] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -118,12 +119,7 @@ const Attendance = () => {
   };
 
   const handleSetLogout = async (record) => {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
-
-    if (!confirmLogout) return;
-
     try {
-      // Use toTimeString().slice(0, 8) for consistent HH:mm:ss format across all browsers
       const logoutTime = new Date().toTimeString().slice(0, 8);
 
       await api.patch(
@@ -137,6 +133,8 @@ const Attendance = () => {
           a._id === record._id ? { ...a, logoutTime } : a
         )
       );
+
+      setLogoutModal(null); // close modal
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -230,7 +228,7 @@ const Attendance = () => {
             new Date(row.date).toISOString().slice(0, 10) === todayDate && (
               <button
                 disabled={!!row.logoutTime}
-                onClick={() => handleSetLogout(row)}
+                onClick={() => setLogoutModal(row)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm ${row.logoutTime
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-green-500 text-white hover:bg-green-600"
@@ -496,6 +494,42 @@ const Attendance = () => {
                   className="w-32 h-32 rounded-xl mt-5 object-cover border shadow-sm mx-auto"
                 />
               )}
+            </div>
+          </div>
+        )}
+
+        {logoutModal && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setLogoutModal(null)}
+          >
+            <div
+              className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4 text-slate-800">
+                Confirm Logout
+              </h3>
+
+              <p className="text-sm text-slate-500 mb-6">
+                Are you sure you want to logout for today?
+              </p>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setLogoutModal(null)}
+                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => handleSetLogout(logoutModal)}
+                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium"
+                >
+                  Yes, Logout
+                </button>
+              </div>
             </div>
           </div>
         )}

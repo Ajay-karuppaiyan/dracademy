@@ -223,11 +223,11 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
       {/* ===== APPLY LEAVE MODAL ===== */}
       {showApplyButton && showForm && user && user.role !== "admin" && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowForm(false)}
         >
           <div
-            className="bg-white w-[500px] p-6 rounded-2xl shadow-xl relative"
+            className="w-full max-w-2xl max-h-[95vh] overflow-y-auto no-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
             <LeaveApplicationForm
@@ -237,12 +237,6 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
               }}
               onCancel={() => setShowForm(false)}
             />
-            <button
-              onClick={() => setShowForm(false)}
-              className="absolute top-3 right-4 text-slate-400 hover:text-slate-700"
-            >
-              ✕
-            </button>
           </div>
         </div>
       )}

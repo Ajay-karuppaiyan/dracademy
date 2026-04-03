@@ -3,6 +3,7 @@ import api from "../../services/api";
 import { UserPlus, Check, Loader2, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const ParentManagement = () => {
   const [parents, setParents] = useState([]);
@@ -19,6 +20,7 @@ const ParentManagement = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [searchParent, setSearchParent] = useState("");
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
   const parentColumns = [
     { name: 'S.no', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
@@ -81,15 +83,22 @@ const ParentManagement = () => {
   };
 
   // Handle delete parent
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this parent?")) return;
+  const handleDelete = (id) => {
+    setConfirmConfig({ isOpen: true, id });
+  };
 
+  const confirmParentDelete = async () => {
+    const id = confirmConfig.id;
+    if (!id) return;
+    
     try {
       await api.delete(`/parent/parent/${id}`);
       toast.success("Parent deleted successfully");
       setParents((prev) => prev.filter((p) => p._id !== id));
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to delete parent");
+    } finally {
+      setConfirmConfig({ isOpen: false, id: null });
     }
   };
 
@@ -229,6 +238,15 @@ const ParentManagement = () => {
           </div>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Parent Account"
+        message="Are you sure you want to delete this parent? This will also remove their access to student records."
+        confirmText="Delete Account"
+        onConfirm={confirmParentDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, id: null })}
+        type="danger"
+      />
     </div>
   );
 };

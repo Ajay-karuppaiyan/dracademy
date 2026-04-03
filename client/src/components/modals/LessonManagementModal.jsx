@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { X, Trash2, Plus, PlayCircle, FileText, ChevronRight, Upload, CircleDashed } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import ConfirmationModal from "./ConfirmationModal";
 
 const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
   const [lessons, setLessons] = useState(course?.lessons || []);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, index: null });
 
   const [newLesson, setNewLesson] = useState({
     title: "",
@@ -70,8 +72,13 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
     }
   };
 
-  const handleDeleteLesson = async (index) => {
-    if (!window.confirm("Delete this lesson?")) return;
+  const handleDeleteLesson = (index) => {
+    setConfirmConfig({ isOpen: true, index });
+  };
+
+  const confirmDeleteLesson = async () => {
+    const index = confirmConfig.index;
+    if (index === null) return;
     
     setLoading(true);
     try {
@@ -86,6 +93,7 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
       toast.error("Failed to delete lesson");
     } finally {
       setLoading(false);
+      setConfirmConfig({ isOpen: false, index: null });
     }
   };
 
@@ -257,6 +265,15 @@ const LessonManagementModal = ({ course, isOpen, onUpdate, onClose }) => {
           </div>
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Lesson"
+        message="Are you sure you want to remove this lesson from the curriculum?"
+        confirmText="Confirm Delete"
+        onConfirm={confirmDeleteLesson}
+        onClose={() => setConfirmConfig({ isOpen: false, index: null })}
+        type="danger"
+      />
     </div>
   );
 };
