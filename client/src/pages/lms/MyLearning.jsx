@@ -55,6 +55,14 @@ const MyLearning = () => {
   };
 
 
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loading message="Fetching your learning progress..." />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-700">
       {/* Header & Stats Section */}
@@ -108,7 +116,7 @@ const MyLearning = () => {
           <CourseCard key={enrollment._id} enrollment={enrollment} />
         ))}
 
-        {filteredCourses.length === 0 && (
+        {!loading && filteredCourses.length === 0 && (
           <div className="col-span-full py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100 shadow-inner">
             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
               <BookOpen size={40} className="text-slate-300" />

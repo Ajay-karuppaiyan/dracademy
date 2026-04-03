@@ -310,8 +310,6 @@ const Profile = () => {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-indigo-600"></div></div>;
-
   return (
     <div className="bg-gray-50 min-h-screen pb-12 font-sans">
       {/* Cover Header */}

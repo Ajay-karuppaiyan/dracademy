@@ -103,11 +103,6 @@ const Settings = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="p-8 text-center text-slate-500">Loading settings...</div>
-    );
-
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
       <h1 className="text-2xl font-bold text-slate-900 mb-8">

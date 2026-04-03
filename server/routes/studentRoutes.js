@@ -3,6 +3,7 @@ const router = express.Router();
 const { upload } = require('../config/cloudinary');
 const Student = require('../models/Student');
 const User = require('../models/User');
+const Course = require('../models/Course');
 
 // // ======================================================
 // // CREATE STUDENT (Creates User + Student)
@@ -154,8 +155,17 @@ const { protect } = require("../middleware/authMiddleware");
 router.get("/", protect, async (req, res) => {
   try {
     let query = {};
-    if (req.user.role === "center") {
+    const userRole = req.user.role.toLowerCase();
+
+    if (userRole === "center") {
       query.center = req.user.center;
+    } else if (userRole === "coach") {
+      // Find all courses assigned to this coach
+      const coachCourses = await Course.find({ instructor: req.user._id }).select("_id");
+      const coachCourseIds = coachCourses.map(c => c._id);
+      
+      // Filter students who are enrolled in ANY of these coach's courses
+      query["enrolledCourses.course"] = { $in: coachCourseIds };
     }
 
     const students = await Student.find(query)
@@ -279,10 +289,10 @@ router.put(
       }
 
       const updatedStudent = await Student.findById(student._id)
-      .populate("user", "-password")
-      .populate("parent", "name email")
-      .populate("enrolledCourses", "title price category duration")
-      .populate("center", "name location");
+        .populate("user", "-password")
+        .populate("parent", "name email")
+        .populate("enrolledCourses", "title price category duration")
+        .populate("center", "name location");
 
       res.json({
         message: "Student updated successfully",
@@ -340,9 +350,8 @@ router.patch('/:id/status', async (req, res) => {
     await student.save();
 
     res.json({
-      message: `Student ${
-        student.status === 'active' ? 'unblocked' : 'blocked'
-      } successfully`,
+      message: `Student ${student.status === 'active' ? 'unblocked' : 'blocked'
+        } successfully`,
       status: student.status,
     });
 
