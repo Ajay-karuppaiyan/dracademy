@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef} from "react";
+import React, { useEffect, useState } from "react";
 import {
   Plus,
   CheckCircle,
@@ -24,7 +24,6 @@ const Expenses = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchExpense, setSearchExpense] = useState("");
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
-  const menuRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user")) || { role: "employee" };
 
@@ -48,8 +47,8 @@ const Expenses = () => {
       toast.success(`Expense ${status}`);
       setOpenMenuId(null);
       fetchExpenses();
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status");
     }
   };
 
@@ -63,8 +62,8 @@ const Expenses = () => {
       toast.success("Expense reimbursed");
       setOpenMenuId(null);
       fetchExpenses();
-    } catch {
-      toast.error("Failed to reimburse");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to reimburse");
     }
   };
 
@@ -82,8 +81,8 @@ const Expenses = () => {
       toast.success("Expense deleted");
       setOpenMenuId(null);
       fetchExpenses();
-    } catch {
-      toast.error("Delete failed");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Delete failed");
     } finally {
       setConfirmConfig({ isOpen: false, id: null });
     }
@@ -93,16 +92,17 @@ const Expenses = () => {
     fetchExpenses();
   }, []);
 
+
+  /* ================= CLICK AWAY FOR MENUS ================= */
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleGlobalClick = (e) => {
+      // If clicking anything other than the menu trigger icons, close the menu
+      if (!e.target.closest(".action-menu-trigger") && !e.target.closest(".action-menu-content")) {
         setOpenMenuId(null);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleGlobalClick);
+    return () => document.removeEventListener("mousedown", handleGlobalClick);
   }, []);
 
   /* ================= COLUMNS ================= */
@@ -114,16 +114,19 @@ const Expenses = () => {
     { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-gray-600 font-mono">{new Date(row.date).toLocaleDateString("en-IN")}</span> },
     { name: 'Status', selector: row => row.status, sortable: true, center: true, width: '120px', cell: row => <StatusBadge status={row.status} /> },
     { name: 'Action', center: true, width: '80px', cell: row => (
-        <div className="relative flex justify-center w-full" ref={menuRef}>
+        <div className="relative flex justify-center w-full">
           <button
-            onClick={() => setOpenMenuId(openMenuId === row._id ? null : row._id)}
-            className="p-2 hover:bg-slate-100 rounded-lg text-gray-600 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenMenuId(openMenuId === row._id ? null : row._id);
+            }}
+            className="p-2 hover:bg-slate-100 rounded-lg text-gray-600 transition action-menu-trigger"
           >
             <MoreVertical size={18} />
           </button>
           
           {openMenuId === row._id && (
-            <div className="absolute right-full top-0 mr-2 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-[9999] text-left overflow-hidden">
+            <div className="absolute right-full top-0 mr-2 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-[9999] text-left overflow-hidden action-menu-content">
               {user.role === "admin" && row.status === "pending" && (
                 <>
                   <button onClick={() => handleStatusUpdate(row._id, "approved")} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-green-600 hover:bg-green-50 transition"><CheckCircle size={16} /> Approve</button>

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Loading from "../../components/Loading";
+import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
 const Announcement = () => {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ const Announcement = () => {
   const [message, setMessage] = useState("");
   const [targetRoles, setTargetRoles] = useState([]);
   const [expiryDate, setExpiryDate] = useState("");
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
   /* ================= FETCH ================= */
   const fetchAnnouncements = async () => {
@@ -72,6 +74,7 @@ const Announcement = () => {
       setMessage("");
       setTargetRoles([]);
       setExpiryDate("");
+      setPage(1);
       fetchAnnouncements();
     } catch {
       toast.error("Dispatch failed");
@@ -79,13 +82,22 @@ const Announcement = () => {
   };
 
   /* ================= DELETE ================= */
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
+    setConfirmConfig({ isOpen: true, id });
+  };
+
+  const confirmAnnouncementDelete = async () => {
+    const id = confirmConfig.id;
+    if (!id) return;
+    
     try {
       await api.delete(`/announcements/${id}`);
       toast.success("Broadcast deleted");
       fetchAnnouncements();
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setConfirmConfig({ isOpen: false, id: null });
     }
   };
 
@@ -472,6 +484,16 @@ const Announcement = () => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete Broadcast"
+        message="Are you sure you want to delete this official announcement? This will remove it for all targets."
+        confirmText="Confirm Delete"
+        onConfirm={confirmAnnouncementDelete}
+        onClose={() => setConfirmConfig({ isOpen: false, id: null })}
+        type="danger"
+      />
     </div>
   );
 };
