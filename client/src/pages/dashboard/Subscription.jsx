@@ -36,6 +36,29 @@ const Subscription = () => {
     fetchSubscriptions();
   }, []);
 
+  const handleDownloadInvoice = async (paymentId) => {
+    try {
+      toast.loading("Preparing your invoice...", { id: "invoice-download" });
+      const response = await api.get(`/payment/invoice/${paymentId}`, {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Invoice_${paymentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Invoice downloaded successfully!", { id: "invoice-download" });
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error("Failed to download invoice", { id: "invoice-download" });
+    }
+  };
+
   const columns = [
     {
       name: "S.No",
@@ -104,8 +127,9 @@ const Subscription = () => {
     {
       name: "Transaction ID",
       selector: row => row.razorpayPaymentId,
+      minWidth: "160px",
       cell: row => (
-        <code className="text-[11px] font-mono bg-slate-100 px-2 py-1 rounded-md text-slate-600 border border-slate-200">
+        <code className="text-[11px] font-mono bg-slate-100 px-2 py-1 rounded-md text-slate-600 border border-slate-200 whitespace-nowrap">
           {row.razorpayPaymentId || "MANUAL_ENROLL"}
         </code>
       ),
@@ -126,7 +150,7 @@ const Subscription = () => {
       center: true,
       cell: row => (
         <button 
-          onClick={() => toast.success("Invoice downloading... (Demo)")}
+          onClick={() => handleDownloadInvoice(row._id)}
           className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-100"
           title="Download Invoice"
         >
@@ -135,7 +159,6 @@ const Subscription = () => {
       ),
     }
   ];
-
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -217,7 +240,6 @@ const Subscription = () => {
            </button>
         </div>
       )}
-
 
       {/* Security Banner */}
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">

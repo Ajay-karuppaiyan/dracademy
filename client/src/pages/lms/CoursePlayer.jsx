@@ -406,7 +406,7 @@ const CoursePlayer = () => {
                     className="group relative flex items-center gap-4 overflow-hidden rounded-[2rem] bg-slate-900 px-10 py-5 font-black text-white shadow-2xl shadow-slate-900/40 hover:scale-105 active:scale-95 transition-all"
                   >
                     <span className="relative z-10">
-                      {isLast ? "Finish Course" : isLastInSection ? `Continue to Step ${activeLesson?.topicIndex + 2}` : "Complete & Next Section"}
+                      {isLast ? "Finish Course" : isLastInSection ? `Continue to Step ${activeLesson?.topicIndex + 2}` : "Next Section"}
                     </span>
                     <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-1">
                       {isLast ? <Trophy size={16} className="text-brand-400" /> : <ArrowRight size={18} />}

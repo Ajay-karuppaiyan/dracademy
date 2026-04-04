@@ -474,7 +474,7 @@ const [stats, setStats] = React.useState({
               className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}>
+                <div className={`p-3 rounded-xl ${colorClasses[stat.color]} group-hover:text-white transition-colors`}>
                   <stat.icon size={24} />
                 </div>
               </div>
@@ -597,7 +597,7 @@ const [stats, setStats] = React.useState({
           >
             <div className="flex items-start justify-between mb-4">
               <div
-                className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-colors`}
+                className={`p-3 rounded-xl ${colorClasses[stat.color]} group-hover:text-white transition-colors`}
               >
                 <stat.icon size={24} />
               </div>
