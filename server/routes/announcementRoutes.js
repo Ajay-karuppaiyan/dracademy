@@ -1,7 +1,22 @@
 const express = require("express");
 const router = express.Router();
+const { upload } = require("../config/cloudinary");
 const Announcement = require("../models/Announcement");
+const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
+
+/* =====================================================
+   USERS BY ROLE
+===================================================== */
+router.get("/users-by-role/:role", protect, async (req, res) => {
+  try {
+    const { role } = req.params;
+    const users = await User.find({ role: role.toLowerCase() }).select("name _id email");
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 /* =====================================================
    MARK ALL AS READ
@@ -9,11 +24,26 @@ const { protect } = require("../middleware/authMiddleware");
 router.patch("/mark-all", protect, async (req, res) => {
   try {
     const role = req.user.role?.toLowerCase();
+    const today = new Date();
 
-    const query =
-      role === "admin"
-        ? {}
-        : { targetRoles: { $in: [role, "all"] } };
+    const query = {
+      $and: [
+        {
+          $or: [
+            { targetRoles: { $in: [role, "all"] } },
+            { targetUserId: req.user._id }
+          ]
+        },
+        { startDate: { $lte: today } },
+        {
+          $or: [
+            { endDate: { $exists: false } },
+            { endDate: null },
+            { endDate: { $gte: today } }
+          ]
+        }
+      ]
+    };
 
     await Announcement.updateMany(
       {
@@ -49,11 +79,26 @@ router.patch("/mark-all", protect, async (req, res) => {
 router.get("/unread/count", protect, async (req, res) => {
   try {
     const role = req.user.role?.toLowerCase();
+    const today = new Date();
 
-    const query =
-      role === "admin"
-        ? {}
-        : { targetRoles: { $in: [role, "all"] } };
+    const query = {
+      $and: [
+        {
+          $or: [
+            { targetRoles: { $in: [role, "all"] } },
+            { targetUserId: req.user._id }
+          ]
+        },
+        { startDate: { $lte: today } },
+        {
+          $or: [
+            { endDate: { $exists: false } },
+            { endDate: null },
+            { endDate: { $gte: today } }
+          ]
+        }
+      ]
+    };
 
     const unread = await Announcement.countDocuments({
       ...query,
@@ -76,7 +121,7 @@ router.get("/unread/count", protect, async (req, res) => {
 /* =====================================================
    CREATE ANNOUNCEMENT
 ===================================================== */
-router.post("/", protect, async (req, res) => {
+router.post("/", protect, upload.array("images", 5), async (req, res) => {
   try {
     if (req.user.role?.toLowerCase() !== "admin") {
       return res.status(403).json({
@@ -85,19 +130,40 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    const { title, message, targetRoles } = req.body;
+    const { 
+      title, 
+      message, 
+      targetRoles, 
+      startDate, 
+      endDate, 
+      targetUserId,
+      targetUserName 
+    } = req.body;
 
-    if (!title?.trim() || !message?.trim() || !targetRoles?.length) {
+    // targetRoles might come as a string (if single) or array from frontend
+    let roles = [];
+    if (targetRoles) {
+      roles = Array.isArray(targetRoles) ? targetRoles : [targetRoles];
+    }
+
+    if (!title?.trim() || !message?.trim() || (roles.length === 0 && !targetUserId)) {
       return res.status(400).json({
         success: false,
-        message: "Title, message and targetRoles are required",
+        message: "Title, message and a target (role or user) are required",
       });
     }
+
+    const imageUrls = req.files ? req.files.map(f => f.path) : [];
 
     const announcement = await Announcement.create({
       title: title.trim(),
       message: message.trim(),
-      targetRoles: targetRoles.map((r) => r.toLowerCase()),
+      images: imageUrls,
+      targetRoles: targetUserId ? [] : roles.map((r) => r.toLowerCase()),
+      targetUserId: targetUserId || null,
+      targetUserName: targetUserName || "",
+      startDate: startDate || new Date(),
+      endDate: endDate || null,
       createdBy: {
         userId: req.user._id,
         name: req.user.name,
@@ -110,12 +176,14 @@ router.post("/", protect, async (req, res) => {
       data: announcement,
     });
   } catch (error) {
+    console.error("Create error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 });
+
 
 
 /* =====================================================
@@ -127,17 +195,65 @@ router.get("/", protect, async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search || "";
+    const today = new Date();
 
-    const query =
-      role === "admin"
-        ? {}
-        : { targetRoles: { $in: [role, "all"] } };
+    let query = {
+      $and: [
+        {
+          $or: [
+            { targetRoles: { $in: [role, "all"] } },
+            { targetUserId: req.user._id }
+          ]
+        },
+        { startDate: { $lte: today } },
+        {
+          $or: [
+            { endDate: { $exists: false } },
+            { endDate: null },
+            { endDate: { $gte: today } }
+          ]
+        }
+      ]
+    };
+
+    // If Admin is in Management Page (not Dashboard ticker) or specifically wants all
+    if (role === "admin") {
+      if (req.query.all === "true") {
+        query = {}; // See EVERYTHING
+      } else {
+        // If they are on the ticker (Dashboard), they probably should still only see what's active.
+        // But many admins expect to see EVERYTHING they've published in the ticker too to verify?
+        // No, ticker should be clean.
+        
+        // HOWEVER, admins should see all ACTIVE announcements regardless of targetRole
+        // so they can verify what's live for students etc.
+        query = {
+          $and: [
+            { startDate: { $lte: today } },
+            {
+              $or: [
+                { endDate: { $exists: false } },
+                { endDate: null },
+                { endDate: { $gte: today } }
+              ]
+            }
+          ]
+        };
+      }
+    }
 
     if (search.trim()) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { message: { $regex: search, $options: "i" } },
-      ];
+      const searchObj = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { message: { $regex: search, $options: "i" } },
+        ],
+      };
+      if (query.$and) {
+        query.$and.push(searchObj);
+      } else {
+        query = { ...query, ...searchObj };
+      }
     }
 
     const announcements = await Announcement.find(query)
@@ -266,4 +382,4 @@ router.delete("/:id", protect, async (req, res) => {
 });
 
 
-module.exports = router;
+module.exports = router;

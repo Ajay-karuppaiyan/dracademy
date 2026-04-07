@@ -19,9 +19,16 @@ const customStyles = {
       fontSize: '0.85rem',
       fontWeight: '700',
       textTransform: 'uppercase',
-      paddingLeft: '16px',
       paddingRight: '16px',
       borderRight: '1px solid #e2e8f0',
+      whiteSpace: 'normal !important',
+      wordBreak: 'break-word !important',
+      overflow: 'visible !important',
+      '& > div': {
+        whiteSpace: 'normal !important',
+        overflow: 'visible !important',
+        textOverflow: 'clip !important',
+      },
       '&:last-child': {
         borderRight: 'none',
       },
@@ -34,6 +41,14 @@ const customStyles = {
       fontSize: '0.875rem',
       color: '#334155',
       borderRight: '1px solid #f1f5f9',
+      whiteSpace: 'normal !important',
+      wordBreak: 'break-word !important',
+      overflow: 'visible !important',
+      '& > div': {
+        whiteSpace: 'normal !important',
+        overflow: 'visible !important',
+        textOverflow: 'clip !important',
+      },
       '&:last-child': {
         borderRight: 'none',
       },

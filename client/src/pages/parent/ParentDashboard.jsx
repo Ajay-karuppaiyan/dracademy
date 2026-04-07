@@ -8,11 +8,66 @@ import {
   Award,
   LogOut,
   Search,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import Loading from "../../components/Loading";
+
+const AnnouncementTicker = ({ announcements }) => {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!announcements || announcements.length <= 1 || isHovered) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [announcements, isHovered]);
+
+  if (!announcements || announcements.length === 0) return null;
+
+  return (
+    <div 
+      className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4 mx-4 mt-4 flex items-center shadow-sm relative overflow-hidden group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg flex-shrink-0 z-10 transition-transform group-hover:scale-110">
+        <AlertCircle size={20} />
+      </div>
+      <div className="flex-1 h-8 ml-4 relative overflow-hidden">
+        {announcements.map((ann, idx) => (
+          <div
+            key={ann._id || idx}
+            onClick={() => window.location.href = '/dashboard/announcements'}
+            className={`absolute top-0 left-0 w-full h-full flex items-center cursor-pointer transition-all duration-500 ease-in-out ${
+              idx === currentIndex
+                ? 'opacity-100 translate-y-0 z-10'
+                : idx < currentIndex ? 'opacity-0 -translate-y-full -z-10' : 'opacity-0 translate-y-full -z-10'
+            }`}
+          >
+            <p className="font-semibold text-indigo-900 group-hover:text-indigo-700 transition-colors truncate">
+              <span className="bg-red-500 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded mr-2 align-middle animate-pulse">New</span>
+              {ann.title || ann.message}
+            </p>
+            <span className="ml-3 text-xs text-indigo-400 font-medium whitespace-nowrap bg-indigo-100/50 px-2 py-1 rounded-md hidden sm:block">
+              {new Date(ann.createdAt || new Date()).toLocaleDateString()}
+            </span>
+          </div>
+        ))}
+      </div>
+      <button 
+        onClick={() => window.location.href = '/dashboard/announcements'}
+        className="ml-4 flex items-center justify-center bg-white text-indigo-600 text-sm font-bold px-4 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors z-10 shadow-sm whitespace-nowrap"
+      >
+        View All
+      </button>
+    </div>
+  );
+};
 
 const ParentDashboard = () => {
   const [children, setChildren] = useState([]);
@@ -25,12 +80,14 @@ const ParentDashboard = () => {
     new Date().toISOString().slice(0, 7)
   ); // YYYY-MM
   const [searchTerm, setSearchTerm] = useState(""); // For filtering children
+  const [announcements, setAnnouncements] = useState([]);
 
   const { logout } = useAuth();
 
   // Fetch children linked to parent
   useEffect(() => {
     fetchChildren();
+    fetchAnnouncements();
   }, []);
 
   // Fetch overview when child selected
@@ -49,6 +106,15 @@ const ParentDashboard = () => {
       toast.error("Failed to load children");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await api.get("/announcements?limit=10");
+      setAnnouncements(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching announcements:", err);
     }
   };
 
@@ -176,6 +242,7 @@ const ParentDashboard = () => {
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
       {/* Header */}
+      <AnnouncementTicker announcements={announcements} />
       <div className="bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">
@@ -186,12 +253,6 @@ const ParentDashboard = () => {
           </p>
         </div>
 
-        <button
-          onClick={logout}
-          className="flex items-center gap-2 text-red-500 text-sm"
-        >
-          <LogOut size={18} /> Logout
-        </button>
       </div>
 
       {/* Child Selector with Search */}
@@ -347,6 +408,7 @@ const ParentDashboard = () => {
                   )}
                 </div>
               </div>
+
             </div>
           )
         )}

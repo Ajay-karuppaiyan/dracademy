@@ -235,21 +235,21 @@ const generatePayslip = async (payrollId, employeeName) => {
 
   // --- COLUMN DEFINITIONS ---
   const payrollColumns = [
-    { name: '#', selector: (row, i) => i + 1, width: '60px', center: true },
+    { name: 'S.No', selector: (row, i) => i + 1, width: '80px', center: true },
     { 
-      name: 'Employee', selector: row => row.name, sortable: true, width: '180px',
+      name: 'Employee', selector: row => row.name, sortable: true, width: '160px',
       cell: row => <div onClick={() => fetchAttendance(row, "all")} className="font-semibold text-gray-800 cursor-pointer hover:text-blue-600 truncate">{row.name}</div>
     },
     {
-      name: 'Dept', selector: row => row.department, center: true, width: '120px',
+      name: 'Dept', selector: row => row.department, center: true, width: '180px',
       cell: row => <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{row.department || "-"}</span>
     },
-    { name: 'Basic Salary', selector: row => row.basic, sortable: true, right: true, cell: row => <div className="text-gray-700 font-medium"><span className="text-gray-400 mr-1">₹</span>{row.basic?.toLocaleString("en-IN") || "0"}</div> },
+    { name: 'Basic Salary', selector: row => row.basic, sortable: true,width:"145px", right: true, cell: row => <div className="text-gray-700 font-medium"><span className="text-gray-400 mr-1">₹</span>{row.basic?.toLocaleString("en-IN") || "0"}</div> },
     { name: 'Days', selector: row => row.totalDays, center: true, width: '80px', cell: row => <span className="text-gray-600 font-medium">{row.totalDays || "-"}</span> },
-    { name: 'Present', selector: row => row.present, center: true, width: '80px', cell: row => <div className="font-bold text-green-600 cursor-pointer hover:bg-green-50 p-1 rounded" onClick={() => fetchAttendance(row, "present")}>{row.present ?? "-"}</div> },
+    { name: 'Present', selector: row => row.present, center: true, width: '95px', cell: row => <div className="font-bold text-green-600 cursor-pointer hover:bg-green-50 p-1 rounded" onClick={() => fetchAttendance(row, "present")}>{row.present ?? "-"}</div> },
     { name: 'Leave', selector: row => row.absent, center: true, width: '80px', cell: row => <div className="font-bold text-red-500 cursor-pointer hover:bg-red-50 p-1 rounded" onClick={() => fetchAttendance(row, "leave")}>{row.absent ?? "-"}</div> },
     { 
-      name: 'Late Info', center: true, width: '90px',
+      name: 'Late Info', center: true, width: '110px',
       cell: row => (
         <div className="flex flex-col items-center cursor-pointer hover:bg-orange-50 p-1 rounded" onClick={() => fetchAttendance(row, "all")}>
           <span className="text-xs font-semibold text-orange-600">{row.lateDays} {row.lateDays === 1 ? 'day' : 'days'}</span>
@@ -257,10 +257,10 @@ const generatePayslip = async (payrollId, employeeName) => {
         </div>
       )
     },
-    { name: 'Allowances', selector: row => row.allowances, right: true, width: '100px', cell: row => <div className="font-bold text-blue-600 cursor-pointer hover:bg-blue-50 p-1 rounded" onClick={() => viewAdjustments(row, "allowance")}>{row.allowances > 0 ? <><span className="text-blue-300 mr-1">+ ₹</span>{row.allowances.toLocaleString("en-IN")}</> : '-'}</div> },
-    { name: 'Deductions', selector: row => row.deductions, right: true, width: '100px', cell: row => <div className="font-bold text-red-500 cursor-pointer hover:bg-red-50 p-1 rounded" onClick={() => viewAdjustments(row, "deduction")}>{row.deductions > 0 ? <><span className="text-red-300 mr-1">- ₹</span>{row.deductions.toLocaleString("en-IN")}</> : '-'}</div> },
+    { name: 'Allowances', selector: row => row.allowances, right: true, width: '130px', cell: row => <div className="font-bold text-blue-600 cursor-pointer hover:bg-blue-50 p-1 rounded" onClick={() => viewAdjustments(row, "allowance")}>{row.allowances > 0 ? <><span className="text-blue-300 mr-1">+ ₹</span>{row.allowances.toLocaleString("en-IN")}</> : '-'}</div> },
+    { name: 'Deductions', selector: row => row.deductions, right: true, width: '130px', cell: row => <div className="font-bold text-red-500 cursor-pointer hover:bg-red-50 p-1 rounded" onClick={() => viewAdjustments(row, "deduction")}>{row.deductions > 0 ? <><span className="text-red-300 mr-1">- ₹</span>{row.deductions.toLocaleString("en-IN")}</> : '-'}</div> },
     { name: 'Advance', selector: row => row.advance, right: true, width: '100px', cell: row => <div className="font-bold text-orange-600 cursor-pointer hover:bg-orange-50 p-1 rounded" onClick={() => viewAdjustments(row, "advance")}>{row.advance > 0 ? <><span className="text-orange-300 mr-1">₹</span>{row.advance.toLocaleString("en-IN")}</> : '-'}</div> },
-    { name: 'Net Salary', selector: row => row.netSalary, sortable: true, right: true, width: '120px', cell: row => <div className="font-bold text-gray-800"><span className="text-green-600 mr-1">₹</span><span className="text-[15px]">{row.netSalary?.toLocaleString("en-IN")}</span></div> },
+    { name: 'Net Salary', selector: row => row.netSalary, sortable: true, right: true, width: '130px', cell: row => <div className="font-bold text-gray-800"><span className="text-green-600 mr-1">₹</span><span className="text-[15px]">{row.netSalary?.toLocaleString("en-IN")}</span></div> },
     { 
       name: 'Action', center: true, width: '100px',
       cell: row => row._id ? (
@@ -272,13 +272,13 @@ const generatePayslip = async (payrollId, employeeName) => {
   const filteredPayrolls = payrolls.filter(p => p.name?.toLowerCase().includes(searchPayroll.toLowerCase()) || p.department?.toLowerCase().includes(searchPayroll.toLowerCase()));
 
   const attendanceColumns = attendanceFilter === "leave" ? [
-    { name: '#', selector: (row, i) => i + 1, width: '60px' },
+    { name: 'S.No', selector: (row, i) => i + 1, width: '60px' },
     { name: 'Leave Type', selector: row => row.leaveType, cell: row => <span className="capitalize font-medium text-gray-700">{row.leaveType || "-"}</span> },
     { name: 'Reason', selector: row => row.reason, cell: row => <span className="text-gray-600">{row.reason || "-"}</span> },
     { name: 'Applied Date', selector: row => row.createdAt, cell: row => <span className="font-mono text-gray-600">{row.createdAt ? new Date(row.startDate).toLocaleDateString("en-GB") : "-"}</span> },
     { name: 'Status', selector: row => row.status, center: true, width: '120px', cell: row => <span className="px-2.5 py-1 rounded-md text-[11px] uppercase font-bold bg-green-100 text-green-700 border border-green-200">{row.status || "Approved"}</span> }
   ] : [
-    { name: '#', selector: (row, i) => i + 1, width: '60px' },
+    { name: 'S.No', selector: (row, i) => i + 1, width: '60px' },
     { name: 'Date', selector: row => row.date || row.startDate, sortable: true, cell: row => <span className="font-mono text-gray-700 font-medium">{new Date(row.date || row.startDate).toLocaleDateString("en-GB", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span> },
     { 
       name: 'Status', selector: row => row.type, center: true, width: '100px',
@@ -290,9 +290,9 @@ const generatePayslip = async (payrollId, employeeName) => {
   ];
 
   const adjustmentColumns = [
-    { name: '#', selector: (row, i) => i + 1, width: '60px', center: true },
+    { name: 'S.No', selector: (row, i) => i + 1, width: '80px', center: true },
     { 
-      name: 'Amount', selector: row => row.amount, right: true, sortable: true,
+      name: 'Amount', selector: row => row.amount, right: true,width:"150px", sortable: true,
       cell: row => <span className={`font-bold ${selectedAdjustmentType === "allowance" ? "text-blue-600" : selectedAdjustmentType === "deduction" ? "text-red-500" : "text-orange-600"}`}>₹{row.amount?.toLocaleString("en-IN")}</span>
     },
     { name: 'Date Added', selector: row => row.createdAt, center: true, cell: row => <span className="text-gray-500 font-mono">{new Date(row.createdAt).toLocaleDateString("en-GB")}</span> },

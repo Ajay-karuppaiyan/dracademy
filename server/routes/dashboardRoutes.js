@@ -141,10 +141,24 @@ router.get("/student", protect, async (req, res) => {
     // For now simple attendance count or %
     const attendanceVal = attendanceCount > 0 ? ((attendanceCount / totalDays) * 100).toFixed(0) : 0;
 
-    // 3. Upcoming events/lessons (mock or check announcements)
     const announcements = await Announcement.find({
-      $or: [{ target: "all" }, { target: "student" }]
-    }).sort({ createdAt: -1 }).limit(3);
+      $and: [
+        {
+          $or: [
+            { targetRoles: { $in: ["all", "student"] } },
+            { targetUserId: req.user._id }
+          ]
+        },
+        { startDate: { $lte: new Date() } },
+        {
+          $or: [
+            { endDate: { $exists: false } },
+            { endDate: null },
+            { endDate: { $gte: new Date() } }
+          ]
+        }
+      ]
+    }).sort({ createdAt: -1 }).limit(10);
 
     // 4. Certificates
     const certificatesCount = student.enrolledCourses.filter(c => c.completed).length;

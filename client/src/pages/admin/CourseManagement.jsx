@@ -334,7 +334,7 @@ const CourseManagement = () => {
 
 
   const columns = [
-    { name: 'S.No', selector: (row, index) => index + 1, width: '80px', sortable: true, center: true },
+    { name: 'S.No', selector: (row, index) => index + 1, width: '100px', sortable: true, center: true },
     { name: 'Course', grow: 3, minWidth: '300px', sortable: true, selector: row => row.title, cell: row => (
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-16 bg-gray-100 rounded overflow-hidden">

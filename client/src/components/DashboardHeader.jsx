@@ -6,9 +6,15 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Briefcase,
+  CreditCard,
+  Inbox
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 
 const DashboardHeader = ({ toggleMobileSidebar }) => {
@@ -99,15 +105,32 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
   const getIcon = (type) => {
     switch (type) {
       case "leave_approved":
-        return "✅";
+        return <div className="p-2 bg-green-100 text-green-600 rounded-full"><CheckCircle size={18} /></div>;
       case "leave_rejected":
-        return "❌";
+        return <div className="p-2 bg-red-100 text-red-600 rounded-full"><XCircle size={18} /></div>;
       case "leave_applied":
-        return "📩";
+        return <div className="p-2 bg-amber-100 text-amber-600 rounded-full"><Briefcase size={18} /></div>;
       case "payment_received":
-        return "💰";
+        return <div className="p-2 bg-emerald-100 text-emerald-600 rounded-full"><CreditCard size={18} /></div>;
       default:
-        return "🔔";
+        return <div className="p-2 bg-blue-100 text-blue-600 rounded-full"><Bell size={18} /></div>;
+    }
+  };
+
+  const formatRelTime = (date) => {
+    try {
+      const now = new Date();
+      const diff = now - new Date(date);
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return "Just now";
+      if (mins < 60) return `${mins}m ago`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `${days}d ago`;
+      return new Date(date).toLocaleDateString();
+    } catch (e) {
+      return "";
     }
   };
 
@@ -149,76 +172,109 @@ const DashboardHeader = ({ toggleMobileSidebar }) => {
     className="
       absolute
       mt-3
-      left-1/2 -translate-x-1/2
-      w-[92vw] max-w-sm
-      sm:left-auto sm:translate-x-0 sm:right-0 sm:w-80
+      right-0
+      w-80 sm:w-96
       bg-white
-      rounded-xl
-      shadow-2xl
-      border
+      rounded-2xl
+      shadow-[0_10px_40px_rgba(0,0,0,0.1)]
+      border border-slate-100
       z-50
+      overflow-hidden
+      animate-in fade-in zoom-in duration-200
     "
   >
     {/* Header */}
-    <div className="p-3 border-b flex justify-between items-center">
-      <span className="text-sm font-semibold">
-        Notifications
-      </span>
+    <div className="px-5 py-4 border-b flex justify-between items-center bg-slate-50/50">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-bold text-slate-800">
+          Notifications
+        </h3>
+        {unreadCount > 0 && (
+          <span className="bg-brand-100 text-brand-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+            {unreadCount} New
+          </span>
+        )}
+      </div>
 
       {unreadCount > 0 && (
         <button
           onClick={markAllAsRead}
-          className="text-xs text-brand-600 hover:underline"
+          className="text-xs text-brand-600 hover:text-brand-700 font-medium transition-colors"
         >
-          Mark all
+          Mark all as read
         </button>
       )}
     </div>
 
     {/* Body */}
-    <div className="max-h-72 overflow-y-auto">
+    <div className="max-h-[28rem] overflow-y-auto scrollbar-thin">
       {notifications.length === 0 ? (
-        <div className="p-4 text-sm text-slate-500 text-center">
-          No notifications
+        <div className="px-8 py-12 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                <Inbox size={32} />
+            </div>
+            <p className="text-sm font-medium text-slate-600">No new notifications</p>
+            <p className="text-xs text-slate-400 mt-1">We'll notify you when something important happens.</p>
         </div>
       ) : (
-        notifications.map((n) => (
+        <div className="divide-y divide-slate-50">
+        {notifications.map((n) => (
           <div
             key={n._id}
             onClick={() => handleNotificationClick(n)}
-            className={`p-3 border-b cursor-pointer transition ${
+            className={`px-5 py-4 cursor-pointer transition-all duration-200 group flex gap-4 ${
               !n.isRead
-                ? "bg-blue-50"
+                ? "bg-brand-50/30 hover:bg-brand-50/50"
                 : "hover:bg-slate-50"
             }`}
           >
-            <div className="flex gap-3">
-              <div className="text-lg mt-1">
+            <div className="flex-shrink-0 transition-transform group-hover:scale-110">
                 {getIcon(n.type)}
-              </div>
-
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {n.title}
-                </p>
-                <p className="text-xs text-slate-600 mt-1">
-                  {n.message}
-                </p>
-                <p className="text-[10px] text-slate-400 mt-2">
-                  {new Date(
-                    n.createdAt
-                  ).toLocaleString()}
-                </p>
-              </div>
-
-              {!n.isRead && (
-                <div className="w-2 h-2 bg-brand-600 rounded-full mt-2"></div>
-              )}
             </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                    <p className={`text-sm font-semibold truncate ${!n.isRead ? "text-slate-900" : "text-slate-700"}`}>
+                        {n.title}
+                    </p>
+                    <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2 flex items-center gap-1">
+                        <Clock size={10} />
+                        {formatRelTime(n.createdAt)}
+                    </span>
+                </div>
+                <p className={`text-xs leading-relaxed line-clamp-2 ${!n.isRead ? "text-slate-600 font-medium" : "text-slate-500"}`}>
+                    {n.message}
+                </p>
+                {n.link && (
+                    <div className="mt-2 text-[10px] text-brand-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 uppercase tracking-wider">
+                        View Details →
+                    </div>
+                )}
+            </div>
+
+            {!n.isRead && (
+                <div className="flex-shrink-0 w-2 h-2 bg-brand-600 rounded-full mt-2 self-start animate-pulse shadow-[0_0_8px_rgba(var(--brand-primary-rgb),0.5)]"></div>
+            )}
           </div>
-        ))
+        ))}
+        </div>
       )}
     </div>
+
+    {/* Footer */}
+    {notifications.length > 0 && (
+        <div className="p-3 border-t bg-slate-50/30 text-center">
+            <button 
+                onClick={() => {
+                    setShowNotifications(false);
+                    navigate("/dashboard/notifications");
+                }}
+                className="text-xs font-bold text-slate-500 hover:text-brand-600 transition-colors uppercase tracking-widest py-1 block w-full"
+            >
+                View all activity
+            </button>
+        </div>
+    )}
   </div>
 )}
         </div>

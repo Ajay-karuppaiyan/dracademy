@@ -7,29 +7,38 @@ const announcementSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     message: {
       type: String,
       required: true,
       trim: true,
     },
-
+    images: [String],
     targetRoles: {
-      type: [String], // ["student", "employee", "admin"]
+      type: [String], // ["student", "employee", "admin", "hr", "coach", "all"]
       required: true,
       index: true,
     },
-
+    targetUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    targetUserName: {
+      type: String,
+      default: "",
+    },
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
     isPinned: {
       type: Boolean,
       default: false,
     },
-
-    expiryDate: {
-      type: Date,
-      default: null,
-    },
-
     createdBy: {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -38,7 +47,6 @@ const announcementSchema = new mongoose.Schema(
       name: String,
       role: String,
     },
-
     readBy: [
       {
         userId: {
@@ -56,5 +64,6 @@ const announcementSchema = new mongoose.Schema(
 
 // Index for fast role filtering
 announcementSchema.index({ targetRoles: 1, createdAt: -1 });
+announcementSchema.index({ targetUserId: 1 });
 
-module.exports = mongoose.model("Announcement", announcementSchema);
+module.exports = mongoose.model("Announcement", announcementSchema);

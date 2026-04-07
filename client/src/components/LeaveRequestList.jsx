@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { Eye, Trash2 } from "lucide-react";
@@ -14,6 +15,7 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [openStatusId, setOpenStatusId] = useState(null);
+  const location = useLocation();
 
   // ================= FETCH LOGGED IN USER =================
   const fetchUser = async () => {
@@ -84,6 +86,15 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   useEffect(() => { fetchUser(); }, []);
   useEffect(() => { if (user) fetchRequests(user.role); }, [user]);
 
+  // Handle URL query parameter for deep-linking
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const leaveId = params.get("id");
+    if (leaveId) {
+      fetchLeaveDetails(leaveId);
+    }
+  }, [location.search]);
+
   // ================= FILTERED & PAGINATED =================
   const filteredRequests = useMemo(() => {
     let list = requests;
@@ -106,7 +117,7 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
     { name: 'Category', selector: row => row.mode, sortable: true, cell: row => <span className="text-slate-600">{row.mode === "permission" ? "Permission" : "Leave"}</span> },
     { name: 'Type', selector: row => row.leaveType, sortable: true },
     { name: 'Reason', selector: row => row.reason, wrap: true, cell: row => <span className="text-slate-600">{row.reason}</span> },
-    { name: 'Applied Date', selector: row => row.createdAt, sortable: true, cell: row => <span className="text-slate-600">{new Date(row.createdAt).toLocaleDateString()}</span> },
+    { name: 'Applied Date', selector: row => row.createdAt, width: '150px', sortable: true, cell: row => <span className="text-slate-600">{new Date(row.createdAt).toLocaleDateString()}</span> },
     {
       name: 'Range', selector: row => row.startDate, cell: row => (
         <span className="text-slate-600">

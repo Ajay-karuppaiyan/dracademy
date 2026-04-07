@@ -23,7 +23,7 @@ const ParentManagement = () => {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
   const parentColumns = [
-    { name: 'S.no', selector: (row, i) => i + 1, width: '80px', sortable: true, center: true },
+    { name: 'S.no', selector: (row, i) => i + 1, width: '100px', sortable: true, center: true },
     { name: 'Name', selector: row => row.name, sortable: true, cell: row => <span className="font-medium text-gray-800">{row.name}</span> },
     { name: 'Email', selector: row => row.email, sortable: true, cell: row => <span className="text-gray-600">{row.email}</span> },
     { name: 'Mobile', selector: row => row.mobile || "N/A" },

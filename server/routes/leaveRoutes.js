@@ -6,6 +6,8 @@ const Notification = require("../models/Notification");
 const multer = require("multer");
 const path = require("path");
 const { protect, admin } = require("../middleware/authMiddleware"); 
+const User = require("../models/User");
+const Student = require("../models/Student");
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -48,7 +50,7 @@ router.post("/apply", protect, upload.single("file"), async (req, res) => {
 
     // ===== CREATE DATA =====
     const leave = new Leave({
-      userId: req.user._id,
+      userId: req.user._id,  // Now stores as ObjectId reference
       employeeName: req.user.name,
       mode,
       leaveType,
@@ -69,6 +71,42 @@ router.post("/apply", protect, upload.single("file"), async (req, res) => {
     });
 
     await leave.save();
+
+    // 🔥 NOTIFY ONLY ADMIN ABOUT NEW LEAVE APPLICATION
+    const admins = await User.find({ role: "admin" });
+    
+    const notificationPromises = admins.map(recipient => 
+      Notification.create({
+        recipient: recipient._id,
+        sender: req.user._id,
+        type: "leave_applied",
+        title: "New Leave Application",
+        message: `${req.user.name} has applied for ${mode === "leave" ? "leave" : "permission"}.`,
+        link: `/dashboard/leave-request?id=${leave._id}`,
+        entityId: leave._id,
+      })
+    );
+
+    // ✅ IF APPLICANT IS A STUDENT, ALSO NOTIFY THE PARENT
+    const applicantUser = await User.findById(req.user._id);
+    if (applicantUser.role === "student") {
+      const student = await Student.findOne({ user: req.user._id });
+      if (student && student.parent) {
+        notificationPromises.push(
+          Notification.create({
+            recipient: student.parent,
+            sender: req.user._id,
+            type: "leave_applied",
+            title: "Child's Leave Application",
+            message: `Your child ${student.studentNameEnglish} has applied for ${mode === "leave" ? "leave" : "permission"}.`,
+            link: `/dashboard/leave-request?id=${leave._id}`,
+            entityId: leave._id,
+          })
+        );
+      }
+    }
+
+    await Promise.all(notificationPromises);
 
     res.status(201).json({
       message:
@@ -177,7 +215,7 @@ router.patch("/:id/status", protect, admin, async (req, res) => {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const leave = await Leave.findById(req.params.id);
+    const leave = await Leave.findById(req.params.id).populate("userId");
     if (!leave) {
       return res.status(404).json({ message: "Leave not found" });
     }
@@ -185,18 +223,49 @@ router.patch("/:id/status", protect, admin, async (req, res) => {
     leave.status = status;
     await leave.save();
 
-    // 🔥 CREATE NOTIFICATION
-    await Notification.create({
-      recipient: leave.userId,   // ✅ IMPORTANT FIX
-      sender: req.user._id,
-      type: status === "approved" ? "leave_approved" : "leave_rejected",
-      title: status === "approved" ? "Leave Approved" : "Leave Rejected",
-      message: `Your leave request has been ${status}.`,
-      link: "/dashboard/hr",
-      entityId: leave._id,
-    });
+    // Get applicant user details
+    const applicant = await User.findById(leave.userId);
+    if (!applicant) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
 
-    res.json({ message: `Leave ${status} successfully` });
+    const notificationPromises = [];
+
+    // ✅ 1. SEND NOTIFICATION TO THE APPLICANT (Student/Employee who applied)
+    notificationPromises.push(
+      Notification.create({
+        recipient: leave.userId,
+        sender: req.user._id,
+        type: status === "approved" ? "leave_approved" : "leave_rejected",
+        title: status === "approved" ? "Leave Approved" : "Leave Rejected",
+        message: `Your ${leave.mode === "leave" ? "leave" : "permission"} request has been ${status}.`,
+        link: `/dashboard/leave-request?id=${leave._id}`,
+        entityId: leave._id,
+      })
+    );
+
+    // ✅ 2. IF APPLICANT IS A STUDENT, ALSO NOTIFY THE PARENT
+    if (applicant.role === "student") {
+      const student = await Student.findOne({ user: leave.userId });
+      if (student && student.parent) {
+        notificationPromises.push(
+          Notification.create({
+            recipient: student.parent,
+            sender: req.user._id,
+            type: status === "approved" ? "leave_approved" : "leave_rejected",
+            title: `Child's Leave ${status === "approved" ? "Approved" : "Rejected"}`,
+            message: `Your child ${student.studentNameEnglish}'s ${leave.mode === "leave" ? "leave" : "permission"} request has been ${status}.`,
+            link: `/dashboard/leave-request?id=${leave._id}`,
+            entityId: leave._id,
+          })
+        );
+      }
+    }
+
+    // Execute all notification promises
+    await Promise.all(notificationPromises);
+
+    res.json({ message: `Leave ${status} successfully and notifications sent to applicant${applicant.role === "student" ? " and parent" : ""}` });
 
   } catch (err) {
     console.error(err);

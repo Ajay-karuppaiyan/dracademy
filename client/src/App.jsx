@@ -43,6 +43,7 @@ import DiscussionForum from "./pages/dashboard/DiscussionForum";
 import Expenses from "./pages/expenses/Expenses";
 import MyCourses from "./pages/coach/MyCourses";
 import Subscription from "./pages/dashboard/Subscription";
+import Notifications from "./pages/dashboard/Notifications";
 
 // Leave
 import LeaveRequestList from "./components/LeaveRequestList";
@@ -195,6 +196,9 @@ function App() {
 
             {/* Settings */}
             <Route path="settings" element={<Settings />} />
+
+            {/* Notifications */}
+            <Route path="notifications" element={<Notifications />} />
 
             {/* Leave */}
             <Route path="leave-request" element={<LeaveRequestOrForm />} />

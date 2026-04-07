@@ -107,11 +107,14 @@ const handleUpdate = async () => {
         payload.center = payload.center._id;
       }
 
-      // Ensure enrolledCourses are sent as IDs if they are objects
+      // Ensure enrolledCourses stay as objects with course IDs
       if (payload.enrolledCourses && Array.isArray(payload.enrolledCourses)) {
-        payload.enrolledCourses = payload.enrolledCourses.map(c => 
-          typeof c === "object" ? c._id : c
-        );
+        payload.enrolledCourses = payload.enrolledCourses.map(item => {
+          if (item.course && typeof item.course === "object") {
+            return { ...item, course: item.course._id };
+          }
+          return item;
+        });
       }
 
       const { data } = await api.put(`/students/${editStudent._id}`, payload);
@@ -158,7 +161,7 @@ const handleUpdate = async () => {
   };
 
   const columns = [
-    { name: "S.No", selector: (row, index) => index + 1, width: "80px", sortable: true },
+    { name: "S.No", selector: (row, index) => index + 1, width: "100px", sortable: true },
     { name: "Name", selector: row => row.user?.name, sortable: true, cell: row => <span className="font-semibold text-slate-800">{row.user?.name}</span> },
     { name: "Email", selector: row => row.user?.email, sortable: true, cell: row => <span className="text-slate-600">{row.user?.email}</span> },
     { name: "Phone", selector: row => row.whatsapp || "-" },

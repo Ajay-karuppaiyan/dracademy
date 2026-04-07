@@ -20,6 +20,60 @@ import CustomDataTable from "../components/DataTable";
 import api from "../services/api";
 import Loading from "../components/Loading";
 
+const AnnouncementTicker = ({ announcements }) => {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!announcements || announcements.length <= 1 || isHovered) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [announcements, isHovered]);
+
+  if (!announcements || announcements.length === 0) return null;
+
+  return (
+    <div 
+      className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-8 flex items-center shadow-sm relative overflow-hidden group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg flex-shrink-0 z-10 transition-transform group-hover:scale-110">
+        <AlertCircle size={20} />
+      </div>
+      <div className="flex-1 h-8 ml-4 relative overflow-hidden">
+        {announcements.map((ann, idx) => (
+          <div
+            key={ann._id || idx}
+            onClick={() => window.location.href = '/dashboard/announcements'}
+            className={`absolute top-0 left-0 w-full h-full flex items-center cursor-pointer transition-all duration-500 ease-in-out ${
+              idx === currentIndex
+                ? 'opacity-100 translate-y-0 z-10'
+                : idx < currentIndex ? 'opacity-0 -translate-y-full -z-10' : 'opacity-0 translate-y-full -z-10'
+            }`}
+          >
+            <p className="font-semibold text-indigo-900 group-hover:text-indigo-700 transition-colors truncate">
+              <span className="bg-red-500 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded mr-2 align-middle animate-pulse">New</span>
+              {ann.title || ann.message}
+            </p>
+            <span className="ml-3 text-xs text-indigo-400 font-medium whitespace-nowrap bg-indigo-100/50 px-2 py-1 rounded-md hidden sm:block">
+              {new Date(ann.createdAt || new Date()).toLocaleDateString()}
+            </span>
+          </div>
+        ))}
+      </div>
+      <button 
+        onClick={() => window.location.href = '/dashboard/announcements'}
+        className="ml-4 flex items-center justify-center bg-white text-indigo-600 text-sm font-bold px-4 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors z-10 shadow-sm whitespace-nowrap"
+      >
+        View All
+      </button>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [students, setStudents] = React.useState([]);
@@ -27,6 +81,7 @@ const Dashboard = () => {
   const [studentStats, setStudentStats] = React.useState(null);
   const [studentActivity, setStudentActivity] = React.useState([]);
   const [studentAnnouncements, setStudentAnnouncements] = React.useState([]);
+  const [recentAnnouncements, setRecentAnnouncements] = React.useState([]);
 
 const [stats, setStats] = React.useState({
   totalStudents: 0,
@@ -81,6 +136,15 @@ const [stats, setStats] = React.useState({
     }
   };
 
+  const fetchRecentAnnouncements = async () => {
+    try {
+      const { data } = await api.get("/announcements?limit=10");
+      setRecentAnnouncements(data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch recent announcements", err);
+    }
+  };
+
   React.useEffect(() => {
     if (user?.role === "student") {
       fetchStudentStats();
@@ -88,6 +152,7 @@ const [stats, setStats] = React.useState({
       fetchStats();
       fetchStudents();
       fetchEnrollments();
+      fetchRecentAnnouncements();
     }
   }, [user]);
 
@@ -95,10 +160,11 @@ const [stats, setStats] = React.useState({
   const studentActivityData = studentActivity;
 
   const studentActivityColumns = [
+    { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
     { name: 'Course', selector: row => row.course, sortable: true, cell: row => <span className="font-medium text-slate-900">{row.course}</span> },
-    { name: 'Activity', selector: row => row.activity, cell: row => <span className="text-slate-500">{row.activity}</span> },
-    { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-slate-500">{row.date}</span> },
-    { name: 'Status', selector: row => row.status, sortable: true, cell: row => (
+    { name: 'Activity', selector: row => row.activity,width:"150px", cell: row => <span className="text-slate-500">{row.activity}</span> },
+    { name: 'Date', selector: row => row.date,width:"100px", sortable: true, cell: row => <span className="text-slate-500">{row.date}</span> },
+    { name: 'Status', selector: row => row.status,width:"120px", sortable: true, cell: row => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
           row.status === "Completed" || row.status === "Graded" ? "bg-green-100 text-green-800" :
           row.status === "In Progress" ? "bg-yellow-100 text-yellow-800" :
@@ -108,7 +174,7 @@ const [stats, setStats] = React.useState({
         </span>
       )
     },
-    { name: 'Action', center: true, width: '80px', cell: row => (
+    { name: 'Action', center: true, width: '100px', cell: row => (
         <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={18} /></button>
       )
     }
@@ -180,9 +246,10 @@ const [stats, setStats] = React.useState({
     slate: "bg-slate-100 text-slate-800",
   };
 
-  if (user && user.role === "student") {
+  if (user && user.role?.toLowerCase() === "student") {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
+        <AnnouncementTicker announcements={studentAnnouncements} />
         {/* Student Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -340,46 +407,8 @@ const [stats, setStats] = React.useState({
               </div>
             </div>
           </div>
-
           {/* Right Column (1/3) */}
           <div className="lg:col-span-1 space-y-8">
-            {/* Upcoming Schedule */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
-              <div className="p-6 border-b border-slate-100">
-                <h3 className="font-bold text-lg text-slate-900">
-                  Upcoming Schedule
-                </h3>
-              </div>
-              <ul className="divide-y divide-slate-100">
-                {studentAnnouncements.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-4 p-6 hover:bg-slate-50 transition-colors"
-                  >
-                    <div
-                      className={`p-3 rounded-xl bg-blue-50 text-blue-600`}
-                    >
-                      <Play size={20} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{item.title}</p>
-                      <p className="text-sm text-slate-500">
-                        {item.time} &bull; Announcement
-                      </p>
-                    </div>
-                  </li>
-                ))}
-                {studentAnnouncements.length === 0 && (
-                   <li className="p-6 text-center text-slate-400 text-sm">No upcoming updates</li>
-                )}
-              </ul>
-              <div className="p-6 border-t border-slate-100">
-                <button className="w-full text-brand-600 text-sm font-bold hover:text-brand-700">
-                  View Full Calendar
-                </button>
-              </div>
-            </div>
-
             {/* Quick Links */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
               <div className="p-6 border-b border-slate-100">
@@ -414,9 +443,10 @@ const [stats, setStats] = React.useState({
     );
   }
 
-  if (user && user.role === "coach") {
+  if (user && user.role?.toLowerCase() === "coach") {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
+        <AnnouncementTicker announcements={recentAnnouncements} />
         {/* Coach Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -531,9 +561,45 @@ const [stats, setStats] = React.useState({
     );
   }
 
+  if (user && user.role?.toLowerCase() === "parent") {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <AnnouncementTicker announcements={recentAnnouncements} />
+        {/* Parent Welcome Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Parent Dashboard
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Welcome back, {user.name || "Parent"}. View updates and broadcasts.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors shadow-lg shadow-brand-600/20">
+              View Children Progress
+            </button>
+          </div>
+        </div>
+
+        {/* Parent Main Content */}
+        <div className="grid grid-cols-1 gap-8">
+          <div className="space-y-8">
+             <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center shadow-sm">
+                <Users size={48} className="mx-auto mb-4 text-slate-300" />
+                <h3 className="text-xl font-bold text-slate-800">Child Progress Insights</h3>
+                <p className="text-slate-500 mt-2">Comprehensive progress reports for your children will appear here.</p>
+             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Default (Admin/Other) Dashboard content
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <AnnouncementTicker announcements={recentAnnouncements} />
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

@@ -113,7 +113,7 @@ const Expenses = () => {
     { name: 'Amount', selector: row => row.amount, sortable: true, cell: row => <span className="font-bold text-gray-800">₹ {row.amount?.toLocaleString("en-IN")}</span> },
     { name: 'Date', selector: row => row.date, sortable: true, cell: row => <span className="text-gray-600 font-mono">{new Date(row.date).toLocaleDateString("en-IN")}</span> },
     { name: 'Status', selector: row => row.status, sortable: true, center: true, width: '120px', cell: row => <StatusBadge status={row.status} /> },
-    { name: 'Action', center: true, width: '80px', cell: row => (
+    { name: 'Action', center: true, width: '100px', cell: row => (
         <div className="relative flex justify-center w-full">
           <button
             onClick={(e) => {

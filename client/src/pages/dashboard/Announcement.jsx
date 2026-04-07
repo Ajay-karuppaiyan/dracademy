@@ -14,7 +14,8 @@ import {
   X,
   Clock,
   Send,
-  Users
+  Users,
+  Paperclip
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Loading from "../../components/Loading";
@@ -28,22 +29,50 @@ const Announcement = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [targetRoles, setTargetRoles] = useState([]);
-  const [expiryDate, setExpiryDate] = useState("");
+  const [targetRole, setTargetRole] = useState("");
+  const [targetUserId, setTargetUserId] = useState("");
+  const [usersList, setUsersList] = useState([]);
+  const [images, setImages] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
+
+  // Fetch users when a specific role (like HR) is selected
+  useEffect(() => {
+    if (targetRole && targetRole !== "all") {
+      api.get(`/announcements/users-by-role/${targetRole}`)
+        .then(res => setUsersList(res.data.data || []))
+        .catch(console.error);
+    } else {
+      setUsersList([]);
+      setTargetUserId("");
+    }
+  }, [targetRole]);
 
   /* ================= FETCH ================= */
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/announcements?page=${page}&search=${search}`);
+      const isAdmin = user?.role?.toLowerCase() === "admin";
+      const { data } = await api.get(`/announcements?page=${page}&search=${search}${isAdmin ? '&all=true' : ''}`);
       setAnnouncements(data.data || []);
       setTotalPages(data.pages || 1);
+
+      if (data.data?.length > 0) {
+        setSelectedAnnouncement(prev => {
+          if (!prev) return data.data[0];
+          const updated = data.data.find(a => a._id === prev._id);
+          return updated || data.data[0];
+        });
+      } else {
+        setSelectedAnnouncement(null);
+      }
     } catch (error) {
       toast.error("Failed to load announcements");
     } finally {
@@ -53,27 +82,42 @@ const Announcement = () => {
 
   useEffect(() => {
     fetchAnnouncements();
-  }, [page, search]);
+  }, [page, search, user]);
 
   /* ================= CREATE ================= */
   const handleCreate = async () => {
-    if (!title || !message || targetRoles.length === 0)
+    if (!title || !message || !targetRole)
       return toast.error("Please fill all required fields");
 
     try {
-      await api.post("/announcements", {
-        title,
-        message,
-        targetRoles,
-        expiryDate,
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("message", message);
+      formData.append("targetRoles", targetRole);
+      if (startDate) formData.append("startDate", startDate);
+      if (endDate) formData.append("endDate", endDate);
+      
+      if (targetUserId) {
+        formData.append("targetUserId", targetUserId);
+        const u = usersList.find((x) => x._id === targetUserId);
+        if (u) formData.append("targetUserName", u.name || u.email);
+      }
+
+      images.forEach((img) => formData.append("images", img));
+
+      await api.post("/announcements", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       toast.success("Broadcast successfully dispatched");
       setShowModal(false);
       setTitle("");
       setMessage("");
-      setTargetRoles([]);
-      setExpiryDate("");
+      setTargetRole("");
+      setTargetUserId("");
+      setImages([]);
+      setStartDate("");
+      setEndDate("");
       setPage(1);
       fetchAnnouncements();
     } catch {
@@ -220,121 +264,148 @@ const Announcement = () => {
         </div>
       </div>
 
-      {/* BODY */}
-      <div className="space-y-6">
-        
-        {loading && announcements.length === 0 && (
-          <div className="py-24 flex justify-center">
-             <Loading message="Establishing secure connection to broadcast center..." />
+      {/* BODY - DUAL PANE */}
+      <div className="flex flex-col lg:flex-row gap-6 h-[800px]">
+        {/* LEFT PANE - LIST */}
+        <div className="w-full lg:w-1/3 flex flex-col bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex-shrink-0 relative">
+          <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center z-10">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <Megaphone size={16} className="text-indigo-600" />
+              Inbox
+            </h3>
+            <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{announcements.length} Messages</span>
           </div>
-        )}
-
-        {!loading && announcements.length === 0 && (
-          <div className="py-24 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-sm">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Megaphone size={32} className="text-slate-300" />
-            </div>
-            <h3 className="text-xl font-black text-slate-800">Clear Skies</h3>
-            <p className="text-slate-500 mt-2">There are currently no active broadcasts to display.</p>
+          
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
+            {loading && announcements.length === 0 && (
+              <div className="p-8 flex justify-center">
+                 <Loading message="Fetching broadcasts..." />
+              </div>
+            )}
+            {!loading && announcements.length === 0 && (
+               <div className="p-8 text-center text-slate-500 flex flex-col items-center">
+                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                   <CheckCheck size={24} className="text-slate-300" />
+                 </div>
+                 <h4 className="font-black text-slate-700 mt-2">All Caught Up!</h4>
+                 <p className="text-xs mt-1 text-slate-400">No active broadcasts</p>
+               </div>
+            )}
+            {announcements.map((a) => {
+              const isUnread = !a.readBy?.some(r => r.userId?.toString() === user?._id);
+              const isSelected = selectedAnnouncement?._id === a._id;
+              return (
+                <div 
+                  key={a._id}
+                  onClick={() => { setSelectedAnnouncement(a); if(isUnread) markAsRead(a._id); }}
+                  className={`p-5 rounded-2xl cursor-pointer transition-all border-l-4 ${
+                     isSelected ? "bg-indigo-50 border-indigo-600 shadow-sm" : 
+                     isUnread ? "bg-white hover:bg-slate-50 border-indigo-400/50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]" :
+                     "bg-white hover:bg-slate-50 border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                   <div className="flex justify-between items-start mb-2">
+                     <h4 className={`font-bold pr-2 flex-1 leading-snug ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>
+                       {a.title}
+                     </h4>
+                     {a.isPinned && <Pin size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />}
+                   </div>
+                   <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-3 pr-2">{a.message}</p>
+                   <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest">
+                      <span className="text-slate-400 flex items-center gap-1.5"><Clock size={12}/> {new Date(a.createdAt).toLocaleDateString()}</span>
+                      {isUnread && <span className="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-md">New</span>}
+                   </div>
+                </div>
+              )
+            })}
           </div>
-        )}
+        </div>
 
-        {/* ANNOUNCEMENT CARDS */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {announcements.map((a) => {
-            const isUnread = !a.readBy?.some(
-              (r) => r.userId?.toString() === user?._id
-            );
-
-            return (
-              <div
-                key={a._id}
-                onClick={() => markAsRead(a._id)}
-                className={`group relative flex flex-col p-6 rounded-[2rem] border transition-all duration-300 cursor-pointer overflow-hidden ${
-                  isUnread
-                    ? "bg-gradient-to-br from-indigo-50/50 to-white hover:from-white hover:to-indigo-50 border-indigo-100 shadow-md hover:-translate-y-1 hover:shadow-xl hover:border-indigo-300"
-                    : "bg-white border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg"
-                }`}
-              >
-                {/* Edge highlight for unread */}
-                {isUnread && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500" />
-                )}
-
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex flex-col gap-1.5 pl-2">
-                    {a.isPinned && (
-                      <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full w-max">
-                        <Pin size={10} /> Pinned Priority
-                      </div>
-                    )}
-                    {isUnread && !a.isPinned && (
-                      <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full w-max">
-                        New Message
-                      </div>
-                    )}
-                    <h2 className="font-black text-xl text-slate-900 leading-tight group-hover:text-indigo-700 transition-colors">
-                      {a.title}
-                    </h2>
-                  </div>
-
-                  {user?.role === "admin" && (
-                    <div className="flex gap-2">
+        {/* RIGHT PANE - DETAILS */}
+        <div className="w-full lg:w-2/3 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col relative h-[600px] lg:h-auto">
+           {selectedAnnouncement ? (
+             <div className="flex flex-col h-full absolute inset-0">
+               <div className="p-8 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+                 <div className="flex-1">
+                   <div className="flex flex-wrap items-center gap-2 mb-4">
+                     {selectedAnnouncement.isPinned && (
+                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-100 px-2.5 py-1 rounded-md">
+                           <Pin size={10} /> Pinned Priority
+                       </span>
+                     )}
+                     {selectedAnnouncement.targetRoles?.map(role => (
+                       <span key={role} className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-md shadow-sm">
+                         {role}
+                       </span>
+                     ))}
+                     {selectedAnnouncement.targetUserName && (
+                       <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md shadow-sm">
+                         <Users size={12} /> {selectedAnnouncement.targetUserName}
+                       </span>
+                     )}
+                   </div>
+                   <h2 className="text-3xl font-black text-slate-900 tracking-tight">{selectedAnnouncement.title}</h2>
+                   <div className="text-sm font-bold text-slate-500 mt-3 flex items-center gap-2">
+                      <Clock size={16} className="text-slate-400" /> 
+                      {new Date(selectedAnnouncement.createdAt).toLocaleString()}
+                      <span className="text-slate-300">|</span>
+                      <span>From: {selectedAnnouncement.createdBy?.name || 'Admin'}</span>
+                   </div>
+                 </div>
+                 
+                 {user?.role === "admin" && (
+                   <div className="flex gap-2 ml-4">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePin(a._id);
-                        }}
-                        className={`p-2 rounded-xl transition-colors ${a.isPinned ? "bg-amber-100 text-amber-600 hover:bg-amber-200" : "bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600"}`}
-                        title={a.isPinned ? "Unpin" : "Pin Broadcast"}
+                         onClick={(e) => { e.stopPropagation(); handlePin(selectedAnnouncement._id); }}
+                         className={`p-3 rounded-xl transition-all shadow-sm ${selectedAnnouncement.isPinned ? "bg-amber-100 text-amber-600 hover:bg-amber-200" : "bg-white border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"}`}
+                         title={selectedAnnouncement.isPinned ? "Unpin" : "Pin"}
                       >
-                         <Pin size={16} fill={a.isPinned ? "currentColor" : "none"} />
+                         <Pin size={18} fill={selectedAnnouncement.isPinned ? "currentColor" : "none"} />
                       </button>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(a._id);
-                        }}
-                        className="p-2 bg-slate-100 text-red-400 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors"
-                        title="Delete Broadcast"
+                         onClick={(e) => { e.stopPropagation(); handleDelete(selectedAnnouncement._id); }}
+                         className="p-3 bg-white border border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
+                         title="Delete"
                       >
-                        <Trash2 size={16} />
+                         <Trash2 size={18} />
                       </button>
+                   </div>
+                 )}
+               </div>
+
+               <div className="flex-1 overflow-y-auto p-10 scrollbar-thin">
+                  <p className="whitespace-pre-wrap text-slate-700 leading-relaxed text-lg font-medium">{selectedAnnouncement.message}</p>
+                  
+                  {selectedAnnouncement.images?.length > 0 && (
+                    <div className="mt-12 pt-8 border-t border-slate-100">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <Paperclip size={14} /> Attachments ({selectedAnnouncement.images.length})
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        {selectedAnnouncement.images.map((img, i) => (
+                          <div key={i} className="group relative aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer" onClick={() => window.open(img, '_blank')}>
+                            <img 
+                              src={img} 
+                              alt="attachment" 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                </div>
-
-                <p className="text-slate-600 text-sm leading-relaxed mb-6 pl-2 flex-grow">
-                  {a.message}
-                </p>
-
-                <div className="pt-4 mt-auto border-t border-slate-100/80 flex flex-wrap gap-2 items-center justify-between text-xs font-bold text-slate-400 pl-2">
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={14} /> 
-                    {new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {a.targetRoles?.map((role) => (
-                      <span
-                        key={role}
-                        className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md uppercase tracking-wider text-[9px]"
-                      >
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Expiry overlay if present */}
-                {a.expiryDate && (
-                  <div className="absolute top-4 right-4 translate-x-4 -translate-y-4 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
-                     <AlertCircle size={120} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+               </div>
+             </div>
+           ) : (
+             <div className="flex flex-col items-center justify-center h-full text-slate-400 absolute inset-0 bg-slate-50/30">
+                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-6">
+                   <Megaphone size={40} className="text-slate-300" />
+                 </div>
+                 <h3 className="font-black text-2xl text-slate-700 mb-2">No Broadcast Selected</h3>
+                 <p className="text-slate-500 font-medium">Select a message from the inbox to view details</p>
+             </div>
+           )}
         </div>
       </div>
 
@@ -386,8 +457,52 @@ const Announcement = () => {
 
             <div className="p-8 space-y-6 overflow-y-auto">
               <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1 flex items-center gap-2">
+                  <Users size={14} /> User Type (Role)
+                </label>
+
+                <select
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl 
+                  focus:outline-none focus:ring-4 focus:ring-indigo-600/10 
+                  focus:border-indigo-600 transition-all font-semibold text-slate-800"
+                  value={targetRole}
+                  onChange={(e) => {
+                    setTargetRole(e.target.value);
+                    setTargetUserId(""); // reset selected user
+                  }}
+                >
+                  <option value="">-- Select Role --</option>
+                  <option value="student">Student</option>
+                  <option value="parent">Parent</option>
+                  <option value="employee">Employee</option>
+                  <option value="hr">HR</option>
+                  <option value="coach">Coach</option>
+                  <option value="finance">Finance</option>
+                  <option value="all">All Users</option>
+                </select>
+              </div>
+
+              {targetRole && targetRole !== "all" && usersList.length > 0 && (
+                <div className="animate-in fade-in duration-300 slide-in-from-top-2">
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
+                    Select Specific User (Optional)
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all font-medium text-slate-800"
+                    value={targetUserId}
+                    onChange={(e) => setTargetUserId(e.target.value)}
+                  >
+                    <option value="">-- All {targetRole.toUpperCase()}s --</option>
+                    {usersList.map((u) => (
+                      <option key={u._id} value={u._id}>{u.name || u.email}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
-                  Headline
+                  Title
                 </label>
                 <input
                   type="text"
@@ -400,7 +515,7 @@ const Announcement = () => {
 
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
-                  Payload Message
+                  Description
                 </label>
                 <textarea
                   rows="4"
@@ -411,51 +526,56 @@ const Announcement = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
-                  Self-Destruct Date (Optional)
-                </label>
-                <div className="relative group">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600" size={18} />
-                  <input
-                    type="date"
-                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all font-semibold text-slate-700"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
+                    Start Date
+                  </label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600" size={18} />
+                    <input
+                      type="date"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all font-semibold text-slate-700"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
+                    End Date (Optional)
+                  </label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600" size={18} />
+                    <input
+                      type="date"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all font-semibold text-slate-700"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-3 pl-1 flex items-center gap-2">
-                  <Users size={14} /> Target Audience
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 pl-1">
+                  Attach Images (Max 5)
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {["student", "parent", "employee", "hr", "coach", "all"].map(
-                    (role) => {
-                      const isSelected = targetRoles.includes(role);
-                      return (
-                        <button
-                          key={role}
-                          onClick={() => {
-                            setTargetRoles((prev) =>
-                              prev.includes(role)
-                                ? prev.filter((r) => r !== role)
-                                : [...prev, role]
-                            );
-                          }}
-                          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
-                            isSelected 
-                              ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20" 
-                              : "bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
-                          }`}
-                        >
-                          {role}
-                        </button>
-                      );
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 5) {
+                       toast.error("You can only upload up to 5 images");
+                       return;
                     }
-                  )}
-                </div>
+                    setImages(files);
+                  }}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all text-sm font-medium text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-wider file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
               </div>
 
             </div>
@@ -466,19 +586,22 @@ const Announcement = () => {
                   setShowModal(false);
                   setTitle("");
                   setMessage("");
-                  setTargetRoles([]);
-                  setExpiryDate("");
+                  setTargetRole("");
+                  setTargetUserId("");
+                  setStartDate("");
+                  setEndDate("");
+                  setImages([]);
                 }}
                 className="px-6 py-3 font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
               >
-                Abort
+                Cancel
               </button>
 
               <button
                 onClick={handleCreate}
                 className="px-8 py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
               >
-                Dispatch <Send size={16} />
+                Submit <Send size={16} />
               </button>
             </div>
           </div>

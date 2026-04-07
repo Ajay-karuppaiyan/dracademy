@@ -94,3 +94,14 @@ body {
 .delay-150 { animation-delay: 150ms; }
 .delay-300 { animation-delay: 300ms; }
 .delay-500 { animation-delay: 500ms; }
+
+/* 🚀 DataTable Truncation Fix: Ensure no dots or semi-words in headers/cells */
+.rdt_TableCol > div, 
+.rdt_TableCell > div {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: break-word !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}

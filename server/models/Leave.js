@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const leaveSchema = new mongoose.Schema(
   {
-    userId: { type: String, required: true },
+    userId: { 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true 
+    },
     employeeName: { type: String, required: true },
 
     // 🔥 NEW: Mode (leave / permission)

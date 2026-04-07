@@ -171,7 +171,7 @@ router.get("/", protect, async (req, res) => {
     const students = await Student.find(query)
       .populate("user", "-password")
       .populate("parent", "name email")
-      .populate("enrolledCourses", "title price category duration")
+      .populate("enrolledCourses.course", "title price category duration")
       .populate("center", "name location");
 
     res.json({
@@ -214,8 +214,11 @@ router.get('/user/:id', protect, async (req, res) => {
 // ======================================================
 // UPDATE STUDENT (Updates BOTH User + Student)
 // ======================================================
+const { admin } = require("../middleware/authMiddleware");
 router.put(
   "/:id",
+  protect,
+  admin,
   upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "idFile", maxCount: 1 },
@@ -223,19 +226,39 @@ router.put(
   ]),
   async (req, res) => {
     try {
-
-      const student = await Student.findById(req.params.id).populate("user");
+      const student = await Student.findById(req.params.id);
 
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      const data = req.body;
+      const data = { ...req.body };
+
+      // =========================
+      // CLEAN DATA
+      // =========================
+      // Remove fields that should not be directly overwritten or are populated
+      const fieldsToRemove = ["_id", "user", "createdAt", "updatedAt", "__v"];
+      fieldsToRemove.forEach(field => delete data[field]);
+
+      // Ensure center is handled as an ID
+      if (data.center && typeof data.center === "object") {
+        data.center = data.center._id;
+      }
+      
+      // Ensure parent is handled as an ID
+      if (data.parent && typeof data.parent === "object") {
+        data.parent = data.parent._id;
+      }
+
+      // Safety check for enrolledCourses to prevent validation errors
+      if (data.enrolledCourses && Array.isArray(data.enrolledCourses)) {
+        data.enrolledCourses = data.enrolledCourses.filter(item => typeof item === "object" && item !== null);
+      }
 
       // =========================
       // UPDATE STUDENT FIELDS
       // =========================
-
       Object.assign(student, data);
 
       // =========================
@@ -268,10 +291,9 @@ router.put(
       // =========================
 
       if (student.user) {
-        const updateData = {
-          ...(data.email && { email: data.email }),
-          ...(data.studentNameEnglish && { name: data.studentNameEnglish }),
-        };
+        const updateData = {};
+        if (req.body.email) updateData.email = req.body.email;
+        if (req.body.studentNameEnglish) updateData.name = req.body.studentNameEnglish;
 
         if (req.files && req.files.profilePic) {
           updateData.profilePic = {
@@ -281,17 +303,19 @@ router.put(
           };
         }
 
-        await User.findByIdAndUpdate(
-          student.user._id,
-          updateData,
-          { new: true }
-        );
+        if (Object.keys(updateData).length > 0) {
+          await User.findByIdAndUpdate(
+            student.user,
+            updateData,
+            { new: true }
+          );
+        }
       }
 
       const updatedStudent = await Student.findById(student._id)
         .populate("user", "-password")
         .populate("parent", "name email")
-        .populate("enrolledCourses", "title price category duration")
+        .populate("enrolledCourses.course", "title price category duration")
         .populate("center", "name location");
 
       res.json({
@@ -309,7 +333,7 @@ router.put(
 // ======================================================
 // DELETE STUDENT (Deletes BOTH User + Student)
 // ======================================================
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect, admin, async (req, res) => {
   try {
     // 1️⃣ Find student first
     const student = await Student.findById(req.params.id);
@@ -336,7 +360,7 @@ router.delete("/:id", async (req, res) => {
 // ======================================================
 // TOGGLE STATUS
 // ======================================================
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', protect, admin, async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
 
