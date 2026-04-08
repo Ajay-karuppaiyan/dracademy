@@ -9,13 +9,14 @@ import {
   LogOut,
   Search,
   AlertCircle,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import Loading from "../../components/Loading";
 
-const AnnouncementTicker = ({ announcements }) => {
+const AnnouncementTicker = ({ announcements, user }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isHovered, setIsHovered] = React.useState(false);
 
@@ -31,40 +32,57 @@ const AnnouncementTicker = ({ announcements }) => {
 
   return (
     <div 
-      className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4 mx-4 mt-4 flex items-center shadow-sm relative overflow-hidden group"
+      className="bg-white border border-slate-100 rounded-2xl p-4 mb-4 mx-4 mt-4 flex items-center shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg flex-shrink-0 z-10 transition-transform group-hover:scale-110">
-        <AlertCircle size={20} />
+      <div className="bg-indigo-50 text-indigo-600 p-2.5 rounded-xl flex-shrink-0 z-10 transition-transform group-hover:scale-110 border border-indigo-100">
+        <Megaphone size={20} />
       </div>
       <div className="flex-1 h-8 ml-4 relative overflow-hidden">
-        {announcements.map((ann, idx) => (
-          <div
-            key={ann._id || idx}
-            onClick={() => window.location.href = '/dashboard/announcements'}
-            className={`absolute top-0 left-0 w-full h-full flex items-center cursor-pointer transition-all duration-500 ease-in-out ${
-              idx === currentIndex
-                ? 'opacity-100 translate-y-0 z-10'
-                : idx < currentIndex ? 'opacity-0 -translate-y-full -z-10' : 'opacity-0 translate-y-full -z-10'
-            }`}
-          >
-            <p className="font-semibold text-indigo-900 group-hover:text-indigo-700 transition-colors truncate">
-              <span className="bg-red-500 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded mr-2 align-middle animate-pulse">New</span>
-              {ann.title || ann.message}
-            </p>
-            <span className="ml-3 text-xs text-indigo-400 font-medium whitespace-nowrap bg-indigo-100/50 px-2 py-1 rounded-md hidden sm:block">
-              {new Date(ann.createdAt || new Date()).toLocaleDateString()}
-            </span>
-          </div>
-        ))}
+        {announcements.map((ann, idx) => {
+          const isUnread = !ann.readBy?.some(r => r.userId?.toString() === user?._id?.toString());
+          return (
+            <div
+              key={ann._id || idx}
+              onClick={() => window.location.href = '/dashboard/announcements'}
+              className={`absolute top-0 left-0 w-full h-full flex items-center cursor-pointer transition-all duration-700 ease-in-out ${
+                idx === currentIndex
+                  ? 'opacity-100 translate-y-0 z-10'
+                  : idx < currentIndex ? 'opacity-0 -translate-y-full -z-10' : 'opacity-0 translate-y-full -z-10'
+              }`}
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                {isUnread && (
+                  <span className="bg-indigo-600 text-white text-[10px] uppercase font-black tracking-widest px-2.5 py-1 rounded-md shadow-sm shadow-indigo-200 animate-pulse flex-shrink-0">
+                    New
+                  </span>
+                )}
+                <p className={`font-bold text-slate-800 transition-colors truncate ${isUnread ? 'text-slate-900 font-black' : 'text-slate-600 font-bold'}`}>
+                  {ann.title}
+                </p>
+                {/* <div className="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+                <p className="text-slate-400 text-sm truncate hidden md:block max-w-md">
+                   {ann.message}
+                </p> */}
+              </div>
+              {/* <span className="ml-auto text-[10px] text-slate-400 font-black uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 hidden lg:flex items-center gap-2">
+                <Clock size={12} />
+                {new Date(ann.createdAt || new Date()).toLocaleDateString()}
+              </span> */}
+            </div>
+          );
+        })}
       </div>
       <button 
         onClick={() => window.location.href = '/dashboard/announcements'}
-        className="ml-4 flex items-center justify-center bg-white text-indigo-600 text-sm font-bold px-4 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors z-10 shadow-sm whitespace-nowrap"
+        className="ml-6 flex items-center justify-center bg-slate-900 text-white text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-indigo-600 transition-all z-10 shadow-lg shadow-slate-200 group-hover:shadow-indigo-100 whitespace-nowrap active:scale-95"
       >
         View All
       </button>
+
+      {/* Decorative background accent */}
+      <div className="absolute right-0 top-0 w-32 h-32 bg-indigo-50/50 blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
     </div>
   );
 };
@@ -82,7 +100,7 @@ const ParentDashboard = () => {
   const [searchTerm, setSearchTerm] = useState(""); // For filtering children
   const [announcements, setAnnouncements] = useState([]);
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   // Fetch children linked to parent
   useEffect(() => {
@@ -242,7 +260,7 @@ const ParentDashboard = () => {
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
       {/* Header */}
-      <AnnouncementTicker announcements={announcements} />
+      <AnnouncementTicker announcements={announcements} user={user} />
       <div className="bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">

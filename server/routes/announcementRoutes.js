@@ -185,6 +185,76 @@ router.post("/", protect, upload.array("images", 5), async (req, res) => {
 });
 
 
+/* =====================================================
+   UPDATE ANNOUNCEMENT
+===================================================== */
+router.patch("/:id", protect, upload.array("images", 5), async (req, res) => {
+  try {
+    if (req.user.role?.toLowerCase() !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin can update announcements",
+      });
+    }
+
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    const {
+      title,
+      message,
+      targetRoles,
+      startDate,
+      endDate,
+      targetUserId,
+      targetUserName,
+    } = req.body;
+
+    let roles = [];
+    if (targetRoles) {
+      roles = Array.isArray(targetRoles) ? targetRoles : [targetRoles];
+    }
+
+    if (!title?.trim() || !message?.trim() || (roles.length === 0 && !targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, message and a target (role or user) are required",
+      });
+    }
+
+    const imageUrls = req.files ? req.files.map((f) => f.path) : null;
+
+    announcement.title = title.trim();
+    announcement.message = message.trim();
+    announcement.targetRoles = targetUserId ? [] : roles.map((r) => r.toLowerCase());
+    announcement.targetUserId = targetUserId || null;
+    announcement.targetUserName = targetUserId ? (targetUserName || "") : "";
+    announcement.startDate = startDate ? new Date(startDate) : announcement.startDate;
+    announcement.endDate = endDate ? new Date(endDate) : null;
+    if (imageUrls && imageUrls.length) {
+      announcement.images = imageUrls;
+    }
+
+    await announcement.save();
+
+    res.json({
+      success: true,
+      data: announcement,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+
 
 /* =====================================================
    GET ANNOUNCEMENTS
@@ -382,4 +452,4 @@ router.delete("/:id", protect, async (req, res) => {
 });
 
 
-module.exports = router;
+module.exports = router;
