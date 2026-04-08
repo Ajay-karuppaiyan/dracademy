@@ -490,7 +490,11 @@ const Announcement = () => {
                {user?.role === "admin" && (
                   <div className="flex gap-2">
                      <button
-                        onClick={(e) => { e.stopPropagation(); openEditModal(selectedAnnouncement); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDetailModal(false); // close detail modal
+                          openEditModal(selectedAnnouncement); // open edit form
+                        }}
                         className="px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 font-black text-xs uppercase tracking-widest bg-white border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                      >
                         <Edit3 size={14} />
