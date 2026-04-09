@@ -141,6 +141,9 @@ router.get("/student", protect, async (req, res) => {
     // For now simple attendance count or %
     const attendanceVal = attendanceCount > 0 ? ((attendanceCount / totalDays) * 100).toFixed(0) : 0;
 
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     const announcements = await Announcement.find({
       $and: [
         {
@@ -149,12 +152,12 @@ router.get("/student", protect, async (req, res) => {
             { targetUserId: req.user._id }
           ]
         },
-        { startDate: { $lte: new Date() } },
+        { startDate: { $lte: now } },
         {
           $or: [
             { endDate: { $exists: false } },
             { endDate: null },
-            { endDate: { $gte: new Date() } }
+            { endDate: { $gte: todayStart } }
           ]
         }
       ]

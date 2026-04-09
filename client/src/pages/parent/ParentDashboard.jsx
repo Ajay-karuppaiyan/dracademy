@@ -16,19 +16,41 @@ import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import Loading from "../../components/Loading";
 
+// Helper function to filter announcements by start and end date
+const filterAnnouncementsByDate = (announcements) => {
+  if (!announcements || !Array.isArray(announcements)) return [];
+  
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  return announcements.filter(ann => {
+    const startDate = ann.startDate ? new Date(ann.startDate) : null;
+    const hasStarted = !startDate || startDate <= now;
+    
+    const endDate = ann.endDate ? new Date(ann.endDate) : null;
+    let hasNotEnded = true;
+    if (endDate) {
+      hasNotEnded = endDate >= todayStart;
+    }
+    
+    return hasStarted && hasNotEnded;
+  });
+};
+
 const AnnouncementTicker = ({ announcements, user }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isHovered, setIsHovered] = React.useState(false);
+  const filteredAnnouncements = filterAnnouncementsByDate(announcements);
 
   React.useEffect(() => {
-    if (!announcements || announcements.length <= 1 || isHovered) return;
+    if (!filteredAnnouncements || filteredAnnouncements.length <= 1 || isHovered) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+      setCurrentIndex((prev) => (prev + 1) % filteredAnnouncements.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [announcements, isHovered]);
+  }, [filteredAnnouncements, isHovered]);
 
-  if (!announcements || announcements.length === 0) return null;
+  if (!filteredAnnouncements || filteredAnnouncements.length === 0) return null;
 
   return (
     <div 
@@ -40,7 +62,7 @@ const AnnouncementTicker = ({ announcements, user }) => {
         <Megaphone size={20} />
       </div>
       <div className="flex-1 h-8 ml-4 relative overflow-hidden">
-        {announcements.map((ann, idx) => {
+        {filteredAnnouncements.map((ann, idx) => {
           const isUnread = !ann.readBy?.some(r => r.userId?.toString() === user?._id?.toString());
           return (
             <div

@@ -21,19 +21,41 @@ import CustomDataTable from "../components/DataTable";
 import api from "../services/api";
 import Loading from "../components/Loading";
 
+// Helper function to filter announcements by start and end date
+const filterAnnouncementsByDate = (announcements) => {
+  if (!announcements || !Array.isArray(announcements)) return [];
+  
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  return announcements.filter(ann => {
+    const startDate = ann.startDate ? new Date(ann.startDate) : null;
+    const hasStarted = !startDate || startDate <= now;
+    
+    const endDate = ann.endDate ? new Date(ann.endDate) : null;
+    let hasNotEnded = true;
+    if (endDate) {
+      hasNotEnded = endDate >= todayStart;
+    }
+    
+    return hasStarted && hasNotEnded;
+  });
+};
+
 const AnnouncementTicker = ({ announcements, user }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isHovered, setIsHovered] = React.useState(false);
+  const filteredAnnouncements = filterAnnouncementsByDate(announcements);
 
   React.useEffect(() => {
-    if (!announcements || announcements.length <= 1 || isHovered) return;
+    if (!filteredAnnouncements || filteredAnnouncements.length <= 1 || isHovered) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+      setCurrentIndex((prev) => (prev + 1) % filteredAnnouncements.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [announcements, isHovered]);
+  }, [filteredAnnouncements, isHovered]);
 
-  if (!announcements || announcements.length === 0) return null;
+  if (!filteredAnnouncements || filteredAnnouncements.length === 0) return null;
 
   return (
     <div 
@@ -45,7 +67,7 @@ const AnnouncementTicker = ({ announcements, user }) => {
         <Megaphone size={20} />
       </div>
       <div className="flex-1 h-8 ml-4 relative overflow-hidden">
-        {announcements.map((ann, idx) => {
+        {filteredAnnouncements.map((ann, idx) => {
           const isUnread = !ann.readBy?.some(r => r.userId?.toString() === user?._id?.toString());
           return (
             <div
@@ -204,7 +226,7 @@ const [stats, setStats] = React.useState({
     { name: "Email", selector: r => r.email, sortable: true },
     { name: "Phone", selector: r => r.whatsapp || r.phone || "N/A" },
     { name: "Joining Date", selector: r => new Date(r.createdAt).toLocaleDateString(), sortable: true },
-    { name: "Status", selector: r => r.status, cell: r => (
+    { name: "Status", selector: r => r.status,width:"120px", cell: r => (
         <span className={`px-2 py-0.5 rounded text-xs ${
           r.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
         }`}>
@@ -212,13 +234,13 @@ const [stats, setStats] = React.useState({
         </span>
       ),
     },
-    { name: "Action", center: true, width: "70px",
-      cell: () => (
-        <button className="text-slate-400 hover:text-slate-600">
-          <MoreHorizontal size={18} />
-        </button>
-      ),
-    },
+    // { name: "Action", center: true, width: "100px",
+    //   cell: () => (
+    //     <button className="text-slate-400 hover:text-slate-600">
+    //       <MoreHorizontal size={18} />
+    //     </button>
+    //   ),
+    // },
   ];
 
   const enrollmentColumns = [
@@ -716,9 +738,9 @@ const [stats, setStats] = React.useState({
       </div>
 
       {/* Main Content Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (2/3) */}
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-8">
+        {/* Left Column */}
+        <div className="space-y-8">
           {/* Recent Admissions Table */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -794,119 +816,7 @@ const [stats, setStats] = React.useState({
           </div>
         </div>
 
-        {/* Right Column (1/3) */}
-        <div className="space-y-8">
-          {/* Notifications / Alerts */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="font-bold text-lg text-slate-900 mb-6">
-              Action Required
-            </h3>
-            <div className="space-y-4">
-              {[
-                {
-                  title: "Review Assessment #45",
-                  time: "2 hours ago",
-                  type: "academic",
-                },
-                {
-                  title: "Approve Leave Request (Sarah)",
-                  time: "5 hours ago",
-                  type: "hr",
-                },
-                {
-                  title: "Server Maintenance",
-                  time: "Tomorrow, 12:00 AM",
-                  type: "sys",
-                },
-                {
-                  title: "New Inquiry: Corporate Training",
-                  time: "1 day ago",
-                  type: "sales",
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 items-start group cursor-pointer"
-                >
-                  <div
-                    className={`mt-1 min-w-[36px] h-9 rounded-full flex items-center justify-center border-2 ${
-                      item.type === "hr"
-                        ? "border-orange-100 bg-orange-50 text-orange-600"
-                        : item.type === "sys"
-                          ? "border-red-100 bg-red-50 text-red-600"
-                          : "border-blue-100 bg-blue-50 text-blue-600"
-                    }`}
-                  >
-                    {item.type === "hr" ? (
-                      <Clock size={16} />
-                    ) : (
-                      <AlertCircle size={16} />
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-800 group-hover:text-brand-600 transition-colors">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">{item.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Student Progress Mini-Chart Substitute */}
-          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-900/20">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold">Course Completion</h3>
-              <TrendingUp size={20} className="text-green-400" />
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-xs mb-1 text-slate-300">
-                  <span>Web Development</span>
-                  <span>78%</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-2">
-                  <div
-                    className="bg-brand-500 h-2 rounded-full"
-                    style={{ width: "78%" }}
-                  ></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1 text-slate-300">
-                  <span>Data Science</span>
-                  <span>45%</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: "45%" }}
-                  ></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1 text-slate-300">
-                  <span>UI/UX Design</span>
-                  <span>92%</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-2">
-                  <div
-                    className="bg-purple-500 h-2 rounded-full"
-                    style={{ width: "92%" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-slate-800">
-              <button className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold transition-colors">
-                View Detailed Reports
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

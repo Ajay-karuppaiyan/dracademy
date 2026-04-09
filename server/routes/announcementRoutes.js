@@ -25,6 +25,7 @@ router.patch("/mark-all", protect, async (req, res) => {
   try {
     const role = req.user.role?.toLowerCase();
     const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const query = {
       $and: [
@@ -39,7 +40,7 @@ router.patch("/mark-all", protect, async (req, res) => {
           $or: [
             { endDate: { $exists: false } },
             { endDate: null },
-            { endDate: { $gte: today } }
+            { endDate: { $gte: todayStart } }
           ]
         }
       ]
@@ -80,6 +81,7 @@ router.get("/unread/count", protect, async (req, res) => {
   try {
     const role = req.user.role?.toLowerCase();
     const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const query = {
       $and: [
@@ -94,7 +96,7 @@ router.get("/unread/count", protect, async (req, res) => {
           $or: [
             { endDate: { $exists: false } },
             { endDate: null },
-            { endDate: { $gte: today } }
+            { endDate: { $gte: todayStart } }
           ]
         }
       ]
@@ -265,7 +267,10 @@ router.get("/", protect, async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search || "";
+    
+    // Get today's date with time normalized as well
     const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     let query = {
       $and: [
@@ -280,11 +285,11 @@ router.get("/", protect, async (req, res) => {
           $or: [
             { endDate: { $exists: false } },
             { endDate: null },
-            { endDate: { $gte: today } }
+            { endDate: { $gte: todayStart } }
           ]
         }
       ]
-    };
+    }; 
 
     // If Admin is in Management Page (not Dashboard ticker) or specifically wants all
     if (role === "admin") {
@@ -304,7 +309,7 @@ router.get("/", protect, async (req, res) => {
               $or: [
                 { endDate: { $exists: false } },
                 { endDate: null },
-                { endDate: { $gte: today } }
+                { endDate: { $gte: todayStart } }
               ]
             }
           ]
