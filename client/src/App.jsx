@@ -50,6 +50,26 @@ import LeaveRequestList from "./components/LeaveRequestList";
 
 import Loading from "./components/Loading";
 
+// Helper components for professional placeholders
+const PlaceholderPage = ({ title, content, features }) => (
+  <div className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="text-center mb-16">
+      <h1 className="text-4xl font-extrabold text-slate-900 mb-6">{title}</h1>
+      <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">{content}</p>
+    </div>
+    {features && (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {features.map((f, i) => (
+          <div key={i} className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">{f.title}</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 // ---------------------------
 // Private Route Wrapper
 // ---------------------------
@@ -104,6 +124,78 @@ function App() {
           {/* ================= PUBLIC ROUTES ================= */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
+
+            <Route path="/admissions" element={
+              <PlaceholderPage
+                title="Admissions 2024-25"
+                content="Your journey to global excellence starts here. We offer a seamless admission process for all our medical, hospitality, and vocational programs."
+                features={[
+                  { title: "Online Application", desc: "Easy-to-use digital portal for submitting your documents and tracking your status." },
+                  { title: "Counseling Support", desc: "Dedicated academic counselors to help you choose the right vertical for your career." },
+                  { title: "Entrance Guidance", desc: "Full support for institutional and competitive entrance exams across all streams." }
+                ]}
+              />
+            } />
+
+            <Route path="/scholarships" element={
+              <PlaceholderPage
+                title="Scholarships & Merit Awards"
+                content="DRRG Academy rewards excellence. We believe financial constraints should never stand in the way of a deserving student's future."
+                features={[
+                  { title: "Merit-Based", desc: "Awards for top scorers in academic and entrance examinations." },
+                  { title: "Needs-Based", desc: "Support for students from economically weaker backgrounds showing high potential." },
+                  { title: "International Grants", desc: "Specific funding for students pursuing medical or hospitality degrees abroad." }
+                ]}
+              />
+            } />
+
+            <Route path="/unicarewel" element={
+              <PlaceholderPage
+                title="Unicarewel Global Education"
+                content="Specialized medical education consultancy bridging students with world-class medical universities internationally."
+                features={[
+                  { title: "MBBS Abroad", desc: "Expert guidance for medical admissions in Russia, Georgia, and other top-tier destinations." },
+                  { title: "Documentation", desc: "Complete support for visa processing, university application, and on-ground logistics." },
+                  { title: "Student Welfare", desc: "Dedicated support team ensuring our students are safe and successful while studying abroad." }
+                ]}
+              />
+            } />
+
+            <Route path="/rgmtn" element={
+              <PlaceholderPage
+                title="RGMTN Hospitality Management"
+                content="The premier institute for hotel and tourism excellence under the DRRG Group banner."
+                features={[
+                  { title: "Professional Kitchens", desc: "Hands-on training in international cuisines and culinary arts." },
+                  { title: "Front Desk Simulators", desc: "Learn guest relations and hospitality software in a real-world environment." },
+                  { title: "Cruise Training", desc: "Specialized modules for candidates targeting luxury cruise liners and flight services." }
+                ]}
+              />
+            } />
+
+            <Route path="/bglrgm" element={
+              <PlaceholderPage
+                title="BGLRGM Vocational Training"
+                content="Empowering the workforce with industry-aligned technical skills and vocational certifications."
+                features={[
+                  { title: "Skill Certification", desc: "Short-term courses recognized by leading national and industrial bodies." },
+                  { title: "Practical Workshops", desc: "Focus on 80% practical learning and only 20% theory for immediate employability." },
+                  { title: "Job Readiness", desc: "Includes communication skills, soft skills, and interview preparation modules." }
+                ]}
+              />
+            } />
+
+            <Route path="/resource-supply" element={<PlaceholderPage title="Resource Supply" content="Access our full library of brochures, training toolkits, and academic resources." />} />
+            <Route path="/benefits" element={<PlaceholderPage title="Why Choose Us?" content="Explore the unique advantages of becoming a DRRG Academy student." />} />
+            <Route path="/locate-us" element={<PlaceholderPage title="Our Presence" content="DRRG Academy is located in Padmanabhanagar, Bangalore, with easy access via public transport and private vehicles. Visit us for admissions, counseling, or inquiries—we’re here to help you." />} />
+            <Route path="/privacy-policy" element={<PlaceholderPage title="Privacy Policy" content="DRRG Academy respects your privacy and ensures that your personal data is securely handled. We collect information only to improve our services and never share it without consent, except when required by law." />} />
+            <Route path="/refund-policy" element={<PlaceholderPage title="Cancellation & Refund Policy" content="Clear guidelines on enrollment cancellations and fee refunds." />} />
+            <Route path="/terms-conditions" element={<PlaceholderPage title="Terms & Conditions" content="General operating policies for students and partners." />} />
+            <Route path="/courses/masters" element={<PlaceholderPage title="Master Degree Courses" content="Advanced specialized programs for career leadership." />} />
+            <Route path="/courses/international" element={<PlaceholderPage title="International Programs" content="Globally recognized degrees from our foreign partner institutions." />} />
+            <Route path="/opportunities/onsite" element={<PlaceholderPage title="Onsite Opportunities" content="Direct industry placements and onsite training experiences." />} />
+            <Route path="/downloads" element={<PlaceholderPage title="Download Center" content="Digital repository for application forms and prospectuses." />} />
+            <Route path="/payment" element={<PlaceholderPage title="Online Fee Payment" content="Secure portal for all your institutional financial transactions." />} />
 
             <Route
               path="/about"
