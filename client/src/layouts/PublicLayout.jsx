@@ -14,60 +14,67 @@ const menuItems = [
     submenu: [
       { title: "About Us", to: "/about" },
       { title: "History", to: "/history" },
-      { title: "Group of Companies", to: "/group-of-companies" },
+      { title: "Group Of Companies", to: "/group-of-companies" },
       { title: "Numbers Counter", to: "/numbers-counter" },
-      { title: "Testimonials", to: "/testimonials" },
-      { title: "Awards & Certificates", to: "/awards-certificates" },
+      { title: "Our Testimonials", to: "/testimonials" },
+      { title: "Awards & Certified", to: "/awards-certificates" },
     ],
   },
   {
     title: "RG Academy",
     submenu: [
-      { title: "Institutions", to: "/institutions" },
-      { title: "Unicarewel", to: "/unicarewel" },
-      { title: "RGMTN", to: "/rgmtn" },
-      { title: "BGLRGM", to: "/bglrgm" },
+      { title: "Our Institutions", to: "/institutions" },
+      { title: "Unicarewel Medical", to: "/unicarewel" },
+      { title: "RGMTN Hospitality", to: "/rgmtn" },
+      { title: "BGLRGM Vocational", to: "/bglrgm" },
     ],
   },
   {
     title: "Courses & Certifications",
     mega: [
       {
-        title: "Diploma Courses (1 to 2 years)",
+        title: "Diploma Programs (1-2 Years)",
         items: [
-          "Hospitality",
-          "Tourism Courses",
-          "Hotel Management Courses",
-          "Cruise and Aviation Courses",
-          "Medical Courses",
-          "Non-Medical Courses",
+          "Medical & Paramedical Diploma",
+          "Hospitality & Hotel Management",
+          "Aviation & Cruise Ship Training",
+          "Travel & Tourism Management",
+          "Business & Vocational Tech",
+          "Non-Medical Professional Tracks",
         ],
       },
       {
-        title: "Degree Courses (3 years)",
+        title: "Degree Programs (3 Years)",
         items: [
-          "Hospitality",
-          "Tourism Courses",
-          "Hotel Management Courses",
-          "Cruise and Aviation Courses",
-          "Medical Courses",
-          "Non-Medical Courses",
+          "Medical Science Degrees",
+          "Hospitality Administration",
+          "Aviation & Airport Management",
+          "Global Tourism & Travel Degrees",
+          "Business Management Studies",
+          "Vocational Science Tracks",
         ],
       },
       {
-        title: "Master Degree Courses (2 years)",
+        title: "Postgraduate Programs (2 Years)",
         items: [
-          "Hospitality",
-          "Tourism Courses",
-          "Hotel Management Courses",
-          "Cruise and Aviation Courses",
-          "Medical Courses",
-          "Non-Medical Courses",
+          "Advanced Healthcare Studies",
+          "Tourism & Hospitality Masters",
+          "Hotel Administration Masters",
+          "Aviation Operations Management",
+          "Corporate Business Leadership",
+          "Vocational Education Masters",
         ],
       },
       {
-        title: "Vocational Trainings (6 months Courses)",
-        items: ["All Courses list and details"],
+        title: "Short-Term/Vocational (6 Mo)",
+        items: [
+          "Patient Care & Nursing Asst",
+          "Culinary Arts & Food Production",
+          "Cabin Crew & Grooming",
+          "Retail & Sales Management",
+          "Information Technology Basics",
+          "Professional Soft Skills",
+        ],
       },
     ],
   },
@@ -84,60 +91,60 @@ const menuItems = [
   {
     title: "Placements",
     submenu: [
-      { title: "Internships", to: "/placements/internships" },
-      { title: "Permanent Jobs", to: "/placements/jobs" },
-      { title: "Campus Drive", to: "/placements/campus-drive" },
-      { title: "Placement Partners", to: "/placements/partners" },
-      { title: "FAQs", to: "/placements/faqs" },
+      { title: "Industry Internships", to: "/placements/internships" },
+      { title: "Permanent Placements", to: "/placements/jobs" },
+      { title: "Campus Recruitment", to: "/placements/campus-drive" },
+      { title: "Our Global Partners", to: "/placements/partners" },
+      { title: "Placement FAQs", to: "/placements/faqs" },
     ],
   },
   {
-    title: "Exams",
+    title: "Examination",
     submenu: [
-      { title: "Exams", to: "/exams" },
-      { title: "Apply Now", to: "/exams/apply" },
-      { title: "Results", to: "/exams/results" },
-      { title: "Entry Ticket", to: "/exams/entry-ticket" },
+      { title: "Available Exams", to: "/exams" },
+      { title: "Online Application", to: "/exams/apply" },
+      { title: "Check Results", to: "/exams/results" },
+      { title: "Download Entry Ticket", to: "/exams/entry-ticket" },
     ],
   },
   {
-    title: "Industries",
+    title: "Our Industries",
     submenu: [
-      { title: "Hospitality", to: "/industries/hospitality" },
-      { title: "Cruise & Aviation", to: "/industries/cruise-aviation" },
-      { title: "Medical", to: "/industries/medical" },
-      { title: "Others", to: "/industries/others" },
+      { title: "Hospitality Industry", to: "/industries/hospitality" },
+      { title: "Cruise & Aviation Sector", to: "/industries/cruise-aviation" },
+      { title: "Medical & Healthcare", to: "/industries/medical" },
+      { title: "Secondary Industries", to: "/industries/others" },
     ],
   },
   {
     title: "Partner With Us",
     submenu: [
-      { title: "Franchise Partners", to: "/partner-with-us" },
+      { title: "Franchise Partnerships", to: "/partner-with-us" },
     ],
   },
   {
     title: "Newsletter",
     submenu: [
-      { title: "News & Media", to: "/newsletter/news-media" },
-      { title: "Blogs", to: "/newsletter/blogs" },
-      { title: "Posts", to: "/newsletter/posts" },
-      { title: "Gallery", to: "/newsletter/gallery" },
-      { title: "Subscribe", to: "/newsletter/subscribe" },
+      { title: "Latest News & Media", to: "/newsletter/news-media" },
+      { title: "Educational Blogs", to: "/newsletter/blogs" },
+      { title: "Social Feed Posts", to: "/newsletter/posts" },
+      { title: "Media Gallery", to: "/newsletter/gallery" },
+      { title: "Email Subscription", to: "/newsletter/subscribe" },
     ],
   },
   {
     title: "Contact Us",
     submenu: [
-      { title: "Contact Us", to: "/contact" },
-      { title: "Our Presence", to: "/presence" },
-      { title: "Careers", to: "/careers" },
+      { title: "Get In Touch", to: "/contact" },
+      { title: "Our Local Presence", to: "/presence" },
+      { title: "Join Our Team", to: "/careers" },
     ],
   },
   {
     title: "Student Portal",
     submenu: [
-      { title: "Login", to: "/login" },
-      { title: "Registration", to: "/register" },
+      { title: "Account Login", to: "/login" },
+      { title: "New Registration", to: "/register" },
     ],
   },
 ];
@@ -158,80 +165,99 @@ const PublicLayout = () => {
   const exploreRef = useRef(null);
 
   const exploreContent = {
+    // Top Level / General
+    "Home": "DRRG Academy stands as a beacon of excellence in professional education, offering a holistic environment where academic rigor meets practical industry experience. Our home portal provides a gateway to exploring our diverse range of campuses, innovative learning modules, and the vibrant life that defines our student community. We are committed to nurturing talent and providing the tools necessary for students to excel in their chosen fields, whether in the heart of our Bangalore facilities or through our global partner network.",
+
     // About Us Group
-    "Home": "Discover the DRRG Academy home experience with quick access to our latest news, featured courses, and student success stories.",
     "About Us": "At DRRG Academy, we are dedicated to empowering students with the knowledge, skills, and confidence needed to achieve their academic and career goals. Our mission is to provide high-quality education through a structured, student-focused approach that nurtures both understanding and performance. We specialize in delivering result-oriented coaching supported by experienced faculty, well-designed study materials, and practical teaching methods. At DRRG Academy, we believe that every student has the potential to succeed, and our role is to guide them with the right strategy, mentorship, and continuous support. Our learning environment is designed to encourage curiosity, discipline, and consistency. With a focus on conceptual clarity and real-world application, we prepare students not just for exams, but for long-term success in their chosen paths. Driven by excellence and innovation, DRRG Academy continues to build a strong foundation for students, helping them transform their ambitions into achievements.",
     "History": "DRRG Academy was founded with a simple yet powerful vision—to make quality education accessible and effective for every student. What started as a small initiative with a handful of learners has grown into a trusted institution known for its commitment to academic excellence and student success. In the early days, the academy focused on building a strong foundation by understanding students’ needs and creating a supportive learning environment. With dedication, consistent results, and positive student outcomes, DRRG Academy quickly gained recognition and expanded its programs and reach. Over the years, the academy has continuously evolved by adopting modern teaching methods, integrating practical learning approaches, and enhancing its curriculum to meet changing educational demands. Our journey has been driven by passionate educators, motivated students, and a shared goal of achieving excellence. Today, DRRG Academy stands as a growing center of learning, shaping the future of students and helping them turn their aspirations into achievements. As we move forward, we remain committed to innovation, quality education, and empowering the next generation.",
-    "Group of Companies": "DRRG Academy is a part of a dynamic and growing group of organizations committed to excellence across multiple sectors. Our group shares a common vision of delivering quality, innovation, and value-driven services in every field we operate in. With a strong foundation built on trust and performance, the DRRG Group has expanded its presence across education, technology, and skill development. Each organization under the group works with a focused mission while maintaining the core values of integrity, professionalism, and continuous improvement. Through collaboration and shared expertise, the group aims to create opportunities, empower individuals, and contribute positively to society. DRRG Academy plays a key role in this ecosystem by nurturing talent and preparing students for future challenges.",
-    "Numbers Counter": "With 20+ years of experience, 50,000+ alumni, 100+ industry partners, and 5 specialized campuses across India.",
-    "Testimonials": "Rahul Sharma – Hotel Management Graduate: “DRRG Academy provided me with the perfect platform to build my career. The practical training and expert guidance helped me gain confidence and secure a job in a reputed hotel chain.” Priya Reddy – Medical Training Program: “The faculty at DRRG Academy are highly supportive and knowledgeable. The hands-on training and real-world exposure made learning very effective.” Arjun Kumar – Aviation & Cruise Training: “Choosing DRRG Academy was one of the best decisions I’ve made. The structured curriculum and placement assistance helped me land an international opportunity.” Sneha Patel – Vocational Training Student: “The learning environment is very motivating, and the trainers focus on both technical skills and personal development.”",    
-    "Awards & Certificates": "DRRG Academy is ISO 9001:2015 certified and has received multiple 'Best Vocational Trainer' awards in the last decade.",
+    "Group Of Companies": "DRRG Academy is a key pillar of the DRRG Group, a multi-faceted conglomerate with interests spanning education, consultancy, technology, and facility management. Our group synergy allows us to provide students with unparalleled opportunities for internships, real-world projects, and direct industry exposure. Each entity within the group operates with a shared philosophy of 'Growth through Excellence,' ensuring that the standards set at the top are reflected in every student's journey. From medical consultancy through Unicarewel to hospitality excellence via RGMTN, our group strength is your professional advantage.",
+    "Numbers Counter": "Our impact is measured in the success of our learners. Over the past two decades, DRRG Academy has established a footprint that includes over 20 years of educational excellence and more than 50,000 successful alumni across the globe. We maintain strategic partnerships with 100+ industry leaders to ensure top-tier placement opportunities. With 15+ advanced training labs and 5 dedicated main campuses alongside multiple regional centers, our physical and intellectual infrastructure is designed for scale and quality, ensuring every student has the resources they need to thrive in a competitive global market.",
+    "Our Testimonials": "The voices of our students and alumni tell the true story of DRRG Academy's impact. Rahul Sharma, a Hotel Management graduate, notes: 'The practical simulation labs were a game-changer for my career.' Priya Reddy, from our Medical Training program, shares: 'The mentorship from industry veterans helped me navigate complex requirements with ease.' These testimonials reflect our commitment to practical excellence and student-centric support. We take immense pride in every success story and continuously use student feedback to refine our teaching methodologies and campus facilities.",
+    "Awards & Certified": "Quality and excellence are certified standards at DRRG Academy. We are proudly ISO 9001:2015 certified, ensuring our management and educational delivery systems meet the highest international benchmarks. Our list of accolades includes the 'Excellence in Vocational Training' award from the Regional Skill Council and being recognized for the 'Best Placement Record' in the hospitality and healthcare sectors for three consecutive years. These awards are a testament to our relentless pursuit of perfection in academic delivery and operational excellence.",
 
     // RG Academy Group
-    "Institutions": "Our network includes specialized campuses for Medical, Hospitality, and Business studies, each equipped with state-of-the-art labs.",
-    "Unicarewel": "Unicarewel focuses on medical education consultancy, helping aspirants secure admissions in top medical universities abroad.",
-    "RGMTN": "The premier Institute of Hospitality Management under DRRG, offering world-class training in hotel and tourism services.",
-    "BGLRGM": "BGLRGM provides industry-standard vocational education training, ensuring students are job-ready from day one.",
+    "Our Institutions": "Our network of institutions serves as a dynamic ecosystem for specialized professional learning. Each campus is meticulously designed to mirror its respective industry, featuring state-of-the-art medical simulation wards, professional-grade culinary kitchens, and aviation training cabins. We believe that the environment is the 'third teacher,' which is why our facilities emphasize collaboration, discipline, and hands-on practice. From our flagship Bangalore campus to our specialized regional centers, we provide a consistent, high-quality educational experience that prepares students for the realities of the modern workplace.",
+    "Unicarewel Medical": "Unicarewel Medical is our specialized wing dedicated to global medical education and healthcare consultancy. We bridge the gap for ambitious students seeking to pursue MBBS and advanced medical degrees in prestigious international universities across Europe, Asia, and beyond. Our expert consultants provide end-to-end support, including university selection, entrance exam preparation, visa processing, and post-arrival assistance. Through Unicarewel, we empower the next generation of healthcare leaders with global exposure and world-class academic foundations.",
+    "RGMTN Hospitality": "The RG Management Training Network (RGMTN) is our flagship brand for hospitality and tourism excellence. Developed in close collaboration with international hotel chains, RGMTN offers a curriculum that is both academically rigorous and industry-relevant. Our students train in simulated high-pressure environments, mastering the arts of culinary production, front-office management, and guest relations. With a focus on the luxury service sector, RGMTN ensures that every graduate enters the workforce with the poise, skill, and certification required to succeed in 5-star environments worldwide.",
+    "BGLRGM Vocational": "BGLRGM is dedicated to fundamental vocational excellence and technical skill-building for the modern labor market. We focus on 'learning-by-doing,' with centers organized around practical workshops and industry-standard technical labs. Our programs cater to a wide range of essential services and technical trades, providing students with immediate employability skills. By shortening the distance between education and the job market, BGLRGM serves as a vital catalyst for economic independence and professional growth for our students.",
 
-    // Courses Group
-    "Hospitality": "Comprehensive training in front office operations, food and beverage service, and housekeeping management.",
-    "Tourism Courses": "Explore travel management, destination marketing, and global tourism operations with our expert-led modules.",
-    "Hotel Management Courses": "Professional degree and diploma programs covering all aspects of modern hotel administration and leadership.",
-    "Cruise and Aviation Courses": "Specialized training for on-board guest services, airport operations, and cabin crew excellence.",
-    "Medical Courses": "Practical healthcare training for nursing, paramedical, and allied health sciences career paths.",
-    "Non-Medical Courses": "Diverse programs in business administration, IT support, and vocational skills for various industries.",
-    "All Courses list and details": "Detailed catalog of all active vocational and professional programs offered across our institution network.",
+    // Courses & Certifications (Detailed Category-wise lists)
+    "Medical & Paramedical Diploma": "Our Medical Diploma programs provide intensive, 1-2 year technical training for essential healthcare support roles. \n\nCategory-wise Courses: \n• Diagnostic: Diploma in Medical Lab Technology (DMLT), X-Ray & Imaging Tech \n• Specialist Support: Diploma in Dialysis Technology, Operation Theatre Tech (DOTT) \n• Patient Care: Hospital Nursing Assistant, Patient Care Management \n• Administrative: Medical Record Management, Health Inspector Training \n\nThese programs include 6 months of mandatory clinical rotations in certified hospitals.",
+    "Hospitality & Hotel Management": "The Hospitality track offers a path into the world's most dynamic service industries. \n\nCategory-wise Courses: \n• Operations: Diploma in Front Office, Food & Beverage Service \n• Culinary: Diploma in Food Production, Bakery & Confectionery \n• Management: Diploma in Hotel Management & Catering Technology \n• Specialized: Housekeeping Operations, Guest Relations Excellence \n\nTraining includes 100% internship placement in top-tier luxury hotel brands.",
+    "Aviation & Cruise Ship Training": "Prepare for a career above the clouds or on the high seas with our specialized travel programs. \n\nCategory-wise Courses: \n• In-Flight: Cabin Crew & Air Hostess Training, Personality Development \n• Ground Ops: Airport Ground Handling, Baggage & Security Management \n• Sea Travel: Cruise Ship Hospitality, Marine Guest Services \n• Technical: Flight Dispatcher Assistant, Air Travel Operations \n\nStudents benefit from mock cabin drills and intensive grooming workshops.",
+    "Travel & Tourism Management": "Explore the global tourism landscape with our comprehensive management and operations courses. \n\nCategory-wise Courses: \n• Travel Agency: Diploma in Travel & Tourism, IATA Foundation \n• Operations: Tour Guiding, Destination Marketing, Ticketing & GDS \n• Management: Event & MICE Management, Eco-Tourism Planning \n\nOur courses focus on international travel regulations, cultural sensitivity, and modern distribution systems.",
+    "Business & Vocational Tech": "Equip yourself with the corporate and technical skills required for the modern business world. \n\nCategory-wise Courses: \n• Administration: Diploma in Business Management, HR Assistant \n• Technical: IT & Software Support, Computer-Aided Design (CAD) \n• Creative: Digital Media, Graphic Design, Web Development Fundamentals \n• Trade Skills: Mechanical & Electrical Maintenance Certifications \n\nFocus is on direct entry into corporate support and technical maintenance roles.",
+    "Non-Medical Professional Tracks": "Diverse career paths for students looking for non-healthcare and non-service specialized roles. \n\nCategory-wise Courses: \n• Finance: Tally & Accounting Professional, Banking Operations \n• Digital: Digital Marketing & SEO, E-Commerce Operations \n• Logistics: Supply Chain Management, Retail Operations \n• Language: Professional English & Communication for Global Careers \n\nThese tracks are designed to fill specific skill gaps in the expanding service and retail sectors.",
 
-    // Sub-Categories under specific levels
-    "Diploma Courses (1 to 2 years)": "1 to 2-year diploma programs designed for rapid skill acquisition and professional entry into specialized sectors.",
-    "Degree Courses (3 years)": "Comprehensive 3-year undergraduate programs providing deep academic knowledge and practical industry exposure.",
-    "Master Degree Courses (2 years)": "Advanced 2-year masters programs for specialization and leadership training in various professional fields.",
-    "Vocational Trainings (6 months Courses)": "Short-term intensive training focused on direct technical skills and immediate employability.",
+    // Degree Programs
+    "Medical Science Degrees": "Comprehensive 3-year undergraduate programs for in-depth healthcare expertise. \n\nCategory-wise Degrees: \n• B.Sc. Medical Lab Technology (BMLT) \n• B.Sc. Imaging & Radiography \n• B.Sc. Dialysis & Renal Technology \n• B.Sc. Operation Theatre & Anesthesia Tech \n• B.Sc. Physician Assistant \n\nOur degrees provide the academic foundation required for postgraduate specialization and research.",
+    "Hospitality Administration": "3-year management programs focused on the leadership and strategic side of the service sector. \n\nCategory-wise Degrees: \n• B.Sc. Hospitality & Hotel Administration \n• Bachelor of Hotel Management (BHM) \n• BBA in Hospitality and Tourism \n• B.Sc. Culinary Arts & Management \n\nGraduates are prepared for Assistant Manager roles and management trainee programs in global chains.",
+    "Aviation & Airport Management": "Strategic degree programs for those aiming for management roles in the aviation industry. \n\nCategory-wise Degrees: \n• BBA in Aviation & Airport Management \n• B.Sc. Aviation Science \n• Bachelor of Tourism & Travel Management \n\nFocus areas include aviation law, airline economics, safety management, and airport logistical planning.",
+    "Global Tourism & Travel Degrees": "In-depth academic study of the global tourism economy and destination management. \n\nCategory-wise Degrees: \n• B.A. (Hons) Travel & Tourism Management \n• B.Sc. International Tourism \n• Bachelor of Tourism Studies (BTS) \n\nIncludes international field trips and research projects on sustainable tourism and global travel trends.",
+    "Business Management Studies": "Broad-spectrum business degrees that open doors to any corporate industry. \n\nCategory-wise Degrees: \n• Bachelor of Business Administration (BBA) - General \n• BBA in Retail & Supply Chain \n• BBA in Digital Business \n• Bachelor of Commerce (B.Com) Professional \n\nOur management degrees emphasize entrepreneurship, financial literacy, and leadership skills.",
+    "Vocational Science Tracks": "Technical degrees that bridge the gap between traditional science and industrial application. \n\nCategory-wise Degrees: \n• B.Voc (Bachelor of Vocation) in Software Development \n• B.Voc in Industrial Automation \n• B.Voc in Renewable Energy Management \n• B.Sc. Information Technology \n\nThese programs focus on high-growth technical sectors requiring specialized scientific knowledge.",
+
+    // Postgraduate
+    "Advanced Healthcare Studies": "Masters-level programs for specialization in clinical and healthcare management. \n\nCategory-wise Masters: \n• M.Sc. Medical Lab Technology \n• Masters in Hospital Administration (MHA) \n• M.Sc. Clinical Research \n• Postgraduate Diploma in Healthcare Management \n\nDesigned for professionals looking to move into senior clinical lead or hospital administrative roles.",
+    "Tourism & Hospitality Masters": "Advanced management studies for the tourism and hospitality sectors. \n\nCategory-wise Masters: \n• Master of Tourism and Travel Management (MTTM) \n• MBA in Tourism & Hospitality \n• M.Sc. International Hospitality Management \n\nFocus on strategic marketing, global heritage management, and large-scale tourism planning.",
+    "Hotel Administration Masters": "The pinnacle of hospitality leadership training. \n\nCategory-wise Masters: \n• Master of Hotel Management (MHM) \n• Executive MBA in Hospitality Administration \n• P.G. Diploma in Hotel Operations & Strategy \n\nIncludes advanced revenue management, HR development for hotels, and luxury lifestyle management.",
+    "Aviation Operations Management": "Master-level expertise for the high-stakes world of airline and airport leadership. \n\nCategory-wise Masters: \n• MBA in Aviation Management \n• M.Sc. Airline & Airport Operations \n• P.G. Diploma in Aviation Safety & Security \n\nFocus on fleet management, international aviation policy, and enterprise-level risk assessment.",
+    "Corporate Business Leadership": "Transforming graduates into visionary corporate leaders. \n\nCategory-wise Masters: \n• Master of Business Administration (MBA) \n• Master of Management Studies (MMS) \n• PGDM in Strategic Leadership \n• MBA in International Business \n\nEmphasis on global market analysis, corporate governance, and complex organizational transformation.",
+    "Vocational Education Masters": "Advanced training for those looking to lead educational and vocational training institutions. \n\nCategory-wise Masters: \n• Master of Vocation (M.Voc) in Various Trades \n• MA in Vocational Education & Training \n• P.G. Diploma in Skills Development Management \n\nPrepares professionals for roles in academic administration and institutional leadership.",
+
+    // Short Term
+    "Patient Care & Nursing Asst": "Intensive 6-month training for immediate entry into healthcare support. Includes basic anatomy, patient hygiene, bedside assistance, and emergency protocols. Perfect for rapid career entry in hospitals and home-care services.",
+    "Culinary Arts Foundations": "Fast-track 6-month certificate in professional cooking and kitchen operations. Focuses on knife skills, food safety, basic mother sauces, and multi-cuisine essentials for entry-level commis roles.",
+    "Cabin Crew & Grooming": "A 6-month transformation program focusing on aviation personality development, etiquette, safety communication, and interview readiness for airline recruitment.",
+    "Retail & Sales Management": "Short-term certificate focusing on customer service excellence, inventory management, and POS operations for the expanding retail and luxury brand markets.",
+    "Information Technology Basics": "6-month crash course in essential IT skills, including MS Office proficiency, hardware troubleshooting, basic networking, and data entry excellence.",
+    "Professional Soft Skills": "A comprehensive 6-month program dedicated to communication excellence, emotional intelligence, leadership basics, and workplace professionalism for any industry.",
 
     // Coaching & Training
-    "Engineering (JEE)": "Prepare for top engineering institutes with our structured coaching program for JEE Main and Advanced.",
-    "Medical (NEET)": "Concept-based learning and rigorous practice sessions for medical aspirants targeting NEET qualifying scores.",
-    "Civil services (UPSC/KPSC)": "Aspirants for administrative services get expert guidance, mock tests, and current affairs analysis.",
-    "Banking (IBPS/SBI)": "Targeted coaching for IBPS and SBI competitive exams with focus on aptitude, reasoning, and banking awareness.",
-    "Management (CAT/CET/MAT/GRE)": "Build your verbal, quantitative, and logical reasoning skills for top management entrance tests.",
+    "Engineering (JEE)": "Our JEE coaching program is a rigorous system designed to help engineering aspirants crack the prestigious IIT-JEE (Main and Advanced) exams. We provide a balanced curriculum that emphasizes conceptual clarity in Physics, Chemistry, and Mathematics. With regular mock tests, performance analytics, and specialized doubt-clearing sessions, we ensure students are battle-ready for the most competitive exams in the country.",
+    "Medical (NEET)": "Prepare for a career in medicine with our specialized NEET coaching. Our faculty focuses on the depth and breadth of the NCERT syllabus while introducing advanced problem-solving techniques for Biology, Physics, and Chemistry. Our comprehensive test series follows the exact pattern of the National Eligibility cum Entrance Test, helping students build accuracy and speed.",
+    "Civil services (UPSC/KPSC)": "The path to becoming a civil servant requires discipline, strategy, and deep knowledge of public affairs. Our coaching for UPSC and KPSC offers a structured approach covering General Studies, Current Affairs, and Optional subjects. We provide expert mentorship, answer-writing workshops, and simulated interview panels to help candidates navigate all three stages of the examination.",
+    "Banking (IBPS/SBI)": "Our banking exams coaching is focused on the core skills required for success in IBPS PO/Clerk and SBI recruitment exams. We provide intensive training in Quantitative Aptitude, Logical Reasoning, English Language, and General Banking Awareness. Short-cut techniques and speed-building drills are a staple of our classroom experience.",
+    "Management (CAT/CET/MAT/GRE)": "Get into the world's top B-schools with our expert-led management entrance coaching. We cover all sections of CAT, MAT, XAT, and international exams like the GRE/GMAT. Our focus is on building logical thinking and verbal ability, complemented by personalized strategy sessions for Group Discussions and Personal Interviews.",
 
     // Placements
-    "Internships": "Curated 3-6 month internships providing practical industry experience and potential for pre-placement offers.",
-    "Permanent Jobs": "Direct placement support connecting qualified graduates with leading global and national employers.",
-    "Campus Drive": "On-campus recruitment events where students can interview directly with HR teams from top-tier organizations.",
-    "Placement Partners": "A network of 100+ partners including major luxury hotel chains, international hospitals, and tech firms.",
-    "FAQs": "Get answers to common queries regarding placement eligibility, documentation, and salary standards.",
+    "Industry Internships": "At DRRG Academy, internships are not just a requirement but a bridge to your professional future. We partner with over 100+ organizations to provide 3-6 month internships that offer real-world responsibility and mentorship. Many of our students receive Pre-Placement Offers (PPOs) directly from their internship providers due to the high standards of training we provide.",
+    "Permanent Placements": "Our dedicated placement cell works year-round to connect our graduates with leading employers in India and abroad. We maintain a strong network across hospitality chains, hospitals, tech firms, and travel companies. Our focus is on long-term career stability, ensuring our students find roles that match their skills and ambitions.",
+    "Campus Recruitment": "We host annual campus recruitment drives where top-tier companies visit our locations for direct hiring. These events provide students with the opportunity to showcase their technical skills and soft skills directly to HR managers. We provide pre-drive grooming and mock interview sessions to ensure our students stand out.",
+    "Our Global Partners": "Our partners are the leaders of their respective industries. From luxury hospitality brands like Taj, Marriott, and Hilton to top healthcare providers and global airlines, our students are placed in the best environments worldwide. These partnerships also help us keep our curriculum aligned with the latest industry trends and recruitment standards.",
+    "Placement FAQs": "Have questions about your placement journey? Our FAQ section covers everything from eligibility criteria and document preparation to salary packages and international job opportunities. We believe in transparency and want our students and parents to have a clear understanding of the transition from classroom to career.",
 
-    // Exams
-    "Exams": "Overview of all academic and competitive certifications hosted or supported by the Academy.",
-    "Apply Now": "Step-by-step guidance for exam registration, fee payment, and document submission.",
-    "Results": "Secure portal to check performance updates and download digital scorecards for recent evaluations.",
-    "Entry Ticket": "Instructions for downloading hall tickets and exam day protocols for all candidates.",
+    // Examination
+    "Available Exams": "DRRG Academy acts as a central hub for various academic and professional examinations. From internal assessments that track student progress to hosting regional and national certifications, we maintain a secure and professional testing environment. We ensure all candidates are well-informed about schedules and syllabus requirements.",
+    "Online Application": "Our application process for exams and certifications is streamlined through a digital portal. We provide step-by-step guidance on filling out application forms, uploading necessary documents, and processing examination fees. Dedicated help-desks are available to assist students with any technical queries during the process.",
+    "Check Results": "Celebrate your success through our real-time results portal. Students can access their detailed performance reports, download digital certificates, and track their academic trajectory. We provide comprehensive feedback along with results to help students identify areas for further improvement.",
+    "Download Entry Ticket": "Your gateway to the examination hall. Our system provides easy downloads for hall tickets and entry passes. We also outline clear protocols for exam days, including reporting times, allowed materials, and code of conduct to ensure a smooth and fair testing experience for all.",
 
     // Industries
-    "Hospitality": "Learn about emerging trends in global hospitality and the vast career landscape for skilled professionals.",
-    "Cruise & Aviation": "Insights into the dynamic world of luxury cruises and commercial aviation services.",
-    "Medical": "Overview of the healthcare support industry and the growing demand for qualified allied health staff.",
-    "Others": "Explore paths in emerging service sectors and niche vocational markets.",
+    "Hospitality Industry": "The hospitality industry is one of the fastest-growing global sectors. At DRRG, we focus on the entire value chain—from luxury hotel management and fine dining to event planning and guest services. We prepare our students for roles that demand excellence in communication, problem-solving, and professional etiquette.",
+    "Cruise & Aviation Sector": "The world of cruise and aviation offers a truly global career path. We train our students to handle the unique challenges of high-pressure environments, focusing on safety standards, guest relations, and operational efficiency. Whether on a luxury liner or an international flight, our graduates are known for their professionalism.",
+    "Medical & Healthcare": "The healthcare support industry is the backbone of modern wellness. We train professionals for the vital 'allied health' roles that support doctors and nurses. From diagnostic labs to emergency rooms, our graduates play a critical role in patient care and medical operations.",
+    "Secondary Industries": "Our 'Other Industries' vertical explores emerging opportunities in retail, logistics, digital media, and corporate services. We keep a close eye on market trends to ensure that our vocational training remains relevant to the needs of the modern, diversifying economy.",
 
     // Partner With Us
-    "Franchise Partners": "Collaborate with us to expand educational excellence. Low investment, high-impact partnership models available.",
+    "Franchise Partnerships": "Grow with a brand that is synonymous with educational excellence. Our franchise model is built on mutual success, providing partners with academic curriculum, staff training, and marketing support. Join us in our mission to bring quality vocational and professional education to every corner of the country.",
 
     // Newsletter
-    "News & Media": "Keep track of our latest campus news, press releases, and media mentions.",
-    "Blogs": "Thought leadership articles, student stories, and industry advice from our expert faculty.",
-    "Posts": "Engaging social highlights from campus life, cultural events, and industry visits.",
-    "Gallery": "Visual showcase of our facilities, graduation ceremonies, and student workshops.",
-    "Subscribe": "Stay updated on new course launches and admissions dates by joining our mailing list.",
+    "Latest News & Media": "Stay updated with the latest happenings at DRRG Academy. From new campus launches and industry MoU signings to student achievements and press releases, our news section is your primary source for academy-related updates.",
+    "Educational Blogs": "Gain insights from our academic leaders and industry experts. Our blog features articles on career guidance, industry trends, and student success stories, providing a deeper look into the world of professional education.",
+    "Social Feed Posts": "Catch the latest snapshots of campus life! Our social posts reflect the vibrant culture, cultural events, sports meets, and workshops that make life at DRRG Academy more than just studies.",
+    "Media Gallery": "A visual journey through our campuses. Explore our facilities, view photos from our graduation ceremonies, and see our students in action in our high-tech labs and simulation rooms.",
+    "Email Subscription": "Don't miss a beat. Subscribe to our newsletter to receive monthly updates, early alerts for admissions, and exclusive invitations to our webinars and campus events directly in your inbox.",
 
     // Contact
-    "Contact Us": "Reach out to our helpline for admissions, support, or general inquiries. We are here to help.",
-    "Our Presence": "Map and location details for our central office in Bangalore and regional training hubs.",
-    "Careers": "Join our faculty or administration. Browse open positions for educators and support staff.",
+    "Get In Touch": "Your journey with DRRG Academy starts with a conversation. Reach out to our admissions team for course advice, or contact our administration for support. We are committed to providing timely and helpful responses to all inquiries.",
+    "Our Local Presence": "With a strong presence across southern India and regional hubs worldwide, DRRG Academy is never too far away. Explore our office locations and training centers to find the campus that best fits your needs.",
+    "Join Our Team": "Are you passionate about shaping the future? DRRG Academy offers a dynamic work environment for educators, administrators, and industry experts. Join our team and be a part of the leading name in professional education.",
 
     // Student Portal
-    "Login": "Secure access for registered students to view schedules, course content, and track academic progress.",
-    "Registration": "Register here to start your application process for a new academic program at DRRG Academy.",
+    "Account Login": "Access your personalized learning dashboard. Our student portal provides secure access to course materials, schedules, attendance records, and faculty communication tools, keeping you connected throughout your academic journey.",
+    "New Registration": "Ready to take the first step? Our registration portal is the beginning of your professional transformation. Fill out your details, choose your program, and join a community of learners dedicated to excellence.",
   };
 
   const getExploreContent = (key) => exploreContent[key] || "Select an item to read more about it.";
@@ -240,8 +266,8 @@ const PublicLayout = () => {
     setActiveExploreCategory(category);
     setSelectedExploreItem(itemTitle);
     if (category.mega) {
-      setOpenMegaGroup("");     
-      setSelectedExploreItem("");    
+      setOpenMegaGroup("");
+      setSelectedExploreItem("");
     } else {
       setOpenMegaGroup("");
     }
@@ -278,7 +304,7 @@ const PublicLayout = () => {
       {/* Top Corporate Strip - Single Line forced */}
       <div className="bg-slate-900 text-slate-400 text-[10px] md:text-xs py-2.5 px-4 border-b border-slate-800 overflow-x-auto whitespace-nowrap scrollbar-hide">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-6 min-w-max md:min-w-0">
-          
+
           {/* Left: Verticals - Forces refresh via <a> */}
           <div className="flex items-center gap-3 md:gap-5 font-medium shrink-0">
             <a href="/" onClick={(e) => handleForcedNavigation(e, "/")} className="hover:text-white transition-colors">Dr R G Academy</a>
@@ -333,26 +359,26 @@ const PublicLayout = () => {
                       <div className="border-b border-slate-200 px-4 py-4 lg:px-6">
                         <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-6 overflow-x-auto">
                           {menuItems
-                            .filter((item) => item.submenu || item.mega) 
+                            .filter((item) => item.submenu || item.mega)
                             .map((item) => (
-                            <button
-                              key={item.title}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation(); 
-                                e.preventDefault();    
-                                handleExploreItemClick(
-                                  item,
-                                  item.submenu?.[0]?.title ||
-                                  item.mega?.[0]?.items?.[0] ||
-                                  item.title
-                                );
-                              }}
-                              className={`whitespace-nowrap text-sm font-semibold transition ${activeExploreCategory.title === item.title ? "text-slate-900 border-b-2 border-brand-600 pb-1" : "text-slate-600 hover:text-slate-900"}`}
-                            >
-                              {item.title}
-                            </button>
-                          ))}
+                              <button
+                                key={item.title}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  handleExploreItemClick(
+                                    item,
+                                    item.submenu?.[0]?.title ||
+                                    item.mega?.[0]?.items?.[0] ||
+                                    item.title
+                                  );
+                                }}
+                                className={`whitespace-nowrap text-sm font-semibold transition ${activeExploreCategory.title === item.title ? "text-slate-900 border-b-2 border-brand-600 pb-1" : "text-slate-600 hover:text-slate-900"}`}
+                              >
+                                {item.title}
+                              </button>
+                            ))}
                         </div>
                       </div>
 
@@ -415,11 +441,11 @@ const PublicLayout = () => {
                           </div>
                           <div className="mt-6 space-y-5 text-sm leading-7 text-slate-700">
                             <p>{getExploreContent(selectedExploreItem)}</p>
-                            
+
                             {/* Student Portal Logic: Show only relevant button */}
                             {activeExploreCategory.title === "Student Portal" && (
                               <div className="mt-4">
-                                {selectedExploreItem === "Login" && (
+                                {selectedExploreItem === "Account Login" && (
                                   <Link
                                     to="/login"
                                     onClick={() => setIsExploreOpen(false)}
@@ -428,7 +454,7 @@ const PublicLayout = () => {
                                     Go to Login
                                   </Link>
                                 )}
-                                {selectedExploreItem === "Registration" && (
+                                {selectedExploreItem === "New Registration" && (
                                   <Link
                                     to="/register"
                                     onClick={() => setIsExploreOpen(false)}
@@ -454,7 +480,7 @@ const PublicLayout = () => {
                 >
                   Log In
                 </Link>
-                <Link 
+                <Link
                   to="/register"
                   className="bg-white border border-brand-700 text-brand-700 px-5 py-2 rounded font-bold hover:bg-brand-50 transition-colors text-sm shadow-sm"
                 >
@@ -479,42 +505,42 @@ const PublicLayout = () => {
               {menuItems
                 .filter((item) => item.submenu || item.mega)
                 .map((item) => (
-                <div key={item.title} className="border-b border-gray-100 pb-3">
-                  <span className="block text-base font-semibold text-slate-700 py-2">
-                    {item.title}
-                  </span>
-                  {item.submenu && (
-                    <div className="pl-4 pt-2 space-y-1">
-                      {item.submenu.map((sub) => (
-                        <Link
-                          key={sub.title}
-                          to={sub.to}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="block text-sm text-slate-600 hover:text-slate-900"
-                        >
-                          {sub.title}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                  {item.mega && (
-                    <div className="pl-4 pt-2 space-y-4">
-                      {item.mega.map((group) => (
-                        <div key={group.title}>
-                          <p className="text-sm font-semibold text-slate-900">{group.title}</p>
-                          <div className="pl-2 pt-1 space-y-1">
-                            {group.items.map((sub) => (
-                              <span key={sub} className="block text-sm text-slate-600">
-                                {sub}
-                              </span>
-                            ))}
+                  <div key={item.title} className="border-b border-gray-100 pb-3">
+                    <span className="block text-base font-semibold text-slate-700 py-2">
+                      {item.title}
+                    </span>
+                    {item.submenu && (
+                      <div className="pl-4 pt-2 space-y-1">
+                        {item.submenu.map((sub) => (
+                          <Link
+                            key={sub.title}
+                            to={sub.to}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block text-sm text-slate-600 hover:text-slate-900"
+                          >
+                            {sub.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    {item.mega && (
+                      <div className="pl-4 pt-2 space-y-4">
+                        {item.mega.map((group) => (
+                          <div key={group.title}>
+                            <p className="text-sm font-semibold text-slate-900">{group.title}</p>
+                            <div className="pl-2 pt-1 space-y-1">
+                              {group.items.map((sub) => (
+                                <span key={sub} className="block text-sm text-slate-600">
+                                  {sub}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               <div className="pt-4 grid grid-cols-2 gap-4">
                 <Link
                   to="/login"
@@ -543,7 +569,7 @@ const PublicLayout = () => {
       {/* Professional Footer */}
       <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-12 mt-20 text-slate-600 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           {/* Featured Academy Verticals Section */}
           <div className="mb-16">
             <div className="flex items-center justify-between mb-8">
@@ -553,7 +579,7 @@ const PublicLayout = () => {
               </div>
               <Link to="/courses" className="text-brand-600 font-bold hover:underline">Explore All Courses →</Link>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-12 border-b border-slate-200">
               {[
                 { title: "Medical Education", desc: "Global MBBS & Healthcare guidance via Unicarewel.", img: medicalImg, link: "/unicarewel" },
@@ -606,10 +632,10 @@ const PublicLayout = () => {
                 Quick Links
               </h4>
               <ul className="space-y-4 font-medium text-slate-500">
-                <li><a href="/locate-us" onClick={(e) => handleForcedNavigation(e, "/locate-us")} className="hover:text-brand-700 transition-colors">Locate Us</a></li>
-                <li><a href="/privacy-policy" onClick={(e) => handleForcedNavigation(e, "/privacy-policy")} className="hover:text-brand-700 transition-colors">Privacy Policy</a></li>
-                <li><a href="/refund-policy" onClick={(e) => handleForcedNavigation(e, "/refund-policy")} className="hover:text-brand-700 transition-colors">Cancellation & Refund Policy</a></li>
-                <li><a href="/terms-conditions" onClick={(e) => handleForcedNavigation(e, "/terms-conditions")} className="hover:text-brand-700 transition-colors">Terms & Condition</a></li>
+                <li><a href="/?info=Locate+Us" className="hover:text-brand-700 transition-colors text-left block">Locate Us</a></li>
+                <li><a href="/?info=Privacy+Policy" className="hover:text-brand-700 transition-colors text-left block">Privacy Policy</a></li>
+                <li><a href="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700 transition-colors text-left block">Cancellation & Refund Policy</a></li>
+                <li><a href="/?info=Terms+%26+Condition" className="hover:text-brand-700 transition-colors text-left block">Terms & Condition</a></li>
               </ul>
             </div>
 
@@ -618,9 +644,10 @@ const PublicLayout = () => {
                 Programs
               </h4>
               <ul className="space-y-4 font-medium text-slate-500">
-                <li><a href="/courses/masters" onClick={(e) => handleForcedNavigation(e, "/courses/masters")} className="hover:text-brand-700 transition-colors">Master Degree Courses</a></li>
-                <li><a href="/courses/international" onClick={(e) => handleForcedNavigation(e, "/courses/international")} className="hover:text-brand-700 transition-colors">International Courses & Degree</a></li>
-                <li><a href="/opportunities/onsite" onClick={(e) => handleForcedNavigation(e, "/opportunities/onsite")} className="hover:text-brand-700 transition-colors">Onsite Opportunities</a></li>
+                <li><a href="/?info=Master+Degree+Courses" className="hover:text-brand-700 transition-colors text-left block">Master Degree Courses</a></li>
+                <li><a href="/?info=International+Degrees" className="hover:text-brand-700 transition-colors text-left block">International Courses & Degree</a></li>
+                <li><a href="/?info=Onsite+Training" className="hover:text-brand-700 transition-colors text-left block">Onsite Opportunities</a></li>
+                <li><a href="/?info=Vocational+Excellence" className="hover:text-brand-700 transition-colors text-left block">Vocational Excellence</a></li>
               </ul>
             </div>
 
@@ -631,16 +658,16 @@ const PublicLayout = () => {
                 </h4>
                 <ul className="grid grid-cols-1 gap-4">
                   <li>
-                    <a href="/downloads" onClick={(e) => handleForcedNavigation(e, "/downloads")} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand-300 hover:shadow-sm transition-all group">
-                      <span className="font-bold text-slate-700">Download Section</span>
+                    <a href="/?info=Download+Section" className="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand-300 hover:shadow-sm transition-all group">
+                      <span className="font-bold text-slate-700 text-left">Download Section</span>
                       <div className="p-2 bg-brand-50 rounded-xl text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
                         <ChevronDown size={14} className="rotate-180" />
                       </div>
                     </a>
                   </li>
                   <li>
-                    <a href="/payment" onClick={(e) => handleForcedNavigation(e, "/payment")} className="flex items-center justify-between p-4 bg-brand-600 rounded-2xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all group">
-                      <span className="font-bold text-white">Pay Now Page</span>
+                    <a href="/?info=Secure+Fee+Management" className="w-full flex items-center justify-between p-4 bg-brand-600 rounded-2xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all group">
+                      <span className="font-bold text-white text-left">Pay Now Page</span>
                       <div className="p-2 bg-white/20 rounded-xl text-white">
                         <Globe size={14} />
                       </div>
@@ -660,9 +687,9 @@ const PublicLayout = () => {
           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs">
             <p className="text-slate-400">© 2024-2026 DR R G ACADEMY LLP. | ISO 9001:2015 Certified | All Rights Reserved.</p>
             <div className="flex flex-wrap gap-4 md:gap-7 justify-center text-slate-400 font-bold uppercase tracking-tighter">
-              <a href="/privacy-policy" onClick={(e) => handleForcedNavigation(e, "/privacy-policy")} className="hover:text-brand-700">Privacy</a>
-              <a href="/terms-conditions" onClick={(e) => handleForcedNavigation(e, "/terms-conditions")} className="hover:text-brand-700">Terms</a>
-              <a href="/refund-policy" onClick={(e) => handleForcedNavigation(e, "/refund-policy")} className="hover:text-brand-700">Refund</a>
+              <a href="/?info=Privacy+Policy" className="hover:text-brand-700">Privacy</a>
+              <a href="/?info=Terms+%26+Condition" className="hover:text-brand-700">Terms</a>
+              <a href="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700">Refund</a>
               <a href="/disclaimer" className="hover:text-brand-700">Disclaimer</a>
             </div>
           </div>
