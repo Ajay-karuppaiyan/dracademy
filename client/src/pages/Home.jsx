@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Award,
@@ -18,6 +18,13 @@ import { useSearchParams } from "react-router-dom";
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const infoKey = searchParams.get("info");
+  const infoRef = useRef(null);
+
+  useEffect(() => {
+    if (infoKey && infoRef.current) {
+      infoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [infoKey]);
 
   const industrialInsights = {
     "Locate Us": "DRRG Academy’s physical footprint is strategically distributed to align with India’s most critical industrial hubs. Our main corporate headquarters in Bangalore, the Silicon Valley of India, serves as the central nerve center for our technology and management programs. Our Mangalore and Hubli campuses are specialized training arenas for hospitality and paramedical sciences, featuring dedicated simulation wings that replicate actual 5-star hotel lobbies and surgical wards. Internationally, our network extends through accredited consultancy partners in Southeast Asia and Europe, facilitating a seamless pipeline for students pursuing international internships and global job placements. Every one of our centers is equipped with Tier-1 infrastructure, high-speed campus-wide fiber networks, and multi-functional collaboration spaces that encourage peer-to-peer learning and industry interaction. We continue to expand our reachable 'Knowledge Nodes' to ensure that every student, regardless of geography, has access to the most advanced vocational tools and professional mentorship available in the current academic landscape.",
@@ -35,61 +42,7 @@ const Home = () => {
 
   return (
     <div className="bg-white">
-      {/* Dynamic Info Section (Triggered by Footer) */}
-      {infoKey && industrialInsights[infoKey] && (
-        <section className="bg-brand-50/50 border-b border-brand-100 py-20 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-[3rem] shadow-2xl shadow-brand-900/10 overflow-hidden border border-brand-100">
-              <div className="p-8 md:p-16">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                  <div>
-                    <div className="inline-flex items-center gap-2 bg-brand-100 text-brand-700 text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-4">
-                      <Info size={12} /> Institutional Intelligence
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-                      {infoKey}
-                    </h2>
-                  </div>
-                  <button 
-                    onClick={() => setSearchParams({})}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all active:scale-95"
-                  >
-                    <X size={18} /> Close Section
-                  </button>
-                </div>
 
-                <div className="grid lg:grid-cols-1 gap-12">
-                  <div className="prose prose-slate max-w-none">
-                    {industrialInsights[infoKey].split('\n').map((para, i) => (
-                      <p key={i} className="text-lg md:text-xl text-slate-600 leading-[1.8] mb-6 last:mb-0">
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-16 grid md:grid-cols-2 gap-8">
-                  <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 italic">Technical Compliance</p>
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                      All educational frameworks and institutional protocols outlined above are validated under the DRRG Academic Excellence standard and global industrial benchmarks.
-                    </p>
-                  </div>
-                  <div className="p-8 bg-brand-600 rounded-[2rem] text-white">
-                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-3">Academic Roadmap</p>
-                    <p className="text-sm text-white/90 leading-relaxed mb-4">
-                      Interested in integrating this knowledge into your career? Connect with our global academic desk for a personalized roadmap.
-                    </p>
-                    <Link to="/register" className="inline-flex items-center gap-2 font-bold text-sm bg-white text-brand-700 px-6 py-2 rounded-xl hover:bg-brand-50 transition-colors">
-                      Consult Counselor <ArrowRight size={14} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
       {/* Hero Section */}
       <section className="relative py-16 lg:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -413,6 +366,66 @@ const Home = () => {
           </Link>
         </div>
       </section>
+
+      {/* Dynamic Info Section (Triggered by Footer) - Now at bottom */}
+      {infoKey && industrialInsights[infoKey] && (
+        <section 
+          id="info-section" 
+          ref={infoRef}
+          className="bg-brand-50/50 border-t border-brand-100 py-10 animate-in fade-in slide-in-from-bottom-4 duration-700"
+        >
+          <div className="max-w-screen-2xl mx-auto">
+            <div className="bg-white shadow-2xl shadow-brand-900/10 overflow-hidden border border-brand-100">
+              <div className="p-8 md:p-20">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                  <div>
+                    <div className="inline-flex items-center gap-2 bg-brand-100 text-brand-700 text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-4">
+                      <Info size={12} /> Institutional Intelligence
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+                      {infoKey}
+                    </h2>
+                  </div>
+                  <button 
+                    onClick={() => setSearchParams({})}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all active:scale-95"
+                  >
+                    <X size={18} /> Close Section
+                  </button>
+                </div>
+
+                <div className="grid lg:grid-cols-1 gap-12">
+                  <div className="prose prose-slate max-w-none">
+                    {industrialInsights[infoKey].split('\n').map((para, i) => (
+                      <p key={i} className="text-lg md:text-xl text-slate-600 leading-[1.8] mb-6 last:mb-0">
+                        {para}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-16 grid md:grid-cols-2 gap-8">
+                  <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 italic">Technical Compliance</p>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                      All educational frameworks and institutional protocols outlined above are validated under the DRRG Academic Excellence standard and global industrial benchmarks.
+                    </p>
+                  </div>
+                  <div className="p-8 bg-brand-600 rounded-[2rem] text-white">
+                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-3">Academic Roadmap</p>
+                    <p className="text-sm text-white/90 leading-relaxed mb-4">
+                      Interested in integrating this knowledge into your career? Connect with our global academic desk for a personalized roadmap.
+                    </p>
+                    <Link to="/register" className="inline-flex items-center gap-2 font-bold text-sm bg-white text-brand-700 px-6 py-2 rounded-xl hover:bg-brand-50 transition-colors">
+                      Consult Counselor <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

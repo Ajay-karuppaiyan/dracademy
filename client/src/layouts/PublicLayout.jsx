@@ -632,10 +632,10 @@ const PublicLayout = () => {
                 Quick Links
               </h4>
               <ul className="space-y-4 font-medium text-slate-500">
-                <li><a href="/?info=Locate+Us" className="hover:text-brand-700 transition-colors text-left block">Locate Us</a></li>
-                <li><a href="/?info=Privacy+Policy" className="hover:text-brand-700 transition-colors text-left block">Privacy Policy</a></li>
-                <li><a href="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700 transition-colors text-left block">Cancellation & Refund Policy</a></li>
-                <li><a href="/?info=Terms+%26+Condition" className="hover:text-brand-700 transition-colors text-left block">Terms & Condition</a></li>
+                <li><Link to="/?info=Locate+Us" className="hover:text-brand-700 transition-colors text-left block">Locate Us</Link></li>
+                <li><Link to="/?info=Privacy+Policy" className="hover:text-brand-700 transition-colors text-left block">Privacy Policy</Link></li>
+                <li><Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700 transition-colors text-left block">Cancellation & Refund Policy</Link></li>
+                <li><Link to="/?info=Terms+%26+Condition" className="hover:text-brand-700 transition-colors text-left block">Terms & Condition</Link></li>
               </ul>
             </div>
 
@@ -644,10 +644,10 @@ const PublicLayout = () => {
                 Programs
               </h4>
               <ul className="space-y-4 font-medium text-slate-500">
-                <li><a href="/?info=Master+Degree+Courses" className="hover:text-brand-700 transition-colors text-left block">Master Degree Courses</a></li>
-                <li><a href="/?info=International+Degrees" className="hover:text-brand-700 transition-colors text-left block">International Courses & Degree</a></li>
-                <li><a href="/?info=Onsite+Training" className="hover:text-brand-700 transition-colors text-left block">Onsite Opportunities</a></li>
-                <li><a href="/?info=Vocational+Excellence" className="hover:text-brand-700 transition-colors text-left block">Vocational Excellence</a></li>
+                <li><Link to="/?info=Master+Degree+Courses" className="hover:text-brand-700 transition-colors text-left block">Master Degree Courses</Link></li>
+                <li><Link to="/?info=International+Degrees" className="hover:text-brand-700 transition-colors text-left block">International Courses & Degree</Link></li>
+                <li><Link to="/?info=Onsite+Training" className="hover:text-brand-700 transition-colors text-left block">Onsite Opportunities</Link></li>
+                <li><Link to="/?info=Vocational+Excellence" className="hover:text-brand-700 transition-colors text-left block">Vocational Excellence</Link></li>
               </ul>
             </div>
 
@@ -658,20 +658,20 @@ const PublicLayout = () => {
                 </h4>
                 <ul className="grid grid-cols-1 gap-4">
                   <li>
-                    <a href="/?info=Download+Section" className="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand-300 hover:shadow-sm transition-all group">
+                    <Link to="/?info=Download+Section" className="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand-300 hover:shadow-sm transition-all group">
                       <span className="font-bold text-slate-700 text-left">Download Section</span>
                       <div className="p-2 bg-brand-50 rounded-xl text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
                         <ChevronDown size={14} className="rotate-180" />
                       </div>
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="/?info=Secure+Fee+Management" className="w-full flex items-center justify-between p-4 bg-brand-600 rounded-2xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all group">
+                    <Link to="/?info=Secure+Fee+Management" className="w-full flex items-center justify-between p-4 bg-brand-600 rounded-2xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all group">
                       <span className="font-bold text-white text-left">Pay Now Page</span>
                       <div className="p-2 bg-white/20 rounded-xl text-white">
                         <Globe size={14} />
                       </div>
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -687,10 +687,11 @@ const PublicLayout = () => {
           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs">
             <p className="text-slate-400">© 2024-2026 DR R G ACADEMY LLP. | ISO 9001:2015 Certified | All Rights Reserved.</p>
             <div className="flex flex-wrap gap-4 md:gap-7 justify-center text-slate-400 font-bold uppercase tracking-tighter">
-              <a href="/?info=Privacy+Policy" className="hover:text-brand-700">Privacy</a>
-              <a href="/?info=Terms+%26+Condition" className="hover:text-brand-700">Terms</a>
-              <a href="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700">Refund</a>
-              <a href="/disclaimer" className="hover:text-brand-700">Disclaimer</a>
+              <Link to="/?info=Privacy+Policy" className="hover:text-brand-700">Privacy</Link>
+              <Link to="/?info=Terms+%26+Condition" className="hover:text-brand-700">Terms</Link>
+              <Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700">Refund</Link>
+              <Link to="/analytics" className="hover:text-brand-700">Analytics</Link>
+              <Link to="/disclaimer" className="hover:text-brand-700">Disclaimer</Link>
             </div>
           </div>
         </div>
