@@ -162,6 +162,8 @@ const PublicLayout = () => {
   const [openMegaGroup, setOpenMegaGroup] = useState(
     menuItems.find((item) => item.mega)?.mega?.[0]?.title || ""
   );
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState("");
+  const [selectedMobileItem, setSelectedMobileItem] = useState("");
   const exploreRef = useRef(null);
 
   const exploreContent = {
@@ -289,8 +291,12 @@ const PublicLayout = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    if (!isMenuOpen) {
+      setExpandedMobileCategory("");
+      setSelectedMobileItem("");
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [activeExploreCategory]);
+  }, [activeExploreCategory, isMenuOpen]);
 
   // Handler for forced refresh navigation
   const handleForcedNavigation = (e, to) => {
@@ -302,27 +308,53 @@ const PublicLayout = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900">
 
       {/* Top Corporate Strip - Single Line forced */}
-      <div className="bg-slate-900 text-slate-400 text-[10px] md:text-xs py-2.5 px-4 border-b border-slate-800 overflow-x-auto whitespace-nowrap scrollbar-hide">
-        <div className="max-w-7xl mx-auto flex justify-between items-center gap-6 min-w-max md:min-w-0">
+      <div className="bg-slate-900 text-slate-400 text-[10px] md:text-xs py-2.5 px-4 border-b border-slate-800 overflow-hidden whitespace-nowrap scrollbar-hide">
+        <div className="max-w-7xl mx-auto flex md:justify-between items-center gap-6 min-w-max md:min-w-0">
+          
+          <div className="flex items-center gap-8 md:gap-6 md:w-full md:justify-between animate-marquee md:animate-none">
+            {/* The set of links to repeat */}
+            <div className="flex items-center gap-6 md:gap-5 md:w-full md:justify-between">
+              {/* Left: Verticals */}
+              <div className="flex items-center gap-3 md:gap-5 font-medium shrink-0">
+                <a href="/" onClick={(e) => handleForcedNavigation(e, "/")} className="hover:text-white transition-colors">Dr R G Academy</a>
+                <span className="text-slate-700">|</span>
+                <a href="/unicarewel" onClick={(e) => handleForcedNavigation(e, "/unicarewel")} className="hover:text-white transition-colors">Unicarewel</a>
+                <span className="text-slate-700">|</span>
+                <a href="/rgmtn" onClick={(e) => handleForcedNavigation(e, "/rgmtn")} className="hover:text-white transition-colors">RGMTN</a>
+                <span className="text-slate-700">|</span>
+                <a href="/bglrgm" onClick={(e) => handleForcedNavigation(e, "/bglrgm")} className="hover:text-white transition-colors">BGLRGM</a>
+              </div>
 
-          {/* Left: Verticals - Forces refresh via <a> */}
-          <div className="flex items-center gap-3 md:gap-5 font-medium shrink-0">
-            <a href="/" onClick={(e) => handleForcedNavigation(e, "/")} className="hover:text-white transition-colors">Dr R G Academy</a>
-            <span className="text-slate-700">|</span>
-            <a href="/unicarewel" onClick={(e) => handleForcedNavigation(e, "/unicarewel")} className="hover:text-white transition-colors">Unicarewel</a>
-            <span className="text-slate-700">|</span>
-            <a href="/rgmtn" onClick={(e) => handleForcedNavigation(e, "/rgmtn")} className="hover:text-white transition-colors">RGMTN</a>
-            <span className="text-slate-700">|</span>
-            <a href="/bglrgm" onClick={(e) => handleForcedNavigation(e, "/bglrgm")} className="hover:text-white transition-colors">BGLRGM</a>
-          </div>
+              {/* Right: Actions */}
+              <div className="flex items-center gap-4 md:gap-5 font-semibold shrink-0">
+                <Link to="/?info=Admissions" className="hover:text-white transition-colors">Admissions</Link>
+                <Link to="/register" className="hover:text-white transition-colors">Apply Now</Link>
+                <Link to="/?info=Scholarships" className="hover:text-white transition-colors">Scholarships</Link>
+                <Link to="/?info=Resource+Supply" className="hover:text-white transition-colors">Resource Supply</Link>
+                <Link to="/?info=Benefits" className="hover:text-white transition-colors">Benefits</Link>
+              </div>
+            </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-4 md:gap-5 font-semibold shrink-0">
-            <a href="/admissions" onClick={(e) => handleForcedNavigation(e, "/admissions")} className="hover:text-white transition-colors">Admissions</a>
-            <a href="/apply" onClick={(e) => handleForcedNavigation(e, "/apply")} className="hover:text-white transition-colors">Apply Now</a>
-            <a href="/scholarships" onClick={(e) => handleForcedNavigation(e, "/scholarships")} className="hover:text-white transition-colors">Scholarships</a>
-            <a href="/resource-supply" onClick={(e) => handleForcedNavigation(e, "/resource-supply")} className="hover:text-white transition-colors">Resource Supply</a>
-            <a href="/benefits" onClick={(e) => handleForcedNavigation(e, "/benefits")} className="hover:text-white transition-colors">Benefits</a>
+            {/* Duplicate for Mobile Marquee (Hidden on md and up) */}
+            <div className="flex md:hidden items-center gap-6 font-medium">
+              <span className="text-slate-800">|</span>
+              <div className="flex items-center gap-3 font-medium shrink-0">
+                <a href="/" onClick={(e) => handleForcedNavigation(e, "/")} className="hover:text-white transition-colors">Dr R G Academy</a>
+                <span className="text-slate-700">|</span>
+                <a href="/unicarewel" onClick={(e) => handleForcedNavigation(e, "/unicarewel")} className="hover:text-white transition-colors">Unicarewel</a>
+                <span className="text-slate-700">|</span>
+                <a href="/rgmtn" onClick={(e) => handleForcedNavigation(e, "/rgmtn")} className="hover:text-white transition-colors">RGMTN</a>
+                <span className="text-slate-700">|</span>
+                <a href="/bglrgm" onClick={(e) => handleForcedNavigation(e, "/bglrgm")} className="hover:text-white transition-colors">BGLRGM</a>
+              </div>
+              <div className="flex items-center gap-4 font-semibold shrink-0">
+                <Link to="/?info=Admissions" className="hover:text-white transition-colors">Admissions</Link>
+                <Link to="/register" className="hover:text-white transition-colors text-brand-400 font-bold">Apply Now</Link>
+                <Link to="/?info=Scholarships" className="hover:text-white transition-colors">Scholarships</Link>
+                <Link to="/?info=Resource+Supply" className="hover:text-white transition-colors">Resource Supply</Link>
+                <Link to="/?info=Benefits" className="hover:text-white transition-colors">Benefits</Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -498,64 +530,110 @@ const PublicLayout = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Overlay */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-b border-gray-200 shadow-lg">
-            <div className="px-4 py-6 space-y-4">
-              {menuItems
-                .filter((item) => item.submenu || item.mega)
-                .map((item) => (
-                  <div key={item.title} className="border-b border-gray-100 pb-3">
-                    <span className="block text-base font-semibold text-slate-700 py-2">
-                      {item.title}
-                    </span>
-                    {item.submenu && (
-                      <div className="pl-4 pt-2 space-y-1">
-                        {item.submenu.map((sub) => (
-                          <Link
-                            key={sub.title}
-                            to={sub.to}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block text-sm text-slate-600 hover:text-slate-900"
-                          >
-                            {sub.title}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    {item.mega && (
-                      <div className="pl-4 pt-2 space-y-4">
-                        {item.mega.map((group) => (
-                          <div key={group.title}>
-                            <p className="text-sm font-semibold text-slate-900">{group.title}</p>
-                            <div className="pl-2 pt-1 space-y-1">
-                              {group.items.map((sub) => (
-                                <span key={sub} className="block text-sm text-slate-600">
-                                  {sub}
-                                </span>
-                              ))}
-                            </div>
+          <div className="md:hidden fixed inset-0 z-[100]">
+            {/* Backdrop - NO BLUR AS REQUESTED */}
+            <div 
+              className="absolute inset-0 bg-slate-900/40"
+              onClick={() => setIsMenuOpen(false)}
+            ></div>
+            
+            {/* Menu Content */}
+            <div className="absolute top-[80px] left-0 w-full max-h-[calc(100vh-80px)] bg-white border-b border-slate-200 shadow-2xl overflow-y-auto">
+              <div className="px-5 py-8 space-y-4">
+                {menuItems.map((item) => (
+                  <div key={item.title} className="border-b border-slate-50 pb-4">
+                    {item.submenu || item.mega ? (
+                      <div>
+                        <button 
+                          onClick={() => setExpandedMobileCategory(expandedMobileCategory === item.title ? "" : item.title)}
+                          className="flex items-center justify-between w-full text-lg font-bold text-slate-900 py-2"
+                        >
+                          {item.title}
+                          <ChevronDown size={20} className={`transition-transform duration-300 ${expandedMobileCategory === item.title ? "rotate-180" : ""}`} />
+                        </button>
+                        
+                        {expandedMobileCategory === item.title && (
+                          <div className="mt-4 pl-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                            {item.submenu && item.submenu.map((sub) => (
+                              <div key={sub.title}>
+                                <button 
+                                  onClick={() => setSelectedMobileItem(selectedMobileItem === sub.title ? "" : sub.title)}
+                                  className={`block w-full text-left text-base font-bold transition-colors ${selectedMobileItem === sub.title ? "text-brand-700" : "text-slate-700 hover:text-brand-600"}`}
+                                >
+                                  {sub.title}
+                                </button>
+                                {selectedMobileItem === sub.title && (
+                                  <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-100 animate-in fade-in duration-500">
+                                    <p className="text-sm leading-relaxed text-slate-600">
+                                      {getExploreContent(sub.title)}
+                                    </p>
+                                    <Link 
+                                      to={sub.to} 
+                                      onClick={() => setIsMenuOpen(false)}
+                                      className="inline-block mt-3 text-sm font-bold text-brand-700 hover:underline"
+                                    >
+                                      Go to Course Page →
+                                    </Link>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {item.mega && item.mega.map((group) => (
+                              <div key={group.title} className="space-y-4">
+                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{group.title}</p>
+                                <div className="space-y-3 pl-2">
+                                  {group.items.map((sub) => (
+                                    <div key={sub}>
+                                      <button 
+                                        onClick={() => setSelectedMobileItem(selectedMobileItem === sub ? "" : sub)}
+                                        className={`block w-full text-left text-sm font-bold transition-colors ${selectedMobileItem === sub ? "text-brand-700" : "text-slate-600"}`}
+                                      >
+                                        {sub}
+                                      </button>
+                                      {selectedMobileItem === sub && (
+                                        <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-100 animate-in fade-in duration-500 text-xs leading-relaxed text-slate-500">
+                                          {getExploreContent(sub)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
+                    ) : (
+                      <Link
+                        to={item.to}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="text-lg font-bold text-slate-900 py-2 block"
+                      >
+                        {item.title}
+                      </Link>
                     )}
                   </div>
                 ))}
-              <div className="pt-4 grid grid-cols-2 gap-4">
-                <Link
-                  to="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-center py-3 border border-slate-200 rounded font-semibold text-slate-600"
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-center py-3 bg-brand-700 text-white rounded font-semibold shadow-sm"
-                >
-                  Join Free
-                </Link>
+
+                <div className="pt-6 grid grid-cols-2 gap-4">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex justify-center items-center py-4 border-2 border-slate-200 rounded-xl font-bold text-slate-700"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex justify-center items-center py-4 bg-brand-700 text-white rounded-xl font-bold"
+                  >
+                    Join Free
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -567,131 +645,99 @@ const PublicLayout = () => {
       </main>
 
       {/* Professional Footer */}
-      <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-12 mt-20 text-slate-600 text-sm">
+      <footer className="bg-brand-900 border-t border-brand-800 pt-16 pb-12 mt-20 text-brand-50 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Featured Academy Verticals Section */}
-          <div className="mb-16">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h4 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Our Academy Verticals</h4>
-                <p className="text-slate-500 mt-1">Specialized institutions under the DRRG umbrella.</p>
-              </div>
-              <Link to="/courses" className="text-brand-600 font-bold hover:underline">Explore All Courses →</Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-12 border-b border-slate-200">
-              {[
-                { title: "Medical Education", desc: "Global MBBS & Healthcare guidance via Unicarewel.", img: medicalImg, link: "/unicarewel" },
-                { title: "Hospitality Academy", desc: "World-class tourism training at RGMTN campuses.", img: hospitalityImg, link: "/rgmtn" },
-                { title: "Vocational Excellence", desc: "Industry-aligned skill building by BGLRGM experts.", img: vocationalImg, link: "/bglrgm" },
-                { title: "DRRG Main Campus", desc: "Core academic programs and Montessori education.", img: campusImg, link: "/about-us" },
-              ].map((item, idx) => (
-                <Link key={idx} to={item.link} className="group overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-lg hover:border-brand-200 transition-all duration-300">
-                  <div className="relative h-44 overflow-hidden">
-                    <img src={item.img} alt={item.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent group-hover:from-red-600/10 transition-colors"></div>
-                  </div>
-                  <div className="p-5 text-center">
-                    <h5 className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors mb-1">{item.title}</h5>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-widest">{item.desc}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 mb-12">
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-6">
-                <div className="p-1 rounded bg-white shadow-sm border border-slate-100">
-                  <img src={logo} alt="DRRG Academy Logo" className="h-9 w-9 object-contain" />
+                <div className="p-1.5 rounded-xl bg-white shadow-xl">
+                  <img src={logo} alt="DRRG Academy Logo" className="h-10 w-10 object-contain" />
                 </div>
-                <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                <span className="text-2xl font-bold text-white tracking-tight">
                   DRRG Academy
                 </span>
               </div>
-              <p className="mb-6 max-w-sm leading-relaxed text-slate-500">
+              <p className="mb-6 max-w-sm leading-relaxed text-brand-100/80">
                 A premier group of institutions dedicated to excellence in professional education, vocational training, and global consultancy. Empowering the next generation of global leaders.
               </p>
               <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all shadow-md">
-                  <Facebook size={18} />
+                <a href="#" className="w-11 h-11 flex items-center justify-center bg-white/10 border border-white/20 rounded-full hover:bg-white hover:text-brand-900 transition-all shadow-lg active:scale-95">
+                  <Facebook size={20} />
                 </a>
-                <a href="#" className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all shadow-md">
-                  <Instagram size={18} />
+                <a href="#" className="w-11 h-11 flex items-center justify-center bg-white/10 border border-white/20 rounded-full hover:bg-white hover:text-brand-900 transition-all shadow-lg active:scale-95">
+                  <Instagram size={20} />
                 </a>
-                <a href="#" className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all shadow-md">
-                  <Linkedin size={18} />
+                <a href="#" className="w-11 h-11 flex items-center justify-center bg-white/10 border border-white/20 rounded-full hover:bg-white hover:text-brand-900 transition-all shadow-lg active:scale-95">
+                  <Linkedin size={20} />
                 </a>
               </div>
             </div>
 
             <div className="col-span-1">
-              <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-[0.2em]">
+              <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-[0.2em] opacity-80">
                 Quick Links
               </h4>
-              <ul className="space-y-4 font-medium text-slate-500">
-                <li><Link to="/?info=Locate+Us" className="hover:text-brand-700 transition-colors text-left block">Locate Us</Link></li>
-                <li><Link to="/?info=Privacy+Policy" className="hover:text-brand-700 transition-colors text-left block">Privacy Policy</Link></li>
-                <li><Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700 transition-colors text-left block">Cancellation & Refund Policy</Link></li>
-                <li><Link to="/?info=Terms+%26+Condition" className="hover:text-brand-700 transition-colors text-left block">Terms & Condition</Link></li>
+              <ul className="space-y-4 font-medium text-brand-100">
+                <li><Link to="/?info=Locate+Us" className="hover:text-white transition-colors text-left block">Locate Us</Link></li>
+                <li><Link to="/?info=Privacy+Policy" className="hover:text-white transition-colors text-left block">Privacy Policy</Link></li>
+                <li><Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-white transition-colors text-left block">Cancellation & Refund Policy</Link></li>
+                <li><Link to="/?info=Terms+%26+Condition" className="hover:text-white transition-colors text-left block">Terms & Condition</Link></li>
               </ul>
             </div>
 
             <div className="col-span-1">
-              <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-[0.2em]">
+              <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-[0.2em] opacity-80">
                 Programs
               </h4>
-              <ul className="space-y-4 font-medium text-slate-500">
-                <li><Link to="/?info=Master+Degree+Courses" className="hover:text-brand-700 transition-colors text-left block">Master Degree Courses</Link></li>
-                <li><Link to="/?info=International+Degrees" className="hover:text-brand-700 transition-colors text-left block">International Courses & Degree</Link></li>
-                <li><Link to="/?info=Onsite+Training" className="hover:text-brand-700 transition-colors text-left block">Onsite Opportunities</Link></li>
-                <li><Link to="/?info=Vocational+Excellence" className="hover:text-brand-700 transition-colors text-left block">Vocational Excellence</Link></li>
+              <ul className="space-y-4 font-medium text-brand-100">
+                <li><Link to="/?info=Master+Degree+Courses" className="hover:text-white transition-colors text-left block">Master Degree Courses</Link></li>
+                <li><Link to="/?info=International+Degrees" className="hover:text-white transition-colors text-left block">International Courses & Degree</Link></li>
+                <li><Link to="/?info=Onsite+Training" className="hover:text-white transition-colors text-left block">Onsite Opportunities</Link></li>
+                <li><Link to="/?info=Vocational+Excellence" className="hover:text-white transition-colors text-left block">Vocational Excellence</Link></li>
               </ul>
             </div>
 
             <div className="col-span-2 space-y-8">
               <div>
-                <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-[0.2em]">
+                <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-[0.2em] opacity-80">
                   Resources
                 </h4>
                 <ul className="grid grid-cols-1 gap-4">
                   <li>
-                    <Link to="/?info=Download+Section" className="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand-300 hover:shadow-sm transition-all group">
-                      <span className="font-bold text-slate-700 text-left">Download Section</span>
-                      <div className="p-2 bg-brand-50 rounded-xl text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                    <Link to="/?info=Download+Section" className="w-full flex items-center justify-between p-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/20 transition-all group">
+                      <span className="font-bold text-white text-left">Download Section</span>
+                      <div className="p-2 bg-white/20 rounded-xl text-white group-hover:bg-white group-hover:text-brand-900 transition-colors">
                         <ChevronDown size={14} className="rotate-180" />
                       </div>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/?info=Secure+Fee+Management" className="w-full flex items-center justify-between p-4 bg-brand-600 rounded-2xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all group">
-                      <span className="font-bold text-white text-left">Pay Now Page</span>
-                      <div className="p-2 bg-white/20 rounded-xl text-white">
+                    <Link to="/?info=Secure+Fee+Management" className="w-full flex items-center justify-between p-4 bg-white rounded-2xl hover:bg-brand-50 shadow-2xl transition-all group">
+                      <span className="font-bold text-brand-900 text-left">Pay Now Page</span>
+                      <div className="p-2 bg-brand-600 rounded-xl text-white group-hover:bg-brand-700 transition-all">
                         <Globe size={14} />
                       </div>
                     </Link>
                   </li>
                 </ul>
               </div>
-              <div className="p-4 bg-slate-100 rounded-2xl">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Main Office</p>
-                <p className="text-slate-600 text-xs leading-relaxed">
+              <div className="p-5 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <p className="text-[10px] font-bold text-brand-200 uppercase tracking-widest mb-2 italic">Main Office</p>
+                <p className="text-brand-50 text-xs leading-relaxed">
                   Padmanabhanagar, Bangalore, Karnataka - 560070, India.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs">
-            <p className="text-slate-400">© 2024-2026 DR R G ACADEMY LLP. | ISO 9001:2015 Certified | All Rights Reserved.</p>
-            <div className="flex flex-wrap gap-4 md:gap-7 justify-center text-slate-400 font-bold uppercase tracking-tighter">
-              <Link to="/?info=Privacy+Policy" className="hover:text-brand-700">Privacy</Link>
-              <Link to="/?info=Terms+%26+Condition" className="hover:text-brand-700">Terms</Link>
-              <Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-brand-700">Refund</Link>
-              <Link to="/analytics" className="hover:text-brand-700">Analytics</Link>
-              <Link to="/disclaimer" className="hover:text-brand-700">Disclaimer</Link>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs text-brand-200/60 font-medium">
+            <p>© 2024-2026 DR R G ACADEMY LLP. | ISO 9001:2015 Certified | All Rights Reserved.</p>
+            <div className="flex flex-wrap gap-4 md:gap-7 justify-center uppercase tracking-widest">
+              <Link to="/?info=Privacy+Policy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/?info=Terms+%26+Condition" className="hover:text-white transition-colors">Terms</Link>
+              <Link to="/?info=Cancellation+%26+Refund+Policy" className="hover:text-white transition-colors">Refund</Link>
+              <Link to="/analytics" className="hover:text-white transition-colors">Analytics</Link>
+              <Link to="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
             </div>
           </div>
         </div>

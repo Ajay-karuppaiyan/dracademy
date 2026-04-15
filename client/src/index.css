@@ -105,3 +105,18 @@ body {
     padding-top: 4px !important;
     padding-bottom: 4px !important;
 }
+/* Marquee Animation for Top Strip on Mobile */
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+    animation-play-state: paused;
+}
