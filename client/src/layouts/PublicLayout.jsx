@@ -6,6 +6,7 @@ import medicalImg from "../assets/medical.png";
 import hospitalityImg from "../assets/hospitality.png";
 import vocationalImg from "../assets/vocational.png";
 import campusImg from "../assets/campus.png";
+import FloatingContactMenu from "../components/FloatingContactMenu";
 
 const menuItems = [
   { title: "Home", to: "/" },
@@ -742,6 +743,7 @@ const PublicLayout = () => {
           </div>
         </div>
       </footer>
+      <FloatingContactMenu />
     </div>
   );
 };
