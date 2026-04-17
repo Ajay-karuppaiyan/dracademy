@@ -1,17 +1,30 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 import { MessageCircle, Phone, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const FloatingContactMenu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
-    alert('Thank you for your enquiry. We will get back to you soon!');
-    setFormData({ name: '', phone: '', email: '', message: '' });
+    try {
+      setIsSubmitting(true);
+      const res = await axios.post('http://localhost:5000/api/enquiries', formData);
+      if (res.data.success) {
+        toast.success('Thank you for your enquiry. We will get back to you soon!');
+        setFormData({ name: '', phone: '', email: '', message: '' });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to send enquiry. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

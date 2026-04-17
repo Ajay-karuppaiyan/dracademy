@@ -4,6 +4,7 @@ const { upload } = require('../config/cloudinary');
 const Student = require('../models/Student');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Vendor = require('../models/Vendor');
 
 // // ======================================================
 // // CREATE STUDENT (Creates User + Student)
@@ -384,5 +385,59 @@ router.patch('/:id/status', protect, admin, async (req, res) => {
   }
 });
 
+
+//////////////////////////////////////////////////////
+// PROMOTE STUDENT AS INTERN (HR/Admin)
+//////////////////////////////////////////////////////
+router.post("/:id/promote-intern", protect, async (req, res) => {
+  try {
+    const { vendorId, location, startDate, endDate, paymentBy } = req.body;
+
+    if (req.user.role !== 'admin' && req.user.role !== 'hr') {
+      return res.status(403).json({ message: "Only admin or HR can promote a student" });
+    }
+
+    const student = await Student.findById(req.params.id);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const internshipData = {
+      vendor: vendor._id,
+      vendorName: vendor.companyName,
+      location,
+      startDate,
+      endDate,
+      paymentBy,
+      status: 'active'
+    };
+
+    if (student.internships && student.internships.length > 0) {
+      // Update the last internship
+      const lastIndex = student.internships.length - 1;
+      student.internships.set(lastIndex, internshipData);
+    } else {
+      student.internships.push(internshipData);
+    }
+
+    student.markModified('internships');
+    await student.save();
+
+    const updatedStudent = await Student.findById(student._id)
+      .populate("user", "-password")
+      .populate("parent", "name email")
+      .populate("enrolledCourses.course", "title price category duration")
+      .populate("center", "name location");
+
+    res.json({ message: "Student promoted as intern successfully", student: updatedStudent });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

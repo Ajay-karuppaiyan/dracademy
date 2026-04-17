@@ -30,6 +30,8 @@ import AdministrativeConfigs from "./pages/admin/AdministrativeConfigs";
 import HR from "./pages/dashboard/HR";
 import Settings from "./pages/dashboard/Settings";
 import Students from "./pages/dashboard/Students";
+import VendorManagement from "./pages/admin/VendorManagement";
+import VendorDashboard from "./pages/dashboard/VendorDashboard";
 import ParentManagement from "./pages/admin/ParentManagement";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ChildAttendance from "./pages/parent/ChildAttendance";
@@ -49,6 +51,10 @@ import Notifications from "./pages/dashboard/Notifications";
 import LeaveRequestList from "./components/LeaveRequestList";
 
 import Loading from "./components/Loading";
+
+// Vendor Pages
+import VendorAttendance from "./pages/vendor/VendorAttendance";
+import VendorLeaves from "./pages/vendor/VendorLeaves";
 
 // Helper components for professional placeholders
 const PlaceholderPage = ({ title, content, features }) => (
@@ -106,6 +112,10 @@ const DashboardRedirect = () => {
 
   if (user?.role === "parent") {
     return <Navigate to="/dashboard/parent-dashboard" replace />;
+  }
+
+  if (user?.role === "vendor") {
+    return <Navigate to="/dashboard/vendor" replace />;
   }
 
   return <Dashboard />;
@@ -271,6 +281,10 @@ function App() {
             <Route path="admin/courses" element={<CourseManagement />} />
             <Route path="admin/configs" element={<AdministrativeConfigs />} />
             <Route path="admin/parents" element={<ParentManagement />} />
+            <Route path="admin/vendors" element={<VendorManagement />} />
+            <Route path="vendor" element={<VendorDashboard />} />
+            <Route path="vendor/attendance" element={<VendorAttendance />} />
+            <Route path="vendor/leaves" element={<VendorLeaves />} />
 
             {/* HR */}
             <Route path="hr" element={<HR />} />

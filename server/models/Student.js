@@ -149,6 +149,19 @@ mobile: String,
     },
   ],
 
+  // INTERNSHIP DETAILS
+  internships: [
+    {
+      vendor: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor" },
+      vendorName: String,
+      location: String,
+      startDate: Date,
+      endDate: Date,
+      paymentBy: String,
+      status: { type: String, enum: ['active', 'completed', 'terminated'], default: 'active' }
+    }
+  ],
+
 center: {
 type: mongoose.Schema.Types.ObjectId,
 ref: "Center",

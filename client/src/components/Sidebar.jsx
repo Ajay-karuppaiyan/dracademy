@@ -18,7 +18,8 @@ import {
   MonitorPlay,
   Megaphone,
   Receipt,
-  MessageSquare 
+  MessageSquare,
+  Briefcase
 } from "lucide-react";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
@@ -127,6 +128,12 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
 
+  const vendorItems = [
+    { icon: <LayoutDashboard size={22} />, label: "Dashboard", path: "/dashboard/vendor" },
+    { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/vendor/attendance" },
+    { icon: <UserCheck size={22} />, label: "Leave Requests", path: "/dashboard/vendor/leaves" },
+  ];
+
   // ================= ROLE BASED NAVIGATION =================
   let currentNavItems = [];
 
@@ -144,10 +151,13 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     currentNavItems = financeItems;
   } else if (role === "center") {
     currentNavItems = centerItems;
+  } else if (role === "vendor") {
+    currentNavItems = vendorItems;
   }
 
   // ================= ADMIN EXTRA ZONE =================
   const superAdminItems = [
+    { icon: <Briefcase size={22} />, label: "Vendor Mgmt", path: "/dashboard/admin/vendors" },
     { icon: <Users size={22} />, label: "Parent Mgmt", path: "/dashboard/admin/parents" },
     { icon: <ShieldCheck size={22} />, label: "Course Mgmt", path: "/dashboard/admin/courses" },
     { icon: <Building2 size={22} />, label: "Administrative", path: "/dashboard/admin/configs" },

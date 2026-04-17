@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
-import { Eye, Trash2, Edit2 } from "lucide-react";
+import { Eye, Trash2, Edit2, Briefcase } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
@@ -12,6 +12,15 @@ const Students = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
+  const [promoteConfig, setPromoteConfig] = useState({ isOpen: false, student: null });
+  const [vendors, setVendors] = useState([]);
+  const [promoteForm, setPromoteForm] = useState({
+    vendorId: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+    paymentBy: ""
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 5;
@@ -30,6 +39,16 @@ const Students = () => {
       }
     };
     fetchCenters();
+
+    const fetchVendors = async () => {
+      try {
+        const { data } = await api.get("/vendors");
+        setVendors(data || []);
+      } catch (err) {
+        console.error("Failed to fetch vendors:", err);
+      }
+    };
+    fetchVendors();
   }, []);
 
   useEffect(() => {
@@ -185,8 +204,38 @@ const handleUpdate = async () => {
         <button onClick={() => handleDelete(row._id)} className="p-2 bg-red-50 rounded-lg hover:bg-red-100 transition shadow-sm" title="Delete">
           <Trash2 size={16} className="text-red-600" />
         </button>
+        {row.internships && row.internships.length > 0 ? (
+          <button 
+            onClick={() => {
+              const latest = row.internships[row.internships.length - 1];
+              setPromoteForm({
+                vendorId: latest.vendor?._id || latest.vendor || "",
+                location: latest.location || "",
+                startDate: latest.startDate ? latest.startDate.split('T')[0] : "",
+                endDate: latest.endDate ? latest.endDate.split('T')[0] : "",
+                paymentBy: latest.paymentBy || ""
+              });
+              setPromoteConfig({ isOpen: true, student: row });
+            }} 
+            className="p-2 bg-green-50 rounded-lg hover:bg-green-100 transition shadow-sm" 
+            title="Edit Intern Details"
+          >
+            <Edit2 size={16} className="text-green-600" />
+          </button>
+        ) : (
+          <button 
+            onClick={() => {
+              setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "" });
+              setPromoteConfig({ isOpen: true, student: row });
+            }} 
+            className="p-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition shadow-sm" 
+            title="Promote to Intern"
+          >
+            <Briefcase size={16} className="text-indigo-600" />
+          </button>
+        )}
       </div>
-    ), width: "160px"}
+    ), width: "200px"}
   ];
 
 
@@ -216,6 +265,80 @@ const handleUpdate = async () => {
         onClose={() => setConfirmConfig({ isOpen: false, id: null })}
         type="danger"
       />
+
+      {/* PROMOTE INTERN MODAL */}
+      {promoteConfig.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl my-8">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-xl font-bold font-heading text-slate-800">
+                Internship Details for {promoteConfig.student?.user?.name}
+              </h2>
+              <button
+                onClick={() => setPromoteConfig({ isOpen: false, student: null })}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-2 hover:bg-slate-100 rounded-full"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                    const { data } = await api.post(`/students/${promoteConfig.student._id}/promote-intern`, promoteForm);
+                    
+                    // Update state
+                    setStudents(prev => prev.map(s => s._id === data.student._id ? data.student : s));
+                    // The useEffect [students] will handle setFiltered(result)
+
+                    setPromoteConfig({ isOpen: false, student: null });
+                    setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "" });
+                    alert("Student successfully updated as intern!");
+                } catch (err) {
+                    console.error(err);
+                    alert(err.response?.data?.message || "Failed to promote student");
+                }
+            }} className="p-6 space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Select Vendor *</label>
+                    <select required className="w-full px-4 py-2 border rounded-xl" value={promoteForm.vendorId} onChange={(e) => setPromoteForm({...promoteForm, vendorId: e.target.value})}>
+                        <option value="">-- Choose Vendor --</option>
+                        {vendors.map(v => (
+                            <option key={v._id} value={v._id}>{v.companyName}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                    <input type="text" className="w-full px-4 py-2 border rounded-xl" value={promoteForm.location} onChange={(e) => setPromoteForm({...promoteForm, location: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Start Date *</label>
+                        <input type="date" required className="w-full px-4 py-2 border rounded-xl" value={promoteForm.startDate} onChange={(e) => setPromoteForm({...promoteForm, startDate: e.target.value})} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">End Date *</label>
+                        <input type="date" required className="w-full px-4 py-2 border rounded-xl" value={promoteForm.endDate} onChange={(e) => setPromoteForm({...promoteForm, endDate: e.target.value})} />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Payment By</label>
+                    <select className="w-full px-4 py-2 border rounded-xl" value={promoteForm.paymentBy} onChange={(e) => setPromoteForm({...promoteForm, paymentBy: e.target.value})}>
+                        <option value="">Select</option>
+                        <option value="Self">Self</option>
+                        <option value="Vendor">Vendor</option>
+                        <option value="Institution">Institution</option>
+                    </select>
+                </div>
+                <div className="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-100">
+                    <button type="button" onClick={() => setPromoteConfig({ isOpen: false, student: null })} className="px-6 py-2.5 bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl">Promote</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* VIEW MODAL */}
 

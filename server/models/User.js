@@ -27,7 +27,7 @@ const userSchema = mongoose.Schema({
     role: {
         type: String,
         default: 'student',
-        enum: ['student', 'admin', 'employee', 'parent', 'coach', 'hr', 'finance', 'center'],
+        enum: ['student', 'admin', 'employee', 'parent', 'coach', 'hr', 'finance', 'center', 'vendor'],
         set: v => v.toLowerCase(),
     },
 
@@ -38,6 +38,10 @@ const userSchema = mongoose.Schema({
     employeeProfile: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Employee',
+    },
+    vendorProfile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vendor',
     },
     center: {
         type: mongoose.Schema.Types.ObjectId,
