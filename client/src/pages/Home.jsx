@@ -169,18 +169,18 @@ const Home = () => {
       </section>
 
       {/* Partner Logos Strip */}
-      <section className="bg-slate-50 py-10 border-y border-slate-200">
+      <section className="bg-red-600 py-10 border-y border-red-700">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm font-bold text-slate-500 mb-6 uppercase tracking-wider">
+          <p className="text-sm font-bold text-red-100 mb-6 uppercase tracking-wider">
             Collaborating with 275+ leading universities and companies
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-            <span className="text-2xl font-serif font-bold text-slate-800">Illinois</span>
-            <span className="text-2xl font-sans font-extrabold text-slate-800">Duke</span>
-            <span className="text-2xl font-serif font-bold text-slate-800">Google</span>
-            <span className="text-2xl font-mono font-bold text-slate-800">IBM</span>
-            <span className="text-2xl font-sans font-bold text-slate-800">Stanford</span>
-            <span className="text-2xl font-serif font-bold text-slate-800">Penn</span>
+          <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 opacity-90 hover:opacity-100 transition-all duration-500">
+            <span className="text-2xl font-serif font-bold text-white">Illinois</span>
+            <span className="text-2xl font-sans font-extrabold text-white">Duke</span>
+            <span className="text-2xl font-serif font-bold text-white">Google</span>
+            <span className="text-2xl font-mono font-bold text-white">IBM</span>
+            <span className="text-2xl font-sans font-bold text-white">Stanford</span>
+            <span className="text-2xl font-serif font-bold text-white">Penn</span>
           </div>
         </div>
       </section>
@@ -351,12 +351,11 @@ const Home = () => {
       </section>
 
       {/* Outcome Stats */}
-      <section className="relative py-24 text-white overflow-hidden">
-        <div 
-          className="absolute inset-0 z-0 bg-fixed bg-cover bg-center"
-          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756ebafe3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")' }}
-        ></div>
-        <div className="absolute inset-0 bg-slate-900/85 z-0"></div>
+      <section 
+        className="relative py-24 text-white overflow-hidden bg-fixed bg-cover bg-center"
+        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1742&q=80")' }}
+      >
+        <div className="absolute inset-0 bg-slate-900/60 z-0"></div>
  
         <div className="relative z-10 max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
           <div className="text-center md:text-left">
