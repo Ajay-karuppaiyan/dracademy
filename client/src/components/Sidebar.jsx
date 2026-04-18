@@ -28,7 +28,7 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => (
   <li>
     <NavLink
       to={item.path}
-      end={item.path === "/dashboard"}
+      end
       onClick={closeMobile}
       className={({ isActive }) =>
         `flex items-center p-3 my-1 rounded-xl transition-all duration-200 group overflow-hidden whitespace-nowrap ${

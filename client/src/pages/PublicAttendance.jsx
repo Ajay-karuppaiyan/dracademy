@@ -318,7 +318,7 @@ const PublicAttendance = () => {
 
                             <button
                                 onClick={() => { setStep("verify"); setPerson(null); setSnapInfo({ time: null, loc: null }); }}
-                                className="w-full mt-4 flex items-center justify-center gap-2 text-[10px] font-black text-slate-300 hover:text-red-500 uppercase tracking-[0.4em] transition-colors"
+                                className="w-full mt-4 flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-red-500 uppercase tracking-wider transition-colors"
                             >
                                 <X size={14} /> Reset Session
                             </button>
@@ -329,7 +329,7 @@ const PublicAttendance = () => {
 
             {/* Ambient Footer */}
             <footer className="relative z-10 mt-12 text-center">
-                <p className="text-slate-300 text-[9px] font-black uppercase tracking-[0.5em] flex items-center justify-center gap-4">
+                <p className="text-slate-500 text-[10px] font-bold tracking-wider flex items-center justify-center gap-4">
                     <ShieldCheck size={12} className="text-brand-400" />
                     Trusted Verification Network • Dr.RG Academy Infrastructure
                 </p>
