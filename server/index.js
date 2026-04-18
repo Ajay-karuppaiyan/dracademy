@@ -25,6 +25,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const centerRoutes = require("./routes/centerRoutes"); 
 const vendorRoutes = require("./routes/vendorRoutes");
 const enquiryRoutes = require("./routes/enquiryRoutes");
+const publicAttendanceRoutes = require("./routes/publicAttendanceRoutes");
 
 
 
@@ -68,6 +69,7 @@ app.use("/api/dashboard-stats", dashboardRoutes);
 app.use("/api/centers", centerRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/enquiries", enquiryRoutes);
+app.use("/api/public-attendance", publicAttendanceRoutes);
 
 
 

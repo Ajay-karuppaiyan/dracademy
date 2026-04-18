@@ -56,6 +56,7 @@ import Loading from "./components/Loading";
 // Vendor Pages
 import VendorAttendance from "./pages/vendor/VendorAttendance";
 import VendorLeaves from "./pages/vendor/VendorLeaves";
+import PublicAttendance from "./pages/PublicAttendance";
 
 // Helper components for professional placeholders
 const PlaceholderPage = ({ title, content, features }) => (
@@ -242,6 +243,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Login />} />
           </Route>
+          
+          <Route path="/public-attendance" element={<PublicAttendance />} />
 
           {/* ================= DASHBOARD ROUTES ================= */}
           <Route

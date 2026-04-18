@@ -8,6 +8,11 @@ const AttendanceSchema = new mongoose.Schema({
   loginTime: { type: String, required: true },
   logoutTime: { type: String },
   photo: { type: String },
+  location: {
+    lat: Number,
+    lng: Number,
+    address: String
+  }
 });
 
 module.exports = mongoose.model("Attendance", AttendanceSchema);

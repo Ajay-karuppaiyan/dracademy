@@ -11,7 +11,8 @@ import {
   X,
   Globe,
   Settings,
-  Info
+  Info,
+  Clock,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import Slider from "../components/Slider";
@@ -135,6 +136,14 @@ const Home = () => {
                 >
                   Try Dr.RG Business
                 </Link>
+                <a
+                  href="/public-attendance"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 bg-slate-900 text-white rounded font-bold text-lg hover:bg-black transition-colors flex items-center justify-center gap-2"
+                >
+                  <Clock size={20} /> Mark Attendance
+                </a>
               </div>
             </div>
 
