@@ -12,6 +12,10 @@ const enquirySchema = new mongoose.Schema({
   email: {
     type: String,
   },
+  type: {
+    type: String,
+    default: 'General',
+  },
   message: {
     type: String,
     required: true,

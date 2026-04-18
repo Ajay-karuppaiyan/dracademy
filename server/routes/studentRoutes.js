@@ -391,7 +391,7 @@ router.patch('/:id/status', protect, admin, async (req, res) => {
 //////////////////////////////////////////////////////
 router.post("/:id/promote-intern", protect, async (req, res) => {
   try {
-    const { vendorId, location, startDate, endDate, paymentBy } = req.body;
+    const { vendorId, location, startDate, endDate, paymentBy, salary } = req.body;
 
     if (req.user.role !== 'admin' && req.user.role !== 'hr') {
       return res.status(403).json({ message: "Only admin or HR can promote a student" });
@@ -414,6 +414,7 @@ router.post("/:id/promote-intern", protect, async (req, res) => {
       startDate,
       endDate,
       paymentBy,
+      salary,
       status: 'active'
     };
 

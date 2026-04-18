@@ -19,7 +19,8 @@ const Students = () => {
     location: "",
     startDate: "",
     endDate: "",
-    paymentBy: ""
+    paymentBy: "",
+    salary: ""
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -185,7 +186,7 @@ const handleUpdate = async () => {
     { name: "Email", selector: row => row.user?.email, sortable: true, cell: row => <span className="text-slate-600">{row.user?.email}</span> },
     { name: "Phone", selector: row => row.whatsapp || "-" },
     { name: "Center", selector: row => row.center?.name || "-", sortable: true },
-    { name: "Status", selector: row => row.status, sortable: true, cell: row => (
+    { name: "Status", selector: row => row.status,width:"100px", sortable: true, cell: row => (
       <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${row.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
         {row.status === "active" ? "Active" : "Inactive"}
       </span>
@@ -213,7 +214,8 @@ const handleUpdate = async () => {
                 location: latest.location || "",
                 startDate: latest.startDate ? latest.startDate.split('T')[0] : "",
                 endDate: latest.endDate ? latest.endDate.split('T')[0] : "",
-                paymentBy: latest.paymentBy || ""
+                paymentBy: latest.paymentBy || "",
+                salary: latest.salary || ""
               });
               setPromoteConfig({ isOpen: true, student: row });
             }} 
@@ -225,7 +227,7 @@ const handleUpdate = async () => {
         ) : (
           <button 
             onClick={() => {
-              setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "" });
+              setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "", salary: "" });
               setPromoteConfig({ isOpen: true, student: row });
             }} 
             className="p-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition shadow-sm" 
@@ -292,7 +294,7 @@ const handleUpdate = async () => {
                     // The useEffect [students] will handle setFiltered(result)
 
                     setPromoteConfig({ isOpen: false, student: null });
-                    setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "" });
+                    setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "", salary: "" });
                     alert("Student successfully updated as intern!");
                 } catch (err) {
                     console.error(err);
@@ -323,12 +325,27 @@ const handleUpdate = async () => {
                     </div>
                 </div>
                 <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Salary / Stipend *</label>
+                    <input
+                        type="number"
+                        required
+                        placeholder="e.g. 15000"
+                        className="w-full px-4 py-2 border rounded-xl"
+                        value={promoteForm.salary}
+                        onChange={(e) => setPromoteForm({ ...promoteForm, salary: e.target.value })}
+                    />
+                </div>
+
+                <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Payment By</label>
-                    <select className="w-full px-4 py-2 border rounded-xl" value={promoteForm.paymentBy} onChange={(e) => setPromoteForm({...promoteForm, paymentBy: e.target.value})}>
+                    <select
+                        className="w-full px-4 py-2 border rounded-xl"
+                        value={promoteForm.paymentBy}
+                        onChange={(e) => setPromoteForm({ ...promoteForm, paymentBy: e.target.value })}
+                    >
                         <option value="">Select</option>
-                        <option value="Self">Self</option>
-                        <option value="Vendor">Vendor</option>
-                        <option value="Institution">Institution</option>
+                        <option value="Vendor Payment">Vendor Payment</option>
+                        <option value="Academy Stipend">Academy Stipend</option>
                     </select>
                 </div>
                 <div className="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-100">

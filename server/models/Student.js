@@ -158,6 +158,7 @@ mobile: String,
       startDate: Date,
       endDate: Date,
       paymentBy: String,
+      salary: String,
       status: { type: String, enum: ['active', 'completed', 'terminated'], default: 'active' }
     }
   ],

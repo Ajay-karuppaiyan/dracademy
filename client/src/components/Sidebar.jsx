@@ -157,6 +157,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
 
   // ================= ADMIN EXTRA ZONE =================
   const superAdminItems = [
+    { icon: <MessageSquare size={22} />, label: "Enquiries", path: "/dashboard/admin/enquiries" },
     { icon: <Briefcase size={22} />, label: "Vendor Mgmt", path: "/dashboard/admin/vendors" },
     { icon: <Users size={22} />, label: "Parent Mgmt", path: "/dashboard/admin/parents" },
     { icon: <ShieldCheck size={22} />, label: "Course Mgmt", path: "/dashboard/admin/courses" },

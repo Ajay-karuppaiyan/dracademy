@@ -1,0 +1,451 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { 
+  Mail, 
+  Phone, 
+  User, 
+  Calendar, 
+  Trash2, 
+  Eye, 
+  CheckCircle, 
+  Clock, 
+  MessageSquare,
+  Filter,
+  MoreVertical,
+  X,
+  FileText
+} from "lucide-react";
+import Loading from "../../components/Loading";
+import CustomDataTable from "../../components/DataTable";
+
+const EnquiryManagement = () => {
+  const [enquiries, setEnquiries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  const stats = {
+    total: enquiries.length,
+    new: enquiries.filter(e => e.status === 'new').length,
+    contacted: enquiries.filter(e => e.status === 'contacted').length,
+    resolved: enquiries.filter(e => e.status === 'resolved').length,
+  };
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, []);
+
+  const fetchEnquiries = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("http://localhost:5000/api/enquiries", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setEnquiries(res.data);
+    } catch (error) {
+      toast.error("Failed to fetch enquiries");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/api/enquiries/${id}`, { status: newStatus }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      toast.success(`Enquiry marked as ${newStatus}`);
+      fetchEnquiries();
+      if (selectedEnquiry && selectedEnquiry._id === id) {
+        setSelectedEnquiry({ ...selectedEnquiry, status: newStatus });
+      }
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleDeleteEnquiry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this enquiry?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/enquiries/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      toast.success("Enquiry deleted successfully");
+      fetchEnquiries();
+      if (selectedEnquiry && selectedEnquiry._id === id) {
+        setShowDetailModal(false);
+      }
+    } catch (error) {
+      toast.error("Failed to delete enquiry");
+    }
+  };
+
+  const statsData = [
+    { label: 'Total Enquiries', value: stats.total, color: 'text-white', bg: 'bg-slate-900', icon: <FileText className="opacity-20" size={40} /> },
+    { label: 'New Lead', value: stats.new, color: 'text-white', bg: 'bg-blue-600', icon: <Clock className="opacity-20" size={40} /> },
+    { label: 'Contacted', value: stats.contacted, color: 'text-white', bg: 'bg-amber-500', icon: <Phone className="opacity-20" size={40} /> },
+    { label: 'Resolved', value: stats.resolved, color: 'text-white', bg: 'bg-emerald-600', icon: <CheckCircle className="opacity-20" size={40} /> }
+  ];
+
+  const filteredEnquiries = enquiries.filter(enquiry => {
+    const matchesSearch = 
+      enquiry.name?.toLowerCase().includes(search.toLowerCase()) ||
+      enquiry.email?.toLowerCase().includes(search.toLowerCase()) ||
+      enquiry.phone?.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesStatus = filterStatus === "all" || enquiry.status === filterStatus;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const columns = [
+    {
+      name: 'S.No',
+      selector: (row, index) => index + 1,
+      width: '80px',
+      cell: (row, index) => (
+        <div className="text-slate-500 font-bold">{index + 1}.</div>
+      )
+    },
+    {
+      name: 'Date',
+      selector: row => row.createdAt,
+      sortable: true,
+      width: '150px',
+      cell: row => (
+        <div className="flex flex-col">
+          <span className="text-slate-900 font-bold">
+            {new Date(row.createdAt).toLocaleDateString()}
+          </span>
+          <span className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+            {new Date(row.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+      )
+    },
+    {
+      name: 'Enquirer Details',
+      selector: row => row.name,
+      sortable: true,
+      width: '280px',
+      cell: row => (
+        <div className="flex items-center gap-3 py-3">
+          <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-sm shrink-0 border border-slate-200">
+            {row.name?.charAt(0)}
+          </div>
+          <div className="overflow-hidden">
+            <div className="font-black text-slate-900 truncate uppercase text-xs tracking-wide">{row.name}</div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <Mail size={12} className="text-slate-400" /> {row.email || 'N/A'}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <Phone size={12} className="text-slate-400" /> {row.phone}
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      name: 'Enquiry Message',
+      selector: row => row.message,
+      sortable: false,
+      cell: row => (
+        <div className="py-2 max-w-md">
+          <div className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium">
+            "{row.message}"
+          </div>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-black uppercase tracking-widest bg-brand-50 text-brand-600 border border-brand-100">
+                {row.type}
+            </span>
+          </div>
+        </div>
+      )
+    },
+    {
+      name: 'Status',
+      selector: row => row.status,
+      sortable: true,
+      width: '130px',
+      cell: row => {
+        const styles = {
+          new: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100",
+          contacted: "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-100",
+          resolved: "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
+        };
+        return (
+          <span className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-wider ${styles[row.status]}`}>
+            {row.status}
+          </span>
+        );
+      }
+    },
+    {
+      name: 'Actions',
+      width: '120px',
+      cell: row => (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setSelectedEnquiry(row);
+              setShowDetailModal(true);
+            }}
+            className="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+            title="View Details"
+          >
+            <Eye size={20} />
+          </button>
+          
+          <div className="relative group">
+            <button className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all">
+              <MoreVertical size={20} />
+            </button>
+            <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block z-20 w-48 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-1">
+                {row.status !== 'contacted' && (
+                    <button 
+                        onClick={() => handleStatusUpdate(row._id, 'contacted')}
+                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl flex items-center gap-2 transition-colors"
+                    >
+                        <Clock size={14} /> Mark Contacted
+                    </button>
+                )}
+                {row.status !== 'resolved' && (
+                    <button 
+                        onClick={() => handleStatusUpdate(row._id, 'resolved')}
+                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl flex items-center gap-2 transition-colors"
+                    >
+                        <CheckCircle size={14} /> Mark Resolved
+                    </button>
+                )}
+                <div className="h-px bg-slate-100 my-1"></div>
+                <button 
+                    onClick={() => handleDeleteEnquiry(row._id)}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2 transition-colors"
+                >
+                    <Trash2 size={14} /> Delete Enquiry
+                </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  if (loading) return <Loading />;
+
+  return (
+    <div className="p-0 sm:p-6 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+      {/* Header & Stats Section */}
+      <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex-1 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 flex flex-col justify-center relative overflow-hidden group">
+          <div className="absolute -right-8 -top-8 w-32 h-32 bg-brand-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
+          <h1 className="text-3xl font-black font-heading text-slate-900 relative z-10 tracking-tight">
+            Enquiry Management
+          </h1>
+          <p className="text-slate-400 mt-2 font-medium relative z-10 max-w-md">Manage your business leads and customer enquiries with standard industrial workflows.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-[2]">
+          {statsData.map((stat, i) => (
+            <div key={i} className={`${stat.bg} p-6 rounded-[28px] shadow-lg shadow-black/5 border border-white/10 transition-all hover:-translate-y-1 relative overflow-hidden group`}>
+              <div className="absolute right-[-10%] bottom-[-10%] transition-transform group-hover:scale-110 duration-500">
+                {stat.icon}
+              </div>
+              <div className="text-[10px] font-black text-white/70 uppercase tracking-[0.2em] relative z-10">{stat.label}</div>
+              <div className={`text-3xl font-black mt-2 ${stat.color} relative z-10`}>{stat.value}</div>
+              <div className="mt-4 h-1.5 w-12 bg-white/20 rounded-full relative z-10">
+                <div 
+                    className="h-full bg-white rounded-full" 
+                    style={{ width: stat.value > 0 ? '60%' : '0%' }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white p-2 rounded-3xl shadow-sm border border-slate-100">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-full sm:w-auto">
+                {['all', 'new', 'contacted', 'resolved'].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setFilterStatus(status)}
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                            filterStatus === status 
+                            ? 'bg-white text-slate-900 shadow-sm' 
+                            : 'text-slate-400 hover:bg-slate-200/50'
+                        }`}
+                    >
+                        {status}
+                    </button>
+                ))}
+            </div>
+            <div className="text-xs font-bold text-slate-400 px-4">
+                Showing {filteredEnquiries.length} of {enquiries.length} Enquiries
+            </div>
+        </div>
+
+        <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+            <CustomDataTable
+                columns={columns}
+                data={filteredEnquiries}
+                search={search}
+                setSearch={setSearch}
+                searchPlaceholder="Search by name, email, or phone number..."
+            />
+        </div>
+      </div>
+
+      {/* Enquiry Detail Modal */}
+      {showDetailModal && selectedEnquiry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-white rounded-[48px] w-full max-w-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-bottom-8 duration-300">
+            {/* Modal Header */}
+            <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-3xl bg-slate-900 text-white flex items-center justify-center font-black text-2xl shadow-xl shadow-slate-900/20">
+                  {selectedEnquiry.name?.charAt(0)}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black font-heading text-slate-900 tracking-tight">
+                    Enquiry Insight
+                  </h2>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">
+                    <Calendar size={12} />
+                    Received: {new Date(selectedEnquiry.createdAt).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-slate-400 hover:text-slate-900 transition-all p-3 bg-slate-100 rounded-full hover:rotate-90"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-10 space-y-10">
+              {/* Profile Context */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <div className="text-[10px] font-black text-slate-301 uppercase tracking-[0.2em]">Contact Person</div>
+                  <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                        <User size={16} />
+                    </div>
+                    {selectedEnquiry.name}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Category</div>
+                    <div className="flex items-center gap-2">
+                        <span className="px-3 py-1.5 rounded-xl text-[10px] font-black bg-brand-50 text-brand-600 border border-brand-100 uppercase tracking-widest">
+                            {selectedEnquiry.type || 'General'}
+                        </span>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email Channel</div>
+                  <a href={`mailto:${selectedEnquiry.email}`} className="flex items-center gap-3 text-slate-900 font-bold text-sm hover:text-brand-600 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                        <Mail size={16} />
+                    </div>
+                    {selectedEnquiry.email || 'No email provided'}
+                  </a>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Phone Identity</div>
+                  <a href={`tel:${selectedEnquiry.phone}`} className="flex items-center gap-3 text-slate-900 font-bold text-sm hover:text-brand-600 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                        <Phone size={16} />
+                    </div>
+                    {selectedEnquiry.phone}
+                  </a>
+                </div>
+              </div>
+
+              {/* Message Context */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-slate-900 font-black text-[10px] uppercase tracking-[0.2em]">
+                  <MessageSquare size={14} className="text-slate-400" />
+                  Conversation Details
+                </div>
+                <div className="bg-slate-50 p-8 rounded-[40px] text-slate-600 leading-relaxed font-medium border border-slate-100 italic relative overflow-hidden">
+                  <div className="absolute top-4 left-4 text-4xl text-slate-200 font-serif leading-none italic opacity-50">"</div>
+                  <span className="relative z-10">{selectedEnquiry.message}</span>
+                </div>
+              </div>
+
+              {/* Status & Cleanup */}
+              <div className="pt-10 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Transition:</span>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => handleStatusUpdate(selectedEnquiry._id, 'contacted')}
+                            className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                                selectedEnquiry.status === 'contacted' 
+                                ? 'bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-200' 
+                                : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
+                            }`}
+                        >
+                            Mark Contacted
+                        </button>
+                        <button 
+                            onClick={() => handleStatusUpdate(selectedEnquiry._id, 'resolved')}
+                            className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                                selectedEnquiry.status === 'resolved' 
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl shadow-emerald-200' 
+                                : 'bg-white text-emerald-600 border-emerald-100 hover:bg-emerald-50'
+                            }`}
+                        >
+                            Mark Resolved
+                        </button>
+                    </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteEnquiry(selectedEnquiry._id)}
+                  className="flex items-center gap-2 px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Garbage Entry
+                </button>
+              </div>
+            </div>
+            
+            {/* Modal Actions */}
+            <div className="px-10 py-8 bg-slate-900 border-t border-white/5 flex justify-between items-center">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-white/60 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors"
+              >
+                Return to Dashboard
+              </button>
+              <a 
+                href={`mailto:${selectedEnquiry.email}?subject=Follow-up on your enquiry`}
+                className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-white/10 hover:bg-slate-100 transition-all flex items-center gap-3"
+              >
+                <Mail size={16} />
+                Send Email Reply
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EnquiryManagement;

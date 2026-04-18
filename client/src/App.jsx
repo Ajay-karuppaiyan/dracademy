@@ -31,6 +31,7 @@ import HR from "./pages/dashboard/HR";
 import Settings from "./pages/dashboard/Settings";
 import Students from "./pages/dashboard/Students";
 import VendorManagement from "./pages/admin/VendorManagement";
+import EnquiryManagement from "./pages/admin/EnquiryManagement";
 import VendorDashboard from "./pages/dashboard/VendorDashboard";
 import ParentManagement from "./pages/admin/ParentManagement";
 import ParentDashboard from "./pages/parent/ParentDashboard";
@@ -282,6 +283,7 @@ function App() {
             <Route path="admin/configs" element={<AdministrativeConfigs />} />
             <Route path="admin/parents" element={<ParentManagement />} />
             <Route path="admin/vendors" element={<VendorManagement />} />
+            <Route path="admin/enquiries" element={<EnquiryManagement />} />
             <Route path="vendor" element={<VendorDashboard />} />
             <Route path="vendor/attendance" element={<VendorAttendance />} />
             <Route path="vendor/leaves" element={<VendorLeaves />} />
