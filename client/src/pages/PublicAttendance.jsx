@@ -4,6 +4,7 @@ import { Camera, User, CheckCircle, Search, AlertCircle, ArrowRight, ShieldCheck
 import api from "../services/api";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.png";
+import attendanceBg from "../assets/attendance.png";
 
 const PublicAttendance = () => {
     const [identifier, setIdentifier] = useState("");
@@ -118,15 +119,16 @@ const PublicAttendance = () => {
     };
 
     const placeholderImg = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-    const bgUrl = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80";
+    const bgUrl = attendanceBg;
 
     return (
-        <div className="min-h-screen bg-slate-50 relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden font-sans">
+        <div className="min-h-screen bg-white/30 backdrop-blur-md relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden font-sans">
             {/* Background Layer - Clean Institutional Feel */}
-            <div className="absolute inset-0 z-0 opacity-10">
-                <img src={bgUrl} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="absolute inset-0 z-0 bg-gradient-to-b from-brand-50/50 to-white"></div>
+            <div
+                className="absolute inset-0 z-0 bg-cover bg-center opacity-70"
+                style={{ backgroundImage: `url(${bgUrl})` }}
+            ></div>
+            {/* <div className="absolute inset-0 z-0 bg-gradient-to-b from-white/30 to-white/80"></div> */}
 
             {/* Header / Logo Component */}
             <div className="relative z-10 mb-8 sm:mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-700">
@@ -141,10 +143,10 @@ const PublicAttendance = () => {
 
                 {/* STEP 1: VERIFICATION (Light Professional Card) */}
                 {step === "verify" && (
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                    <div className="bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)]">
                         <div className="px-10 py-12 sm:p-16">
                             <div className="text-center mb-12">
-                                <div className="inline-flex items-center justify-center w-24 h-24 bg-brand-50 rounded-[2.5rem] mb-6 shadow-inner">
+                                <div className="inline-flex items-center justify-center w-24 h-24 bg-white/30 backdrop-blur-md rounded-[2.5rem] mb-6 shadow-inner">
                                     <Clock size={48} className="text-brand-600" />
                                 </div>
                                 <h2 className="text-3xl font-black text-slate-900 mb-2">Member Login</h2>
@@ -158,7 +160,7 @@ const PublicAttendance = () => {
                                         value={identifier}
                                         onChange={(e) => setIdentifier(e.target.value.toUpperCase())}
                                         placeholder="STU-20XX-XXXX"
-                                        className="w-full pl-16 pr-4 py-6 bg-slate-50 border-2 border-slate-100 rounded-3xl text-xl font-bold text-slate-800 focus:bg-white focus:border-brand-500 outline-none transition-all placeholder:text-slate-300 tracking-wide text-left shadow-inner"
+                                        className="w-full pl-16 pr-4 py-6 bg-white/30 backdrop-blur-md border-2 border-slate-100 rounded-3xl text-xl font-bold text-slate-800 focus:bg-white focus:border-brand-500 outline-none transition-all placeholder:text-slate-300 tracking-wide text-left shadow-inner"
                                         autoFocus
                                     />
                                     <div className="absolute left-6 top-1/2 -translate-y-1/2 p-2 text-slate-300 group-focus-within:text-brand-500 transition-colors">
@@ -212,7 +214,7 @@ const PublicAttendance = () => {
                                             <div className="absolute -bottom-1 -right-1 w-16 h-16 border-b-8 border-r-8 border-brand-500 rounded-br-3xl"></div>
                                         </div>
                                     </div>
-                                    <div className="absolute top-8 left-8 flex items-center gap-3 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-slate-200 shadow-xl">
+                                    <div className="absolute top-4 left-8 flex items-center gap-3 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-slate-200 shadow-xl">
                                         <div className="w-2.5 h-2.5 bg-brand-600 rounded-full animate-pulse"></div>
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Live Biometric Ready</span>
                                     </div>
@@ -221,7 +223,7 @@ const PublicAttendance = () => {
                                 <>
                                     <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-brand-600/5"></div>
-                                    <div className="absolute top-8 left-8 flex items-center gap-3 bg-emerald-500 px-6 py-3 rounded-full shadow-2xl border border-emerald-400/30">
+                                    <div className="absolute top-4 left-8 flex items-center gap-3 bg-emerald-500 px-6 py-3 rounded-full shadow-2xl border border-emerald-400/30">
                                         <CheckCircle size={20} className="text-white" />
                                         <span className="text-[10px] font-black uppercase tracking-widest text-white">Biometric Logged</span>
                                     </div>
@@ -232,9 +234,8 @@ const PublicAttendance = () => {
                         {/* Details Panel */}
                         <div className="p-10 space-y-8">
                             {/* Member Profile Card */}
-                            <div className="relative p-6 bg-slate-50 rounded-[2rem] border-2 border-slate-100 flex items-center gap-6 group hover:border-brand-100 transition-colors">
-                                <div className="absolute top-4 right-6 flex items-center gap-1.5 px-3 py-1 bg-white rounded-full shadow-sm border border-slate-100">
-                                    <div className={`w-2 h-2 rounded-full ${location ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`}></div>
+                            <div className="relative p-6 bg-white/30 backdrop-blur-md rounded-[2rem] border-2 border-slate-100 flex items-center gap-6 group hover:border-brand-100 transition-colors">
+                                <div className="absolute -top-3 right-4 flex items-center gap-1.5 px-3 py-1 bg-white rounded-full shadow-sm border border-slate-100">                                    <div className={`w-2 h-2 rounded-full ${location ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`}></div>
                                     <span className="text-[8px] font-black uppercase tracking-tighter text-slate-500">
                                         {location ? 'GIS Sync Active' : 'Acquiring GIS...'}
                                     </span>
@@ -294,7 +295,7 @@ const PublicAttendance = () => {
                                         className="col-span-2 py-6 bg-brand-600 hover:bg-brand-700 text-white rounded-[1.5rem] font-black text-xl shadow-[0_15px_40px_rgba(37,99,235,0.3)] transition-all active:scale-95 flex items-center justify-center gap-4 group"
                                     >
                                         <Camera size={28} className="group-hover:scale-110 transition-transform" />
-                                        Capture Identity
+                                        Capture
                                     </button>
                                 ) : (
                                     <>
