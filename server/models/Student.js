@@ -14,6 +14,7 @@ ref: "User",
 },
 
 // BASIC DETAILS
+studentId: { type: String, unique: true },
 studentNameEnglish: { type: String, required: true },
 studentNameMotherTongue: String,
 fatherName: String,

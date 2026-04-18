@@ -370,8 +370,15 @@ router.post('/register', async (req, res) => {
 
         if (user.role === 'student') {
             const Student = require('../models/Student');
+            
+            // Generate Student ID
+            const year = new Date().getFullYear();
+            const random = Math.floor(1000 + Math.random() * 9000);
+            const studentId = `STU-${year}-${random}`;
+
             const studentProfile = await Student.create({
                 user: user._id,
+                studentId,
                 studentNameEnglish: user.name,
                 email: user.email,
                 phone: user.mobile
