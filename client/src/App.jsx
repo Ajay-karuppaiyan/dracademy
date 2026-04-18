@@ -150,7 +150,7 @@ function App() {
             <Route path="/scholarships" element={
               <PlaceholderPage
                 title="Scholarships & Merit Awards"
-                content="DRRG Academy rewards excellence. We believe financial constraints should never stand in the way of a deserving student's future."
+                content="Dr.RG Academy rewards excellence. We believe financial constraints should never stand in the way of a deserving student's future."
                 features={[
                   { title: "Merit-Based", desc: "Awards for top scorers in academic and entrance examinations." },
                   { title: "Needs-Based", desc: "Support for students from economically weaker backgrounds showing high potential." },
@@ -174,7 +174,7 @@ function App() {
             <Route path="/rgmtn" element={
               <PlaceholderPage
                 title="RGMTN Hospitality Management"
-                content="The premier institute for hotel and tourism excellence under the DRRG Group banner."
+                content="The premier institute for hotel and tourism excellence under the Dr.RG Group banner."
                 features={[
                   { title: "Professional Kitchens", desc: "Hands-on training in international cuisines and culinary arts." },
                   { title: "Front Desk Simulators", desc: "Learn guest relations and hospitality software in a real-world environment." },
@@ -196,9 +196,9 @@ function App() {
             } />
 
             <Route path="/resource-supply" element={<PlaceholderPage title="Resource Supply" content="Access our full library of brochures, training toolkits, and academic resources." />} />
-            <Route path="/benefits" element={<PlaceholderPage title="Why Choose Us?" content="Explore the unique advantages of becoming a DRRG Academy student." />} />
-            <Route path="/locate-us" element={<PlaceholderPage title="Our Presence" content="DRRG Academy is located in Padmanabhanagar, Bangalore, with easy access via public transport and private vehicles. Visit us for admissions, counseling, or inquiries—we’re here to help you." />} />
-            <Route path="/privacy-policy" element={<PlaceholderPage title="Privacy Policy" content="DRRG Academy respects your privacy and ensures that your personal data is securely handled. We collect information only to improve our services and never share it without consent, except when required by law." />} />
+            <Route path="/benefits" element={<PlaceholderPage title="Why Choose Us?" content="Explore the unique advantages of becoming a Dr.RG Academy student." />} />
+            <Route path="/locate-us" element={<PlaceholderPage title="Our Presence" content="Dr.RG Academy is located in Padmanabhanagar, Bangalore, with easy access via public transport and private vehicles. Visit us for admissions, counseling, or inquiries—we’re here to help you." />} />
+            <Route path="/privacy-policy" element={<PlaceholderPage title="Privacy Policy" content="Dr.RG Academy respects your privacy and ensures that your personal data is securely handled. We collect information only to improve our services and never share it without consent, except when required by law." />} />
             <Route path="/refund-policy" element={<PlaceholderPage title="Cancellation & Refund Policy" content="Clear guidelines on enrollment cancellations and fee refunds." />} />
             <Route path="/terms-conditions" element={<PlaceholderPage title="Terms & Conditions" content="General operating policies for students and partners." />} />
             <Route path="/courses/masters" element={<PlaceholderPage title="Master Degree Courses" content="Advanced specialized programs for career leadership." />} />

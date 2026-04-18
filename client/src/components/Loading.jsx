@@ -18,7 +18,7 @@ const Loading = ({ fullPage = false, message = "Loading..." }) => {
         <div className="mt-8 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-[2px] bg-brand-600/30 rounded-full"></div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">DRRG ACADEMY</h2>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Dr.RG ACADEMY</h2>
             <div className="w-8 h-[2px] bg-brand-600/30 rounded-full"></div>
           </div>
           <p className="text-slate-500 text-sm font-bold tracking-widest uppercase animate-pulse">{message}</p>
