@@ -130,12 +130,14 @@ const Home = () => {
                 >
                   Join for Free
                 </Link>
-                <Link
-                  to="/enterprise"
-                  className="px-8 py-4 bg-white border border-brand-700 text-brand-700 rounded font-bold text-lg hover:bg-brand-50 transition-colors"
+                <a
+                  href="/student-registration"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 bg-orange-500 text-white rounded font-bold text-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-900/10 flex items-center justify-center gap-2"
                 >
-                  Try Dr.RG Business
-                </Link>
+                  <Users size={20} /> Student Register
+                </a>
                 <a
                   href="/public-attendance"
                   target="_blank"

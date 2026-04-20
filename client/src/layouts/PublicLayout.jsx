@@ -145,7 +145,7 @@ const menuItems = [
     title: "Student Portal",
     submenu: [
       { title: "Account Login", to: "/login" },
-      { title: "New Registration", to: "/register" },
+      { title: "New Registration", to: "/student-registration" },
     ],
   },
 ];
@@ -329,7 +329,7 @@ const PublicLayout = () => {
               {/* Right: Actions */}
               <div className="flex items-center gap-4 md:gap-5 font-semibold shrink-0">
                 <Link to="/?info=Admissions" className="hover:text-white transition-colors">Admissions</Link>
-                <Link to="/register" className="hover:text-white transition-colors">Apply Now</Link>
+                <Link to="/student-registration" className="hover:text-white transition-colors">Apply Now</Link>
                 <Link to="/?info=Scholarships" className="hover:text-white transition-colors">Scholarships</Link>
                 <Link to="/?info=Resource+Supply" className="hover:text-white transition-colors">Resource Supply</Link>
                 <Link to="/?info=Benefits" className="hover:text-white transition-colors">Benefits</Link>
@@ -350,7 +350,7 @@ const PublicLayout = () => {
               </div>
               <div className="flex items-center gap-4 font-semibold shrink-0">
                 <Link to="/?info=Admissions" className="hover:text-white transition-colors">Admissions</Link>
-                <Link to="/register" className="hover:text-white transition-colors text-brand-400 font-bold">Apply Now</Link>
+                <Link to="/student-registration" className="hover:text-white transition-colors text-brand-400 font-bold">Apply Now</Link>
                 <Link to="/?info=Scholarships" className="hover:text-white transition-colors">Scholarships</Link>
                 <Link to="/?info=Resource+Supply" className="hover:text-white transition-colors">Resource Supply</Link>
                 <Link to="/?info=Benefits" className="hover:text-white transition-colors">Benefits</Link>
@@ -488,8 +488,9 @@ const PublicLayout = () => {
                                   </Link>
                                 )}
                                 {selectedExploreItem === "New Registration" && (
-                                  <Link
-                                    to="/register"
+                                <Link
+                                    to="/student-registration"
+                                    target="_blank"
                                     onClick={() => setIsExploreOpen(false)}
                                     className="block max-w-[200px] rounded-2xl bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition"
                                   >
@@ -514,7 +515,8 @@ const PublicLayout = () => {
                   Log In
                 </Link>
                 <Link
-                  to="/register"
+                  to="/student-registration"
+                  target="_blank"
                   className="bg-white border border-brand-700 text-brand-700 px-5 py-2 rounded font-bold hover:bg-brand-50 transition-colors text-sm shadow-sm"
                 >
                   Join for Free

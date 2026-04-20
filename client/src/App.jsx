@@ -17,6 +17,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import CourseCatalog from "./pages/lms/CourseCatalog";
 import ForgotPassword from "./components/ForgotPassword";
+import StudentRegistration from "./pages/StudentRegistration";
 
 import CertificateView from "./pages/lms/CertificateView";
 
@@ -242,6 +243,7 @@ function App() {
             {/* ================= AUTH ================= */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Login />} />
+            <Route path="/student-registration" element={<StudentRegistration />} />
           </Route>
           
           <Route path="/public-attendance" element={<PublicAttendance />} />

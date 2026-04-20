@@ -9,7 +9,158 @@ const Vendor = require('../models/Vendor');
 // // ======================================================
 // // CREATE STUDENT (Creates User + Student)
 // // ======================================================
-// router.post(
+// ======================================================
+// PUBLIC REGISTRATION (Apply Now)
+// ======================================================
+router.post('/public-registration', async (req, res) => {
+  try {
+    const {
+      studentNameEnglish,
+      studentNameMotherTongue,
+      email,
+      phone,
+      whatsapp,
+      dob,
+      age,
+      fatherName,
+      gender,
+      aadharNo,
+      religion,
+      community,
+      maritalStatus,
+      center,
+      nationality,
+      
+      // Educational identifiers
+      kcetRegNo,
+      neetRegNo,
+      apaarId,
+      debId,
+      abcId,
+
+      // Address
+      address,
+      village,
+      post,
+      taluk,
+      district,
+      pin,
+
+      // Language & Bank
+      englishFluency,
+      language1,
+      language2,
+      language3,
+      accountHolderName,
+      accountNumber,
+      ifscCode,
+      bankNameBranch,
+
+      // Tables
+      educationBackground,
+      sslcSubjects,
+      sslcDetails,
+      hscSubjects,
+      hscDetails,
+      familyBackground,
+      references,
+
+      // App specific
+      year,
+      department,
+    } = req.body;
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    const defaultPassword = "Student@123";
+
+    // 1️⃣ Create User
+    const user = await User.create({
+      name: studentNameEnglish,
+      email,
+      password: defaultPassword,
+      role: 'student',
+      mobile: phone
+    });
+
+    // 2️⃣ Create Student Profile
+    const student = await Student.create({
+      user: user._id,
+      studentId: `APP-${Date.now()}`,
+      studentNameEnglish,
+      studentNameMotherTongue,
+      email,
+      phone,
+      whatsapp,
+      dob,
+      age,
+      fatherName,
+      gender,
+      aadharNo,
+      religion,
+      community,
+      maritalStatus,
+      center,
+      nationality,
+
+      // Identifiers
+      kcetRegNo,
+      neetRegNo,
+      apaarId,
+      debId,
+      abcId,
+
+      address: address || {
+        village,
+        post,
+        taluk,
+        district,
+        pin
+      },
+
+      englishFluency,
+      languagesKnown: [language1, language2, language3].filter(Boolean),
+
+      bankDetails: {
+        accountHolderName,
+        accountNumber,
+        ifscCode,
+        bankNameBranch,
+      },
+
+      educationBackground,
+      sslcSubjects,
+      sslcDetails,
+      hscSubjects,
+      hscDetails,
+      familyBackground,
+      references,
+
+      year,
+      department,
+      status: 'active'
+    });
+
+    // 3️⃣ Link Student to User
+    user.studentProfile = student._id;
+    await user.save();
+
+    res.status(201).json({
+      message: 'Registration successful',
+      studentId: student.studentId
+    });
+
+  } catch (error) {
+    console.error("PUBLIC REGISTRATION ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// // ======================================================
 //   '/',
 //   upload.fields([
 //     { name: 'profilePic', maxCount: 1 },
