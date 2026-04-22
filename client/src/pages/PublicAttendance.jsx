@@ -291,7 +291,7 @@ const PublicAttendance = () => {
                                         </button>
                                         
                                         <button onClick={() => setStep("verify")} className="w-full py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors">
-                                            Cancel & Reset
+                                            Go back
                                         </button>
                                     </div>
                                 )}

@@ -274,7 +274,22 @@ router.put('/profile', protect, upload.single('profilePic'), async (req, res) =>
         if (user) {
             user.name = req.body.name || user.name;
             user.mobile = req.body.mobile || user.mobile;
-            user.email = req.body.email || user.email;
+            
+            if (req.body.email && req.body.email !== user.email) {
+                // Verify OTP for email change
+                const { otp } = req.body;
+                if (!otp) {
+                    return res.status(400).json({ message: "OTP is required to change email" });
+                }
+                const otpRecord = await Otp.findOne({ email: req.body.email, otp });
+                if (!otpRecord) {
+                    return res.status(400).json({ message: "Invalid or expired OTP" });
+                }
+                // Delete OTP after verification
+                await Otp.deleteOne({ _id: otpRecord._id });
+                
+                user.email = req.body.email;
+            }
 
             if (req.file) {
                 user.profilePic = {

@@ -174,7 +174,7 @@ const StudentRegistration = () => {
     }
     if (step === 2) {
       if (!formData.whatsapp || !formData.email) {
-        toast.error("Required: Whatsapp Number and Email Address.");
+        toast.error("Required: Phone Number and Email Address.");
         return false;
       }
       if (!isEmailVerified) {
@@ -316,7 +316,14 @@ const StudentRegistration = () => {
         {/* Professional Stepper Indicator */}
         <div className="grid grid-cols-5 gap-2 md:gap-4 -mt-8 mb-10">
           {steps.map((s, i) => (
-            <div key={i} className={`relative flex flex-col items-center group cursor-default`}>
+            <div key={i}
+              onClick={() => {
+                if (i + 1 <= currentStep || validateStep(currentStep)) {
+                  setCurrentStep(i + 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className={`relative flex flex-col items-center group cursor-pointer`}>
               <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 border-4 ${currentStep === i + 1 ? "bg-white border-brand-700 text-brand-700 shadow-xl" : currentStep > i + 1 ? "bg-brand-700 border-brand-700 text-white" : "bg-white border-slate-100 text-slate-300"}`}>
                 {currentStep > i + 1 ? <CheckCircle size={24} /> : s.icon}
               </div>
@@ -402,8 +409,8 @@ const StudentRegistration = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                    <FormInput label="Whatsapp No *" name="whatsapp" value={formData.whatsapp} onChange={handleChange} />
-                    
+                    <FormInput label="Phone Number *" name="whatsapp" value={formData.whatsapp} onChange={handleChange} />
+
                     <div className="space-y-4">
                       {/* Email Input Wrapper */}
                       <div className="group space-y-2">
@@ -525,7 +532,7 @@ const StudentRegistration = () => {
                         Languages Known
                       </h4>
                       <p className="text-xs text-slate-400 mb-4">
-                        Please mention the languages you can speak/read/write (Language 1, 2, 3)
+                        Please mention the languages you can speak/read/write
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -819,7 +826,7 @@ const StudentRegistration = () => {
               <div className="min-w-[150px]">
                 {currentStep > 1 && (
                   <button type="button" onClick={prevStep} className="flex items-center gap-3 px-10 py-5 text-slate-400 font-black uppercase tracking-widest hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all group text-[10px]">
-                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back Previous
+                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
                   </button>
                 )}
               </div>

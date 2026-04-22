@@ -370,7 +370,6 @@ const { admin } = require("../middleware/authMiddleware");
 router.put(
   "/:id",
   protect,
-  admin,
   upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "idFile", maxCount: 1 },
@@ -382,6 +381,11 @@ router.put(
 
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Check authorization: Admin or the student themselves
+      if (req.user.role !== 'admin' && student.user?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Not authorized to update this profile" });
       }
 
       const data = { ...req.body };
@@ -443,8 +447,26 @@ router.put(
       // =========================
 
       if (student.user) {
+        const user = await User.findById(student.user);
         const updateData = {};
-        if (req.body.email) updateData.email = req.body.email;
+        
+        if (req.body.email && req.body.email !== user.email) {
+          // Verify OTP for email change
+          const { otp } = req.body;
+          if (!otp) {
+            return res.status(400).json({ message: "OTP is required to change email" });
+          }
+          const Otp = require('../models/Otp');
+          const otpRecord = await Otp.findOne({ email: req.body.email, otp });
+          if (!otpRecord) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+          }
+          // Delete OTP after verification
+          await Otp.deleteOne({ _id: otpRecord._id });
+          
+          updateData.email = req.body.email;
+        }
+        
         if (req.body.studentNameEnglish) updateData.name = req.body.studentNameEnglish;
 
         if (req.files && req.files.profilePic) {

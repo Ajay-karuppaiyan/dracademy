@@ -326,7 +326,7 @@ const Attendance = () => {
                   <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
                 </div>
 
-                {user.role !== "admin" && !showForm && (
+                {/* {user.role !== "admin" && !showForm && (
                   <button
                     onClick={() => setShowForm(true)}
                     disabled={hasMarkedToday}
@@ -335,7 +335,7 @@ const Attendance = () => {
                   >
                     {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
                   </button>
-                )}
+                )} */}
               </div>
 
               {/* FORM */}

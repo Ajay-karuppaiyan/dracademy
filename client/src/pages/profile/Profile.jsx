@@ -37,6 +37,14 @@ const Profile = () => {
   const [childEditorTab, setChildEditorTab] = useState("personal");
   const [centers, setCenters] = useState([]);
 
+  // OTP States
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [originalEmail, setOriginalEmail] = useState("");
+  const [originalChildEmail, setOriginalChildEmail] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+
   useEffect(() => {
     const fetchCenters = async () => {
       try {
@@ -68,6 +76,7 @@ const Profile = () => {
         email: userData.email || "",
         mobile: userData.mobile || ""
       });
+      setOriginalEmail(userData.email || "");
 
       if (userData.role === "student") {
         const sRes = await api.get(`/students/user/${userData._id}`);
@@ -124,6 +133,13 @@ const Profile = () => {
     const { name, value } = e.target;
     setProfileData({ ...profileData, [name]: value });
     
+    if (name === "email") {
+        if (selectedChildId) {
+            setIsEmailVerified(value === originalChildEmail);
+        } else {
+            setIsEmailVerified(value === originalEmail);
+        }
+    }
     if (studentProfile) {
         if (name === "name") setStudentProfile({ ...studentProfile, studentNameEnglish: value });
         if (name === "email") setStudentProfile({ ...studentProfile, email: value });
@@ -174,8 +190,34 @@ const Profile = () => {
     setStudentProfile(prev => ({ ...prev, [parentField]: updatedArray }));
   };
 
-  const savePersonalProfile = async () => {
-    const loadingToast = toast.loading("Updating profile...");
+  const sendEmailOtp = async () => {
+    const targetEmail = selectedChildId ? childData.email : profileData.email;
+    const compareEmail = selectedChildId ? originalChildEmail : originalEmail;
+    
+    if (!targetEmail) return toast.error("Email is required");
+    if (targetEmail === compareEmail) return;
+    
+    setIsSendingOtp(true);
+    const loadingToast = toast.loading("Sending code to " + targetEmail);
+    try {
+      await api.post("/otp/send-otp", { email: targetEmail });
+      toast.success("Verification code sent!", { id: loadingToast });
+      setShowOtpModal(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send OTP", { id: loadingToast });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const savePersonalProfile = async (otpValue = null) => {
+    // If email changed and NOT verified, error out (forcing manual Verify click)
+    if (profileData.email !== originalEmail && !isEmailVerified && !otpValue) {
+      toast.error("Please verify your new email first");
+      return;
+    }
+
+    const loadingToast = toast.loading(otpValue ? "Verifying & Updating..." : "Updating profile...");
     try {
       let res;
       const data = new FormData();
@@ -190,6 +232,10 @@ const Profile = () => {
           data.append(key, profileData[key]);
         }
       });
+
+      if (otpValue) {
+        data.append("otp", otpValue);
+      }
 
       // Also append student/employee specific fields if needed
       if (authUser?.role === "student" && studentProfile) {
@@ -208,6 +254,7 @@ const Profile = () => {
                studentFormData.append(key, studentProfile[key]);
             }
           });
+          if (otpValue) studentFormData.append("otp", otpValue);
           res = await api.put(`/students/${studentProfile._id}`, studentFormData, {
              headers: { "Content-Type": "multipart/form-data" }
           });
@@ -249,6 +296,9 @@ const Profile = () => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setIsEditingPersonal(false);
+      setShowOtpModal(false);
+      setOtp("");
+      setIsEmailVerified(false);
       await fetchProfile();
       toast.success("Profile updated!", { id: loadingToast });
     } catch (err) {
@@ -259,6 +309,8 @@ const Profile = () => {
   // ----- CHILD EDITOR HANDLERS -----
   const openChildEditor = (child) => {
     setSelectedChildId(child._id);
+    setOriginalChildEmail(child.email || "");
+    setIsEmailVerified(true);
     // Deep clone to avoid direct mutations
     setChildData(JSON.parse(JSON.stringify(child)));
   };
@@ -299,14 +351,25 @@ const Profile = () => {
     setChildData(prev => ({ ...prev, [parentField]: updatedArray }));
   };
 
-  const saveChildProfile = async () => {
+  const saveChildProfile = async (otpValue = null) => {
+    if (childData.email !== originalChildEmail && !isEmailVerified && !otpValue) {
+      toast.error("Please verify the new email first");
+      return;
+    }
+
+    const loadingToast = toast.loading(otpValue ? "Verifying & Updating..." : "Updating child profile...");
     try {
-      await api.put(`/students/${selectedChildId}`, childData);
-      toast.success("Child profile updated!");
+      const payload = { ...childData };
+      if (otpValue) payload.otp = otpValue;
+      
+      await api.put(`/students/${selectedChildId}`, payload);
+      toast.success("Child profile updated!", { id: loadingToast });
       fetchChildren();
       setSelectedChildId(null);
+      setShowOtpModal(false);
+      setOtp("");
     } catch (err) {
-      toast.error("Failed to update child profile");
+      toast.error(err.response?.data?.message || "Failed to update child profile", { id: loadingToast });
     }
   };
 
@@ -351,8 +414,12 @@ const Profile = () => {
                   </span>
                 </h1>
                 <div className="mt-4 flex flex-col sm:flex-row flex-wrap gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-2"><Mail size={16} className="text-gray-400" /> {profileData.email}</span>
-                  <span className="flex items-center gap-2"><Phone size={16} className="text-gray-400" /> {profileData.mobile || employeeProfile?.phone || studentProfile?.whatsapp || "No Phone"}</span>
+                  {authUser?.role !== "student" && (
+                    <>
+                      <span className="flex items-center gap-2"><Mail size={16} className="text-gray-400" /> {profileData.email}</span>
+                      <span className="flex items-center gap-2"><Phone size={16} className="text-gray-400" /> {profileData.mobile || employeeProfile?.phone || "No Phone"}</span>
+                    </>
+                  )}
                   {(studentProfile?.center || employeeProfile?.center) && (
                       <span className="flex items-center gap-2"><MapPin size={16} className="text-gray-400" /> {studentProfile?.center?.name || employeeProfile?.center?.name}</span>
                   )}
@@ -384,13 +451,15 @@ const Profile = () => {
 
         {/* Navigation Tabs */}
         <div className="flex mb-8 border-b border-gray-200">
-           <button
-             onClick={() => setActiveTab("personal")}
-             className={`px-1 py-3 mr-8 text-sm font-medium transition-colors relative ${activeTab === "personal" ? "text-indigo-600" : "text-gray-500 hover:text-gray-800"}`}
-           >
-             Personal Details
-             {activeTab === "personal" && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-indigo-600 rounded-t-lg"></div>}
-           </button>
+           {authUser?.role !== "student" && (
+             <button
+               onClick={() => setActiveTab("personal")}
+               className={`px-1 py-3 mr-8 text-sm font-medium transition-colors relative ${activeTab === "personal" ? "text-indigo-600" : "text-gray-500 hover:text-gray-800"}`}
+             >
+               Personal Details
+               {activeTab === "personal" && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-indigo-600 rounded-t-lg"></div>}
+             </button>
+           )}
            {authUser?.role === "parent" && (
              <button
                onClick={() => setActiveTab("children")}
@@ -405,42 +474,36 @@ const Profile = () => {
         {/* Tab Contents */}
         <div className="animate-in fade-in duration-300">
           {activeTab === "personal" && (
-            <div className={`grid grid-cols-1 gap-8 ${studentProfile ? "lg:grid-cols-4" : ""}`}>
-              {/* Left Column - Sub nav for Students */}
+            <div className="flex flex-col gap-6">
+              {/* Top Bar Navigation for Students */}
               {studentProfile && (
-                <div className="lg:col-span-1 border-r border-gray-200/60 pr-4">
-                  <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto pb-4 lg:pb-0 sticky top-24">
-                    {["personal", "academic", "family", "references"].map(tab => (
-                        <button 
-                          key={tab}
-                          onClick={() => setChildEditorTab(tab)}
-                          className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${childEditorTab === tab ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-100"}`}
-                        >
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)} Information
-                        </button>
-                    ))}
-                  </div>
+                <div className="bg-white border border-gray-200 rounded-xl p-1 flex gap-1 overflow-x-auto shadow-sm">
+                  {["personal", "academic", "family", "references"].map(tab => (
+                    <button 
+                      key={tab}
+                      onClick={() => setChildEditorTab(tab)}
+                      className={`flex-1 min-w-[120px] items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold transition-all ${childEditorTab === tab ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"}`}
+                    >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)} Info
+                    </button>
+                  ))}
                 </div>
               )}
 
-              {/* Right Column - Forms */}
-              <div className={studentProfile ? "lg:col-span-3 space-y-8" : "space-y-8"}>
-                {/* Always show base Account box */}
-                <SectionCard title="Account Details" icon={<User size={20} />}>
-                  <div className="grid md:grid-cols-2 gap-5">
-                    <InputCard label="Full Name" name="name" value={profileData.name} onChange={handlePersonalChange} isEditing={isEditingPersonal} />
-                    <InputCard label="Email Address" name="email" value={profileData.email} onChange={handlePersonalChange} isEditing={isEditingPersonal} type="email" />
-                    <InputCard label="Mobile Number" name="mobile" value={profileData.mobile} onChange={handlePersonalChange} isEditing={isEditingPersonal} />
-                  </div>
-                </SectionCard>
-
-                {/* Role Specific */}
-                {studentProfile && (
+              {/* Form Content Area */}
+              <div className="space-y-8">
+                {/* Role Specific Forms */}
+                {studentProfile ? (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                       <StudentFormContent 
                           data={studentProfile} 
                           isEditing={isEditingPersonal}
                           activeTab={childEditorTab}
+                          profileData={profileData}
+                          handlePersonalChange={handlePersonalChange}
+                          sendEmailOtp={sendEmailOtp}
+                          originalEmail={originalEmail}
+                          isEmailVerified={isEmailVerified}
                           handlers={{
                               updateField: updateStudentField,
                               updateAddress: updateStudentAddress,
@@ -452,25 +515,66 @@ const Profile = () => {
                           centers={centers}
                       />
                   </div>
-                )}
-
-                {/* Employee View */}
-                {employeeProfile && (
-                  <div className="space-y-8">
-                    <SectionCard title="Professional Overview" icon={<Briefcase size={20} />}>
+                ) : (
+                  <>
+                    <SectionCard title="Account Details" icon={<User size={20} />}>
                       <div className="grid md:grid-cols-2 gap-5">
-                        <InputCard label="First Name" value={employeeProfile.firstName} onChange={(e)=>updateEmployeeField("firstName", e.target.value)} isEditing={isEditingPersonal} />
-                        <InputCard label="Last Name" value={employeeProfile.lastName} onChange={(e)=>updateEmployeeField("lastName", e.target.value)} isEditing={isEditingPersonal} />
-                        <InputCard label="Mobile (Professional)" value={employeeProfile.phone} onChange={(e)=>updateEmployeeField("phone", e.target.value)} isEditing={isEditingPersonal} />
-                        <InputCard label="User ID" value={employeeProfile.employeeId} isEditing={false} />
-                        <InputCard label="Core Department" value={employeeProfile.department} isEditing={false} />
-                        <InputCard label="Role Title" value={employeeProfile.designation} isEditing={false} />
-                        <InputCard label="Joined On" value={employeeProfile.joiningDate?.substring(0,10)} isEditing={false} />
-                        <InputCard label="Assigned Gender" value={employeeProfile.gender} onChange={(e)=>updateEmployeeField("gender", e.target.value)} isEditing={isEditingPersonal} />
-                        <InputCard label="Assigned Center" value={employeeProfile.center?.name || "No Center"} isEditing={false} />
+                        <InputCard label="Full Name" name="name" value={profileData.name} onChange={handlePersonalChange} isEditing={isEditingPersonal} />
+                        <InputCard 
+                          label="Email Address" 
+                          name="email" 
+                          value={profileData.email} 
+                          onChange={handlePersonalChange} 
+                          isEditing={isEditingPersonal} 
+                          type="email" 
+                          action={(profileData.email !== originalEmail && !isEmailVerified) && (
+                            <button 
+                                onClick={sendEmailOtp}
+                                className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase tracking-wider"
+                            >
+                                Verify
+                            </button>
+                          )}
+                        />
+                        <InputCard label="Mobile Number" name="mobile" value={profileData.mobile} onChange={handlePersonalChange} isEditing={isEditingPersonal} />
                       </div>
                     </SectionCard>
-                  </div>
+                    
+                    {employeeProfile && (
+                      <div className="space-y-8">
+                        <SectionCard title="Professional Overview" icon={<Briefcase size={20} />}>
+                          <div className="grid md:grid-cols-2 gap-5">
+                            <InputCard label="First Name" value={employeeProfile.firstName} onChange={(e)=>updateEmployeeField("firstName", e.target.value)} isEditing={isEditingPersonal} />
+                            <InputCard label="Last Name" value={employeeProfile.lastName} onChange={(e)=>updateEmployeeField("lastName", e.target.value)} isEditing={isEditingPersonal} />
+                            <InputCard label="Mobile (Professional)" value={employeeProfile.phone} onChange={(e)=>updateEmployeeField("phone", e.target.value)} isEditing={isEditingPersonal} />
+                            <InputCard label="User ID" value={employeeProfile.employeeId} isEditing={isEditingPersonal} onChange={(e)=>updateEmployeeField("employeeId", e.target.value)} />
+                            <InputCard label="Core Department" value={employeeProfile.department} isEditing={isEditingPersonal} onChange={(e)=>updateEmployeeField("department", e.target.value)} />
+                            <InputCard label="Role Title" value={employeeProfile.designation} isEditing={isEditingPersonal} onChange={(e)=>updateEmployeeField("designation", e.target.value)} />
+                            <InputCard label="Joined On" value={employeeProfile.joiningDate?.substring(0,10)} isEditing={isEditingPersonal} onChange={(e)=>updateEmployeeField("joiningDate", e.target.value)} type="date" />
+                            <InputCard label="Assigned Gender" value={employeeProfile.gender} onChange={(e)=>updateEmployeeField("gender", e.target.value)} isEditing={isEditingPersonal} />
+                            
+                            <div className="flex flex-col gap-1.5 focus-within:text-indigo-600 transition-colors">
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Assigned Center</label>
+                                {isEditingPersonal ? (
+                                    <select 
+                                        value={employeeProfile.center?._id || employeeProfile.center || ""}
+                                        onChange={(e) => updateEmployeeField("center", e.target.value)}
+                                        className="w-full px-3.5 py-2 hover:border-gray-400 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none text-gray-800 text-sm shadow-sm"
+                                    >
+                                        <option value="">Select Center</option>
+                                        {centers.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                    </select>
+                                ) : (
+                                    <div className="px-3.5 py-2 bg-gray-50/50 border border-gray-100 rounded-lg text-gray-800 text-sm break-words min-h-[38px] flex items-center">
+                                        {employeeProfile.center?.name || centers?.find(c => c._id === employeeProfile.center)?.name || "No Center"}
+                                    </div>
+                                )}
+                            </div>
+                          </div>
+                        </SectionCard>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -488,13 +592,19 @@ const Profile = () => {
                            </div>
                            <div>
                                <h3 className="text-lg font-bold text-gray-900 leading-tight">{child.studentNameEnglish}</h3>
-                               <p className="text-gray-500 text-xs font-semibold">{child.course || "No Course Linked"}</p>
                            </div>
                        </div>
                        <div className="flex-1 space-y-2 text-sm mb-6">
-                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">WhatsApp</span><span className="font-medium text-gray-800">{child.whatsapp || "N/A"}</span></div>
-                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">Center</span><span className="font-medium text-indigo-600">{child.center?.name || centers?.find(c => c._id === child.center)?.name || "N/A"}</span></div>
-                       </div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">
+                            phone</span><span className="font-medium text-gray-800">{child.whatsapp || "N/A"}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">
+                            Email</span><span className="font-medium text-gray-800">{child.email || "N/A"}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-gray-500">
+                            Center</span><span className="font-medium text-indigo-600">{child.center?.name || centers?.find(c => c._id === child.center)?.name || "N/A"}</span>
+                          </div>
+                        </div>
                        <button 
                          onClick={() => openChildEditor(child)}
                          className="w-full py-2.5 bg-gray-50 border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-colors"
@@ -549,6 +659,9 @@ const Profile = () => {
                           data={childData} 
                           isEditing={true}
                           activeTab={childEditorTab}
+                          sendEmailOtp={sendEmailOtp}
+                          originalEmail={originalChildEmail}
+                          isEmailVerified={isEmailVerified}
                           handlers={{
                               updateField: updateChildField,
                               updateAddress: updateChildAddress,
@@ -566,6 +679,64 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8 text-center">
+                 <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Mail size={32} />
+                 </div>
+                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Email Change</h2>
+                 <p className="text-gray-600 text-sm mb-8">
+                   We've sent a 6-digit verification code to <span className="font-semibold text-gray-800">{profileData.email}</span>. Please enter it below to confirm your new email.
+                 </p>
+                 
+                 <div className="space-y-6">
+                    <input 
+                      type="text" 
+                      maxLength="6"
+                      placeholder="0 0 0 0 0 0"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center text-3xl font-bold tracking-[0.5em] py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-indigo-500 focus:bg-white outline-none transition-all placeholder:text-gray-300"
+                    />
+                    
+                    <div className="flex flex-col gap-3">
+                       <button 
+                         disabled={otp.length !== 6 || isSendingOtp}
+                         onClick={() => {
+                            if (selectedChildId) {
+                              saveChildProfile(otp);
+                            } else {
+                              savePersonalProfile(otp);
+                            }
+                         }}
+                         className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200"
+                       >
+                         Complete Verification
+                       </button>
+                       <button 
+                         onClick={() => { setShowOtpModal(false); setOtp(""); }}
+                         className="w-full py-3 bg-white text-gray-500 font-semibold rounded-xl hover:text-gray-700 transition-colors"
+                       >
+                         Cancel Change
+                       </button>
+                    </div>
+                    
+                    <button 
+                      disabled={isSendingOtp}
+                      onClick={sendEmailOtp}
+                      className="text-xs font-bold text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors"
+                    >
+                      {isSendingOtp ? "Sending..." : "Resend Code"}
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -586,16 +757,24 @@ const SectionCard = ({ title, icon, children }) => (
     </div>
 );
 
-const InputCard = ({ label, value, onChange, isEditing, type = "text" }) => (
+const InputCard = ({ label, value, onChange, isEditing, type = "text", name, action }) => (
     <div className="flex flex-col gap-1.5 focus-within:text-indigo-600 transition-colors">
         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
         {isEditing ? (
-            <input
-                type={type}
-                value={value || ""}
-                onChange={onChange}
-                className="w-full px-3.5 py-2 hover:border-gray-400 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none text-gray-800 text-sm shadow-sm"
-            />
+            <div className="relative flex items-center">
+                <input
+                    type={type}
+                    name={name}
+                    value={value || ""}
+                    onChange={onChange}
+                    className={`w-full px-3.5 py-2 hover:border-gray-400 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none text-gray-800 text-sm shadow-sm ${action ? "pr-20" : ""}`}
+                />
+                {action && (
+                    <div className="absolute right-1.5">
+                        {action}
+                    </div>
+                )}
+            </div>
         ) : (
             <div className="px-3.5 py-2 bg-gray-50/50 border border-gray-100 rounded-lg text-gray-800 text-sm break-words min-h-[38px] flex items-center">
                 {value || <span className="text-gray-400 italic">Not specified</span>}
@@ -606,14 +785,43 @@ const InputCard = ({ label, value, onChange, isEditing, type = "text" }) => (
 
 
 
-const StudentFormContent = ({ data, isEditing, activeTab, handlers, centers }) => {
+const StudentFormContent = ({ data, isEditing, activeTab, handlers, centers, profileData, handlePersonalChange, sendEmailOtp, originalEmail, isEmailVerified }) => {
     const { updateField, updateAddress, updateBank, updateArray, addArrayItem, removeArrayItem } = handlers;
     
+    // Support both own profile and child profile editing
+    const effectiveName = profileData ? profileData.name : data.studentNameEnglish;
+    const effectiveEmail = profileData ? profileData.email : data.email;
+    const effectiveMobile = profileData ? profileData.mobile : (data.phone || data.whatsapp);
+
+    const onNameChange = handlePersonalChange ? handlePersonalChange : (e) => updateField("studentNameEnglish", e.target.value);
+    const onEmailChange = handlePersonalChange ? handlePersonalChange : (e) => updateField("email", e.target.value);
+    const onMobileChange = handlePersonalChange ? handlePersonalChange : (e) => updateField("phone", e.target.value);
+
     return (
         <div className="animate-in fade-in duration-300">
             {activeTab === "personal" && (
                 <div className="space-y-8">
-                <SectionCard title="Identity & Demographics" icon={<User size={20} />}>
+                <SectionCard title="Account & Identity" icon={<User size={20} />}>
+                    <div className="grid md:grid-cols-3 gap-5 mb-6 pb-6 border-b border-gray-100">
+                        <InputCard label="Full Name" name="name" value={effectiveName} onChange={onNameChange} isEditing={isEditing} />
+                        <InputCard 
+                          label="Email Address" 
+                          name="email" 
+                          value={effectiveEmail} 
+                          onChange={onEmailChange} 
+                          isEditing={isEditing} 
+                          type="email" 
+                          action={(effectiveEmail !== originalEmail && !isEmailVerified) && (
+                            <button 
+                                onClick={sendEmailOtp}
+                                className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase tracking-wider"
+                            >
+                                Verify
+                            </button>
+                          )}
+                        />
+                        <InputCard label="Mobile (Phone)" name="mobile" value={effectiveMobile} onChange={onMobileChange} isEditing={isEditing} />
+                    </div>
                     <div className="grid md:grid-cols-3 gap-5">
                     <InputCard label="Mother Tongue Name" value={data.studentNameMotherTongue} onChange={(e)=>updateField("studentNameMotherTongue", e.target.value)} isEditing={isEditing} />
                     <InputCard label="Father's Name" value={data.fatherName} onChange={(e)=>updateField("fatherName", e.target.value)} isEditing={isEditing} />
@@ -633,13 +841,24 @@ const StudentFormContent = ({ data, isEditing, activeTab, handlers, centers }) =
                     
                     <div className="flex flex-col gap-1.5 focus-within:text-indigo-600 transition-colors">
                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Assigned Center</label>
-                        <div className="px-3.5 py-2 bg-gray-50/50 border border-gray-100 rounded-lg text-gray-800 text-sm break-words min-h-[38px] flex items-center">
-                            {(() => {
-                                const childCenterId = data.center?._id || data.center;
-                                const centerObj = centers?.find(c => c._id === childCenterId) || (typeof data.center === 'object' ? data.center : null);
-                                return centerObj?.name ? `${centerObj.name} - ${centerObj.location || "Location unlisted"}` : <span className="text-gray-400 italic">Not specified</span>;
-                            })()}
-                        </div>
+                        {isEditing ? (
+                            <select 
+                                value={data.center?._id || data.center || ""}
+                                onChange={(e) => updateField("center", e.target.value)}
+                                className="w-full px-3.5 py-2 hover:border-gray-400 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none text-gray-800 text-sm shadow-sm"
+                            >
+                                <option value="">Select Center</option>
+                                {centers.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            </select>
+                        ) : (
+                            <div className="px-3.5 py-2 bg-gray-50/50 border border-gray-100 rounded-lg text-gray-800 text-sm break-words min-h-[38px] flex items-center">
+                                {(() => {
+                                    const childCenterId = data.center?._id || data.center;
+                                    const centerObj = centers?.find(c => c._id === childCenterId) || (typeof data.center === 'object' ? data.center : null);
+                                    return centerObj?.name ? `${centerObj.name} - ${centerObj.location || "Location unlisted"}` : <span className="text-gray-400 italic">Not specified</span>;
+                                })()}
+                            </div>
+                        )}
                     </div>
                     </div>
                 </SectionCard>
