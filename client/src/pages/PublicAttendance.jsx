@@ -3,7 +3,7 @@ import Webcam from "react-webcam";
 import { Camera, User, CheckCircle, ArrowRight, ShieldCheck, Clock, MapPin, X, RefreshCw, LogIn, MonitorCheck, FileCheck } from "lucide-react";
 import api from "../services/api";
 import toast from "react-hot-toast";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-3.jpeg";
 import attendanceSidebar from "../assets/attendance_sidebar.png";
 
 const PublicAttendance = () => {
@@ -137,7 +137,7 @@ const PublicAttendance = () => {
                 <div className="relative z-10 w-full flex flex-col justify-start gap-16 p-12 lg:p-20">
                     <div className="space-y-6">
                         <div className="inline-block p-4 bg-white rounded-3xl shadow-2xl animate-in zoom-in-50 duration-700">
-                            <img src={logo} alt="Dr.RG Logo" className="w-16 h-16 object-contain" />
+                            <img src={logo} alt="Dr.RG Logo" className="h-16 w-auto object-contain" />
                         </div>
                         <div>
                             <h1 className="text-4xl lg:text-6xl font-black text-white tracking-tighter uppercase leading-none">
@@ -202,7 +202,7 @@ const PublicAttendance = () => {
                                 {/* Mobile-only Header */}
                                 <div className="md:hidden text-center mb-10">
                                     <div className="inline-block p-4 bg-white rounded-2xl shadow-sm mb-6 mx-auto border border-slate-50">
-                                        <img src={logo} alt="Academy Logo" className="w-14 h-14 object-contain" />
+                                        <img src={logo} alt="Academy Logo" className="h-14 w-auto object-contain" />
                                     </div>
                                     <h2 className="text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">Dr.RG Academy</h2>
                                     <p className="text-slate-400 text-[11px] font-medium mt-3">Please enter your Institutional ID to begin</p>

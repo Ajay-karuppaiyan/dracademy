@@ -136,13 +136,16 @@ router.post('/login', async (req, res) => {
                 if (employee && employee.status === 'inactive') {
                     return res.status(403).json({ message: 'Your account has been blocked by the administration. Please contact support.' });
                 }
-                if (student && student.status === 'inactive') {
-                    return res.status(403).json({ message: 'Your account has been blocked by the administration. Please contact support.' });
-                }
             } else if (user.role === 'vendor') {
                 const Vendor = require('../models/Vendor');
                 const vendor = await Vendor.findOne({ user: user._id });
                 if (vendor && vendor.status === 'inactive') {
+                    return res.status(403).json({ message: 'Your account has been blocked by the administration. Please contact support.' });
+                }
+            } else if (user.role === 'student') {
+                const Student = require('../models/Student');
+                const student = await Student.findOne({ user: user._id });
+                if (student && student.status === 'inactive') {
                     return res.status(403).json({ message: 'Your account has been blocked by the administration. Please contact support.' });
                 }
             }

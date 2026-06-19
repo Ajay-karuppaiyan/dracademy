@@ -23,7 +23,7 @@ import {
   Key,
   ShieldAlert
 } from "lucide-react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-2.jpeg";
 import { useAuth } from "../context/AuthContext";
 
 const NavItem = ({ item, isCollapsed, closeMobile }) => (
@@ -205,9 +205,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
               <div className="p-1 rounded bg-white">
-                <img src={logo} alt="DRRG Academy Logo" className="h-6 w-6 object-contain" />
+                <img src={logo} alt="DRRG Academy Logo" className="h-10 w-auto object-contain" />
               </div>
-              <span className="text-2xl font-bold tracking-tight">Dr.RG</span>
             </div>
           ) : (
             <div className="mx-auto bg-brand-600 p-2 rounded-lg">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { Menu, X, Search, ChevronDown, Globe, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
-import logo from "../assets/logo.png";
+import logoHeader from "../assets/logo-3.jpeg";
+import logoFooter from "../assets/logo-1.jpeg";
 import medicalImg from "../assets/medical.png";
 import hospitalityImg from "../assets/hospitality.png";
 import vocationalImg from "../assets/vocational.png";
@@ -311,7 +312,7 @@ const PublicLayout = () => {
       {/* Top Corporate Strip - Single Line forced */}
       <div className="bg-slate-900 text-slate-400 text-[10px] md:text-xs py-2.5 px-4 border-b border-slate-800 overflow-hidden whitespace-nowrap scrollbar-hide">
         <div className="max-w-7xl mx-auto flex md:justify-between items-center gap-6 min-w-max md:min-w-0">
-          
+
           <div className="flex items-center gap-8 md:gap-6 md:w-full md:justify-between animate-marquee md:animate-none">
             {/* The set of links to repeat */}
             <div className="flex items-center gap-6 md:gap-5 md:w-full md:justify-between">
@@ -367,11 +368,8 @@ const PublicLayout = () => {
             {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
               <div className="p-1 rounded bg-white">
-                <img src={logo} alt="DRRG Academy Logo" className="h-10 w-10 object-contain" />
+                <img src={logoHeader} alt="DRRG Academy Logo" className="h-14 sm:h-18 object-contain" />
               </div>
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                Dr.RG Academy
-              </span>
             </Link>
 
             <div className="flex items-center gap-3 ml-auto">
@@ -488,7 +486,7 @@ const PublicLayout = () => {
                                   </Link>
                                 )}
                                 {selectedExploreItem === "New Registration" && (
-                                <Link
+                                  <Link
                                     to="/student-registration"
                                     target="_blank"
                                     onClick={() => setIsExploreOpen(false)}
@@ -537,11 +535,11 @@ const PublicLayout = () => {
         {isMenuOpen && (
           <div className="md:hidden fixed inset-0 z-[100]">
             {/* Backdrop - NO BLUR AS REQUESTED */}
-            <div 
+            <div
               className="absolute inset-0 bg-slate-900/40"
               onClick={() => setIsMenuOpen(false)}
             ></div>
-            
+
             {/* Menu Content */}
             <div className="absolute top-[80px] left-0 w-full max-h-[calc(100vh-80px)] bg-white border-b border-slate-200 shadow-2xl overflow-y-auto">
               <div className="px-5 py-8 space-y-4">
@@ -549,19 +547,19 @@ const PublicLayout = () => {
                   <div key={item.title} className="border-b border-slate-50 pb-4">
                     {item.submenu || item.mega ? (
                       <div>
-                        <button 
+                        <button
                           onClick={() => setExpandedMobileCategory(expandedMobileCategory === item.title ? "" : item.title)}
                           className="flex items-center justify-between w-full text-lg font-bold text-slate-900 py-2"
                         >
                           {item.title}
                           <ChevronDown size={20} className={`transition-transform duration-300 ${expandedMobileCategory === item.title ? "rotate-180" : ""}`} />
                         </button>
-                        
+
                         {expandedMobileCategory === item.title && (
                           <div className="mt-4 pl-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
                             {item.submenu && item.submenu.map((sub) => (
                               <div key={sub.title}>
-                                <button 
+                                <button
                                   onClick={() => setSelectedMobileItem(selectedMobileItem === sub.title ? "" : sub.title)}
                                   className={`block w-full text-left text-base font-bold transition-colors ${selectedMobileItem === sub.title ? "text-brand-700" : "text-slate-700 hover:text-brand-600"}`}
                                 >
@@ -572,8 +570,8 @@ const PublicLayout = () => {
                                     <p className="text-sm leading-relaxed text-slate-600">
                                       {getExploreContent(sub.title)}
                                     </p>
-                                    <Link 
-                                      to={sub.to} 
+                                    <Link
+                                      to={sub.to}
                                       onClick={() => setIsMenuOpen(false)}
                                       className="inline-block mt-3 text-sm font-bold text-brand-700 hover:underline"
                                     >
@@ -583,14 +581,14 @@ const PublicLayout = () => {
                                 )}
                               </div>
                             ))}
-                            
+
                             {item.mega && item.mega.map((group) => (
                               <div key={group.title} className="space-y-4">
                                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{group.title}</p>
                                 <div className="space-y-3 pl-2">
                                   {group.items.map((sub) => (
                                     <div key={sub}>
-                                      <button 
+                                      <button
                                         onClick={() => setSelectedMobileItem(selectedMobileItem === sub ? "" : sub)}
                                         className={`block w-full text-left text-sm font-bold transition-colors ${selectedMobileItem === sub ? "text-brand-700" : "text-slate-600"}`}
                                       >
@@ -654,11 +652,8 @@ const PublicLayout = () => {
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-6">
                 <div className="p-1.5 rounded-xl bg-white shadow-xl">
-                  <img src={logo} alt="DRRG Academy Logo" className="h-10 w-10 object-contain" />
+                  <img src={logoFooter} alt="DRRG Academy Logo" className="h-16 sm:h-20 object-contain" />
                 </div>
-                <span className="text-2xl font-bold text-white tracking-tight">
-                  Dr.RG Academy
-                </span>
               </div>
               <p className="mb-6 max-w-sm leading-relaxed text-brand-100/80">
                 A premier group of institutions dedicated to excellence in professional education, vocational training, and global consultancy. Empowering the next generation of global leaders.
