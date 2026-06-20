@@ -27,6 +27,7 @@ import MyLearning from "./pages/lms/MyLearning";
 import CoursePlayer from "./pages/lms/CoursePlayer";
 import EnrollClass from "./pages/lms/EnrollClass";
 import CourseManagement from "./pages/admin/CourseManagement";
+import ExamManagement from "./pages/dashboard/ExamManagement";
 import AdministrativeConfigs from "./pages/admin/AdministrativeConfigs";
 import HR from "./pages/dashboard/HR";
 import Settings from "./pages/dashboard/Settings";
@@ -263,6 +264,7 @@ function App() {
             {/* Announcements */}
             <Route path="announcements" element={<Announcement />} />
             <Route path="forum" element={<DiscussionForum />} />
+            <Route path="exams" element={<ExamManagement />} />
 
             {/* LMS */}
             <Route path="lms" element={<MyLearning />} />

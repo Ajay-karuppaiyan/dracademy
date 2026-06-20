@@ -431,7 +431,7 @@ const StudentRegistration = () => {
                             placeholder="email@example.com"
                           />
                           <Mail className={`absolute left-4 size-5 ${isEmailVerified ? "text-green-500" : "text-slate-400"}`} />
-                          
+
                           <div className="absolute right-2 flex gap-1">
                             {!isEmailVerified && !otpSent && (
                               <button
@@ -443,7 +443,7 @@ const StudentRegistration = () => {
                                 {sendingOtp ? "Sending..." : "Verify"}
                               </button>
                             )}
-                            
+
                             {isEmailVerified && (
                               <div className="flex items-center gap-1.5 px-4 py-2.5 bg-green-500 text-white rounded-xl shadow-lg shadow-green-500/20 animate-in zoom-in duration-300">
                                 <CheckCircle size={14} />

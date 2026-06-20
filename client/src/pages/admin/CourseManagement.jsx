@@ -28,6 +28,7 @@ import ConfirmationModal from "../../components/modals/ConfirmationModal";
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [instructors, setInstructors] = useState([]);
+  const [availableSubjects, setAvailableSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -53,6 +54,7 @@ const CourseManagement = () => {
     duration: "",
     durationUnit: "week",
     instructor: "",
+    subjects: [],
     thumbnail: null,
     syllabus: [{ week: "Week 1", topic: "", description: "", projectName: "" }],
   });
@@ -89,10 +91,19 @@ const CourseManagement = () => {
     }
   };
 
+  const fetchSubjects = async () => {
+    try {
+      const { data } = await api.get("/subjects");
+      setAvailableSubjects(data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchCourses(), fetchInstructors()]);
+      await Promise.all([fetchCourses(), fetchInstructors(), fetchSubjects()]);
       setLoading(false);
     };
     init();
@@ -109,6 +120,7 @@ const CourseManagement = () => {
       duration: course.duration,
       durationUnit: course.durationUnit || "week",
       instructor: course.instructor?._id || course.instructor || "",
+      subjects: course.subjects ? course.subjects.map(s => s._id || s) : [],
       thumbnail: null,
       syllabus:
         course.syllabus && course.syllabus.length > 0
@@ -131,6 +143,7 @@ const CourseManagement = () => {
       duration: course.duration,
       durationUnit: course.durationUnit || "week",
       instructor: course.instructor?._id || course.instructor || "",
+      subjects: course.subjects ? course.subjects.map(s => s._id || s) : [],
       thumbnail: null,
       syllabus:
         course.syllabus && course.syllabus.length > 0
@@ -282,6 +295,7 @@ const CourseManagement = () => {
       data.append("duration", formData.duration);
       data.append("durationUnit", formData.durationUnit);
       data.append("instructor", formData.instructor || user?._id);
+      data.append("subjects", JSON.stringify(formData.subjects));
       data.append("syllabus", JSON.stringify(formData.syllabus));
 
       if (formData.thumbnail) {
@@ -322,6 +336,7 @@ const CourseManagement = () => {
       duration: "",
       durationUnit: "week",
       instructor: "",
+      subjects: [],
       thumbnail: null,
       syllabus: [
         { week: "Week 1", topic: "", description: "", projectName: "" },
@@ -806,6 +821,37 @@ const CourseManagement = () => {
                             </option>
                           )}
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Course Subjects
+                      </label>
+                      <div className="border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto bg-white space-y-2 shadow-sm">
+                        {availableSubjects.map((subject) => {
+                          const isChecked = formData.subjects.includes(subject._id);
+                          return (
+                            <label key={subject._id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded transition-colors">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({ ...formData, subjects: [...formData.subjects, subject._id] });
+                                  } else {
+                                    setFormData({ ...formData, subjects: formData.subjects.filter((id) => id !== subject._id) });
+                                  }
+                                }}
+                              />
+                              <span className="text-sm text-gray-700">{subject.name} ({subject.code})</span>
+                            </label>
+                          );
+                        })}
+                        {availableSubjects.length === 0 && (
+                          <p className="text-xs text-gray-400 italic">No subjects available.</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 

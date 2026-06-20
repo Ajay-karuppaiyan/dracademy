@@ -23,6 +23,7 @@ const AddEmployeeModal = ({ isOpen, onClose, employee = null }) => {
   const [designations, setDesignations] = useState([]);
   const [preview, setPreview] = useState(null);
   const [centers, setCenters] = useState([]);
+  const [availableSubjects, setAvailableSubjects] = useState([]);
   const { sendOtp, user } = useAuth();
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -48,21 +49,24 @@ const [formData, setFormData] = useState({
   idFile: null,
   certificateFile: null,
   contractFile: null,
+  subjects: [],
 });
 
   const fetchConfigs = async () => {
     try {
-      const [deptRes, roleRes, desigRes, centerRes] = await Promise.all([
+      const [deptRes, roleRes, desigRes, centerRes, subRes] = await Promise.all([
         api.get("/departments"),
         api.get("/roles"),
         api.get("/designations"),
         api.get("/centers"),
+        api.get("/subjects"),
       ]);
       console.log("Centers API:", centerRes.data);
       setDepartments(deptRes.data);
       setRoles(roleRes.data);
       setDesignations(desigRes.data);
       setCenters(centerRes.data);
+      setAvailableSubjects(subRes.data);
     } catch {
       toast.error("Failed to load configuration data");
     }
@@ -105,6 +109,7 @@ const [formData, setFormData] = useState({
           idFile: null,
           certificateFile: null,
           contractFile: null,
+          subjects: employee.user?.subjects ? employee.user.subjects.map(s => s._id || s) : [],
         });
         setPreview(employee.profilePic?.url || null);
       } else {
@@ -129,6 +134,7 @@ const [formData, setFormData] = useState({
           idFile: null,
           certificateFile: null,
           contractFile: null,
+          subjects: [],
         });
         setPreview(null);
       }
@@ -200,13 +206,17 @@ const [formData, setFormData] = useState({
       Object.keys(formData).forEach((key) => {
         if (
           formData[key] &&
-          !["profilePic", "idFile", "certificateFile", "contractFile"].includes(
+          !["profilePic", "idFile", "certificateFile", "contractFile", "subjects"].includes(
             key,
           )
         ) {
           data.append(key, formData[key]);
         }
       });
+
+      if (formData.role === "coach" || formData.role === "Coach") {
+        data.append("subjects", JSON.stringify(formData.subjects));
+      }
 
       // Append files
       if (formData.profilePic) data.append("profilePic", formData.profilePic);
@@ -590,6 +600,39 @@ const [formData, setFormData] = useState({
                   ))}
                 </select>
               </div>
+
+              {(formData.role === "coach" || formData.role === "Coach") && (
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Coach Subjects
+                  </label>
+                  <div className="border border-slate-200 rounded-lg p-3 max-h-40 overflow-y-auto bg-slate-50 space-y-2">
+                    {availableSubjects.map((subject) => {
+                      const isChecked = formData.subjects.includes(subject._id);
+                      return (
+                        <label key={subject._id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-1 rounded transition-colors">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ ...formData, subjects: [...formData.subjects, subject._id] });
+                              } else {
+                                setFormData({ ...formData, subjects: formData.subjects.filter((id) => id !== subject._id) });
+                              }
+                            }}
+                          />
+                          <span className="text-sm text-slate-700">{subject.name} ({subject.code})</span>
+                        </label>
+                      );
+                    })}
+                    {availableSubjects.length === 0 && (
+                      <p className="text-xs text-slate-400 italic">No subjects available.</p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
                   Center <span className="text-red-500">*</span>

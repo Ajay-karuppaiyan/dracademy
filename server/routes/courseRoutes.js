@@ -193,7 +193,7 @@ router.post('/', (req, res, next) => {
         log(`POST /api/courses started`);
         log(`Body keys: ${Object.keys(req.body).join(', ')}`);
 
-        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive } = req.body;
+        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive, subjects } = req.body;
 
         const thumbnail = req.file ? {
             url: req.file.path,
@@ -228,7 +228,8 @@ router.post('/', (req, res, next) => {
             thumbnail,
             price: Number(price) || 0,
             category,
-            level
+            level,
+            subjects: typeof subjects === 'string' ? JSON.parse(subjects) : subjects || []
         });
 
         const createdCourse = await course.save();
@@ -248,7 +249,7 @@ router.put('/:id', upload.single('thumbnail'), async (req, res) => {
         const course = await Course.findById(req.params.id);
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
-        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive, lessons } = req.body;
+        const { title, description, instructor, price, category, level, duration, durationUnit, syllabus, isActive, lessons, subjects } = req.body;
         
         if (lessons) {
             course.lessons = lessons;
@@ -278,6 +279,10 @@ router.put('/:id', upload.single('thumbnail'), async (req, res) => {
         course.durationUnit = durationUnit || course.durationUnit;
         course.isActive = isActive !== undefined ? (isActive === 'false' ? false : true) : course.isActive;
         course.instructor = instructor || course.instructor;
+
+        if (subjects) {
+            course.subjects = typeof subjects === 'string' ? JSON.parse(subjects) : subjects;
+        }
 
         const updatedCourse = await course.save();
         res.json(updatedCourse);

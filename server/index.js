@@ -27,6 +27,10 @@ const vendorRoutes = require("./routes/vendorRoutes");
 const enquiryRoutes = require("./routes/enquiryRoutes");
 const publicAttendanceRoutes = require("./routes/publicAttendanceRoutes");
 const otpRoutes = require("./routes/otpRoutes");
+const batchRoutes = require("./routes/batchRoutes");
+const subjectRoutes = require("./routes/subjectRoutes");
+const examRoutes = require("./routes/examRoutes");
+const markRoutes = require("./routes/markRoutes");
 
 
 
@@ -72,6 +76,10 @@ app.use("/api/vendors", vendorRoutes);
 app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/public-attendance", publicAttendanceRoutes);
 app.use("/api/otp", otpRoutes);
+app.use("/api/batches", batchRoutes);
+app.use("/api/subjects", subjectRoutes);
+app.use("/api/exams", examRoutes);
+app.use("/api/marks", markRoutes);
 
 
 

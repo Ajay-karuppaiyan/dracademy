@@ -21,7 +21,8 @@ import {
   MessageSquare,
   Briefcase,
   Key,
-  ShieldAlert
+  ShieldAlert,
+  FileText
 } from "lucide-react";
 import logo from "../assets/logo-2.jpeg";
 import { useAuth } from "../context/AuthContext";
@@ -65,6 +66,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <CreditCard size={22} />, label: "Subscription", path: "/dashboard/subscription" },
     { icon: <Clock size={22} />, label: "Time Table", path: "/dashboard/timetable" },
+    { icon: <FileText size={22} />, label: "Exam Management", path: "/dashboard/exams" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];
@@ -77,6 +79,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <Receipt size={22} />, label: "Expenses", path: "/dashboard/expenses" },
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <FileText size={22} />, label: "Exam Management", path: "/dashboard/exams" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
@@ -88,6 +91,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <MonitorPlay size={22} />, label: "My Courses", path: "/dashboard/coach/my-courses" },
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/attendance" },
+    { icon: <FileText size={22} />, label: "Exam Management", path: "/dashboard/exams" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/leave-request" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
@@ -99,6 +103,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <CalendarCheck size={22} />, label: "Attendance", path: "/dashboard/parent/child-attendance" },
     { icon: <UserCheck size={22} />, label: "Leave Request", path: "/dashboard/parent/child-leave" },
     { icon: <MonitorPlay size={22} />, label: "Enroll Class", path: "/dashboard/enroll" },
+    { icon: <FileText size={22} />, label: "Exam Management", path: "/dashboard/exams" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
   ];

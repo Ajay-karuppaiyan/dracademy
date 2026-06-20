@@ -31,7 +31,7 @@ router.post('/public-registration', optionalProtect, async (req, res) => {
       maritalStatus,
       center,
       nationality,
-      
+
       // Educational identifiers
       kcetRegNo,
       neetRegNo,
@@ -315,7 +315,7 @@ router.get("/", protect, async (req, res) => {
       // Find all courses assigned to this coach
       const coachCourses = await Course.find({ instructor: req.user._id }).select("_id");
       const coachCourseIds = coachCourses.map(c => c._id);
-      
+
       // Filter students who are enrolled in ANY of these coach's courses
       query["enrolledCourses.course"] = { $in: coachCourseIds };
     }
@@ -401,7 +401,7 @@ router.put(
       if (data.center && typeof data.center === "object") {
         data.center = data.center._id;
       }
-      
+
       // Ensure parent is handled as an ID
       if (data.parent && typeof data.parent === "object") {
         data.parent = data.parent._id;
@@ -449,7 +449,7 @@ router.put(
       if (student.user) {
         const user = await User.findById(student.user);
         const updateData = {};
-        
+
         if (req.body.email && req.body.email !== user.email) {
           // Verify OTP for email change
           const { otp } = req.body;
@@ -463,10 +463,10 @@ router.put(
           }
           // Delete OTP after verification
           await Otp.deleteOne({ _id: otpRecord._id });
-          
+
           updateData.email = req.body.email;
         }
-        
+
         if (req.body.studentNameEnglish) updateData.name = req.body.studentNameEnglish;
 
         if (req.files && req.files.profilePic) {

@@ -95,6 +95,7 @@ router.post(
         email,
         password: "Employee@123",
         role: roleLower,
+        subjects: req.body.subjects ? JSON.parse(req.body.subjects) : [],
       });
 
       //////////////////////////////////////////////////////
@@ -323,6 +324,10 @@ router.put(
         }
 
         user.role = roleLower;
+      }
+
+      if (req.body.subjects) {
+        user.subjects = JSON.parse(req.body.subjects);
       }
 
       await user.save();

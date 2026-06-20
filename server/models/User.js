@@ -63,6 +63,10 @@ const userSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
     }],
+    subjects: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subject',
+    }],
     resetPasswordOtp: String,
     resetPasswordOtpExpire: Date,
     profilePic: {

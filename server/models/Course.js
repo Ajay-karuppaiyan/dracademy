@@ -100,6 +100,11 @@ const courseSchema = mongoose.Schema({
 
   lessons: [lessonSchema],
 
+  subjects: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject'
+  }],
+
   totalLessons: {
     type: Number,
     default: 0

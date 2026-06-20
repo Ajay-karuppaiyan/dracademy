@@ -8,6 +8,8 @@ import {
   Briefcase,
   MapPin,
   Key,
+  Layers,
+  BookOpen,
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
@@ -34,6 +36,10 @@ const AdministrativeConfigs = () => {
     name: "",
     location: "",
     description: "",
+    certificateDate: "",
+    code: "",
+    type: "Theory",
+    semester: 1,
   });
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -50,23 +56,39 @@ const AdministrativeConfigs = () => {
   const config = {
     departments: {
       title: "Departments",
+      singular: "Department",
       endpoint: "/departments",
       icon: <Building2 size={20} />,
     },
     roles: {
       title: "Roles",
+      singular: "Role",
       endpoint: "/roles",
       icon: <UserCheck size={20} />,
     },
     designations: {
       title: "Designations",
+      singular: "Designation",
       endpoint: "/designations",
       icon: <Briefcase size={20} />,
     },
     centers: {
       title: "Centers",
+      singular: "Center",
       endpoint: "/centers",
       icon: <MapPin size={20} />,
+    },
+    batches: {
+      title: "Batches",
+      singular: "Batch",
+      endpoint: "/batches",
+      icon: <Layers size={20} />,
+    },
+    subjects: {
+      title: "Subjects",
+      singular: "Subject",
+      endpoint: "/subjects",
+      icon: <BookOpen size={20} />,
     },
   };
 
@@ -89,13 +111,13 @@ const AdministrativeConfigs = () => {
   const handleDelete = async (id) => {
     if (
       window.confirm(
-        `Are you sure you want to delete this ${activeTab.slice(0, -1)}?`,
+        `Are you sure you want to delete this ${config[activeTab].singular}?`,
       )
     ) {
       try {
         await api.delete(`${config[activeTab].endpoint}/${id}`);
         setData(data.filter((item) => item._id !== id));
-        toast.success(`${config[activeTab].title.slice(0, -1)} deleted`);
+        toast.success(`${config[activeTab].singular} deleted`);
       } catch {
         toast.error(`Error deleting ${activeTab}`);
       }
@@ -118,14 +140,14 @@ const AdministrativeConfigs = () => {
         setData(
           data.map((item) => (item._id === currentId ? updatedItem : item)),
         );
-        toast.success(`${config[activeTab].title.slice(0, -1)} updated`);
+        toast.success(`${config[activeTab].singular} updated`);
       } else {
         const { data: newItem } = await api.post(
           config[activeTab].endpoint,
           formattedData,
         );
         setData([...data, newItem]);
-        toast.success(`${config[activeTab].title.slice(0, -1)} created`);
+        toast.success(`${config[activeTab].singular} created`);
       }
       closeModal();
     } catch (error) {
@@ -139,6 +161,10 @@ const AdministrativeConfigs = () => {
         name: item.name || "",
         location: item.location || "",
         description: item.description || "",
+        certificateDate: item.certificateDate || "",
+        code: item.code || "",
+        type: item.type || "Theory",
+        semester: item.semester || 1,
       });
       setIsEditing(true);
       setCurrentId(item._id);
@@ -147,6 +173,10 @@ const AdministrativeConfigs = () => {
         name: "",
         location: "",
         description: "",
+        certificateDate: "",
+        code: "",
+        type: "Theory",
+        semester: 1,
       });
       setIsEditing(false);
     }
@@ -197,7 +227,7 @@ const columns = [
   { name: "S.No", selector: (r, i) => i + 1, width: "70px", center: true },
 
   {
-    name: `${config[activeTab].title.slice(0, -1)} Name`,
+    name: `${config[activeTab].singular} Name`,
     selector: r => r.name,
     sortable: true,
     cell: r => (
@@ -232,6 +262,35 @@ const columns = [
               {r.location || "N/A"}
             </span>
           ),
+        },
+      ]
+    : []),
+  ...(activeTab === "subjects"
+    ? [
+        {
+          name: "Subject Code",
+          selector: r => r.code,
+          sortable: true,
+          width: "150px",
+          center: true,
+          cell: r => (
+            <span className="font-mono text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-1 rounded">
+              {r.code || "N/A"}
+            </span>
+          ),
+        },
+        {
+          name: "Type",
+          selector: r => r.type,
+          sortable: true,
+          width: "120px",
+        },
+        {
+          name: "Semester",
+          selector: r => r.semester,
+          sortable: true,
+          width: "100px",
+          center: true,
         },
       ]
     : []),
@@ -275,7 +334,7 @@ const columns = [
           onClick={() => openModal()}
           className="bg-brand-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-brand-700 transition-colors shadow-sm"
         >
-          <Plus size={20} /> Add {config[activeTab].title.slice(0, -1)}
+          <Plus size={20} /> Add {config[activeTab].singular}
         </button>
       </div>
 
@@ -323,21 +382,21 @@ const columns = [
               </div>
               <h2 className="text-xl font-bold text-gray-900">
                 {isEditing
-                  ? `Edit ${config[activeTab].title.slice(0, -1)}`
-                  : `Create ${config[activeTab].title.slice(0, -1)}`}
+                  ? `Edit ${config[activeTab].singular}`
+                  : `Create ${config[activeTab].singular}`}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  {config[activeTab].title.slice(0, -1)} Name
+                  {config[activeTab].singular} Name
                 </label>
                 <input
                   type="text"
                   required
                   autoFocus
                   className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
-                  placeholder={`Enter ${activeTab.slice(0, -1)} name...`}
+                  placeholder={`Enter ${config[activeTab].singular.toLowerCase()} name...`}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -378,6 +437,75 @@ const columns = [
                   </div>
                 </>
               )}
+
+              {activeTab === "subjects" && (
+                <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Subject Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
+                    placeholder="Enter subject code..."
+                    value={formData.code}
+                    onChange={(e) =>
+                      setFormData({ ...formData, code: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Subject Type
+                  </label>
+                  <select
+                    required
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
+                    value={formData.type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value })
+                    }
+                  >
+                    <option value="Theory">Theory</option>
+                    <option value="Practical">Practical</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Semester
+                  </label>
+                  <select
+                    required
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
+                    value={formData.semester}
+                    onChange={(e) =>
+                      setFormData({ ...formData, semester: Number(e.target.value) })
+                    }
+                  >
+                    {[1, 2, 3, 4, 5, 6].map(sem => (
+                      <option key={sem} value={sem}>{sem}</option>
+                    ))}
+                  </select>
+                </div>
+                </>
+              )}
+
+              {activeTab === "batches" && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Certificate Date
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
+                    value={formData.certificateDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, certificateDate: e.target.value })
+                    }
+                  />
+                </div>
+              )}
               <div className="flex justify-end gap-3 mt-8">
                 <button
                   type="button"
@@ -392,7 +520,7 @@ const columns = [
                 >
                   {isEditing
                     ? "Save Changes"
-                    : `Add ${config[activeTab].title.slice(0, -1)}`}
+                    : `Add ${config[activeTab].singular}`}
                 </button>
               </div>
             </form>
