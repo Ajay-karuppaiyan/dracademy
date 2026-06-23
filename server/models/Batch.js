@@ -32,8 +32,14 @@ const batchSchema = new mongoose.Schema(
     },
     numberOfStudents: {
       type: Number,
-      required: true,
+      default: 0,
     },
+    students: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Student'
+      }
+    ],
     semesters: [
       {
         semesterNumber: { type: Number, required: true },

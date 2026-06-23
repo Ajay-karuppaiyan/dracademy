@@ -17,7 +17,8 @@ router.get('/', protect, async (req, res) => {
     const exams = await Exam.find()
       .populate('course', 'title')
       .populate('center', 'name location')
-      .populate('subjects', 'name code type semester')
+      .populate('batch', 'name')
+      .populate('subject', 'name code type semester')
       .sort({ date: -1 });
     res.json(exams);
   } catch (error) {
@@ -31,7 +32,8 @@ router.get('/:id', protect, async (req, res) => {
     const exam = await Exam.findById(req.params.id)
       .populate('course', 'title')
       .populate('center', 'name location')
-      .populate('subjects', 'name code type semester');
+      .populate('batch', 'name')
+      .populate('subject', 'name code type semester');
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
     }
@@ -44,14 +46,20 @@ router.get('/:id', protect, async (req, res) => {
 // POST create a new exam (Admin only)
 router.post('/', protect, isAdmin, async (req, res) => {
   try {
-    const { name, date, course, semester, center, subjects } = req.body;
+    const { name, date, course, semester, center, batch, subject, totalMark, passMark, internalMark, externalMark, theoryMark } = req.body;
     const exam = await Exam.create({
       name,
       date,
       course,
       semester,
       center,
-      subjects: subjects ? JSON.parse(subjects) : []
+      batch,
+      subject,
+      totalMark: Number(totalMark || 100),
+      passMark: Number(passMark || 35),
+      internalMark: Number(internalMark || 0),
+      externalMark: Number(externalMark || 0),
+      theoryMark: Number(theoryMark || 0)
     });
     res.status(201).json(exam);
   } catch (error) {
@@ -62,7 +70,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // PUT update an exam (Admin only)
 router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
-    const { name, date, course, semester, center, subjects } = req.body;
+    const { name, date, course, semester, center, batch, subject, totalMark, passMark, internalMark, externalMark, theoryMark } = req.body;
     const exam = await Exam.findById(req.params.id);
     
     if (!exam) {
@@ -74,7 +82,13 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
     if (course) exam.course = course;
     if (semester) exam.semester = semester;
     if (center) exam.center = center;
-    if (subjects) exam.subjects = JSON.parse(subjects);
+    if (batch) exam.batch = batch;
+    if (subject) exam.subject = subject;
+    if (totalMark !== undefined) exam.totalMark = Number(totalMark);
+    if (passMark !== undefined) exam.passMark = Number(passMark);
+    if (internalMark !== undefined) exam.internalMark = Number(internalMark);
+    if (externalMark !== undefined) exam.externalMark = Number(externalMark);
+    if (theoryMark !== undefined) exam.theoryMark = Number(theoryMark);
 
     await exam.save();
     res.json(exam);

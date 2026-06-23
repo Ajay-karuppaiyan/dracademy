@@ -6,10 +6,13 @@ const markSchema = new mongoose.Schema({
     ref: 'Student',
     required: true,
   },
-  exam: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Exam',
+  semester: {
+    type: Number,
     required: true,
+  },
+  batch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,14 +22,6 @@ const markSchema = new mongoose.Schema({
   subject: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subject',
-    required: true,
-  },
-  totalMark: {
-    type: Number,
-    required: true,
-  },
-  passMark: {
-    type: Number,
     required: true,
   },
   theoryMark: {

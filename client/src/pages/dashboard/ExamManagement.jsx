@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, FileText, Calendar, BookOpen, MapPin, X, CheckSquare, Layers, Download, Upload, FileArchive } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Calendar, BookOpen, MapPin, X, CheckSquare, Layers, Download, Upload, FileArchive, DollarSign } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import { useAuth } from "../../context/AuthContext";
 import * as XLSX from 'xlsx';
+import MarksheetModal from "../../components/MarksheetModal";
+import BulkEditMarksModal from "../../components/BulkEditMarksModal";
+import AddStudentFeeModal from "../../components/AddStudentFeeModal";
 
 const ExamManagement = () => {
   const { user } = useAuth();
@@ -15,13 +18,19 @@ const ExamManagement = () => {
   const [exams, setExams] = useState([]);
   const [courses, setCourses] = useState([]);
   const [centers, setCenters] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [students, setStudents] = useState([]);
   const [marks, setMarks] = useState([]);
+  const [studentFees, setStudentFees] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showMarkModal, setShowMarkModal] = useState(false);
+  const [showMarksheetModal, setShowMarksheetModal] = useState(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedGroupData, setSelectedGroupData] = useState(null);
   
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
@@ -33,20 +42,24 @@ const ExamManagement = () => {
     course: "",
     semester: 1,
     center: "",
-    subjects: []
+    batch: "",
+    subject: "",
+    totalMark: 100,
+    passMark: 35,
+    internalMark: 0,
+    externalMark: 0,
+    theoryMark: 0
   });
 
   const [markFormData, setMarkFormData] = useState({
     student: "",
-    exam: "",
+    batch: "",
+    semester: 1,
     course: "",
     subject: "",
-    totalMark: 100,
-    passMark: 35,
     theoryMark: 0,
     internalMark: 0,
-    practicalMark: 0,
-    marksheet: null
+    practicalMark: 0
   });
 
   const fileInputRef = React.useRef(null);
@@ -54,20 +67,24 @@ const ExamManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [examsRes, coursesRes, centersRes, subjectsRes, marksRes, studentsRes] = await Promise.all([
+      const [examsRes, coursesRes, centersRes, batchesRes, subjectsRes, marksRes, studentsRes, feesRes] = await Promise.all([
         api.get("/exams"),
         api.get("/courses"),
         api.get("/centers"),
+        api.get("/batches"),
         api.get("/subjects"),
         api.get("/marks"),
-        isAdmin ? api.get("/students") : Promise.resolve({ data: [] })
+        isAdmin ? api.get("/students") : Promise.resolve({ data: [] }),
+        isAdmin ? api.get("/student-fees") : Promise.resolve({ data: [] })
       ]);
       setExams(examsRes.data);
       setCourses(coursesRes.data);
       setCenters(centersRes.data);
+      setBatches(batchesRes.data);
       setSubjects(subjectsRes.data);
       setMarks(marksRes.data);
       if (isAdmin) setStudents(studentsRes.data.students || []);
+      if (isAdmin) setStudentFees(feesRes.data || []);
     } catch (error) {
       toast.error("Failed to load data");
     } finally {
@@ -88,7 +105,13 @@ const ExamManagement = () => {
         course: exam.course?._id || "",
         semester: exam.semester,
         center: exam.center?._id || "",
-        subjects: exam.subjects?.map(s => s._id) || []
+        batch: exam.batch?._id || "",
+        subject: exam.subject?._id || "",
+        totalMark: exam.totalMark || 100,
+        passMark: exam.passMark || 35,
+        internalMark: exam.internalMark || 0,
+        externalMark: exam.externalMark || 0,
+        theoryMark: exam.theoryMark || 0
       });
       setCurrentId(exam._id);
       setIsEditing(true);
@@ -99,7 +122,13 @@ const ExamManagement = () => {
         course: "",
         semester: 1,
         center: "",
-        subjects: []
+        batch: "",
+        subject: "",
+        totalMark: 100,
+        passMark: 35,
+        internalMark: 0,
+        externalMark: 0,
+        theoryMark: 0
       });
       setCurrentId(null);
       setIsEditing(false);
@@ -110,7 +139,7 @@ const ExamManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formData, subjects: JSON.stringify(formData.subjects) };
+      const payload = { ...formData };
       if (isEditing) {
         await api.put(`/exams/${currentId}`, payload);
         toast.success("Exam updated successfully");
@@ -142,30 +171,26 @@ const ExamManagement = () => {
     if (mark) {
       setMarkFormData({
         student: mark.student?._id || "",
-        exam: mark.exam?._id || "",
+        batch: mark.batch?._id || "",
+        semester: mark.semester || 1,
         course: mark.course?._id || "",
         subject: mark.subject?._id || "",
-        totalMark: mark.totalMark,
-        passMark: mark.passMark,
         theoryMark: mark.theoryMark,
         internalMark: mark.internalMark,
-        practicalMark: mark.practicalMark || 0,
-        marksheet: null
+        practicalMark: mark.practicalMark || 0
       });
       setCurrentId(mark._id);
       setIsEditing(true);
     } else {
       setMarkFormData({
         student: "",
-        exam: "",
+        batch: "",
+        semester: 1,
         course: "",
         subject: "",
-        totalMark: 100,
-        passMark: 35,
         theoryMark: 0,
         internalMark: 0,
-        practicalMark: 0,
-        marksheet: null
+        practicalMark: 0
       });
       setCurrentId(null);
       setIsEditing(false);
@@ -176,22 +201,11 @@ const ExamManagement = () => {
   const handleMarkSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = new FormData();
-      Object.keys(markFormData).forEach(key => {
-        if (key === 'marksheet') {
-          if (markFormData.marksheet) {
-            data.append('marksheet', markFormData.marksheet);
-          }
-        } else {
-          data.append(key, markFormData[key]);
-        }
-      });
-
       if (isEditing) {
-        await api.put(`/marks/${currentId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.put(`/marks/${currentId}`, markFormData);
         toast.success("Mark updated successfully");
       } else {
-        await api.post("/marks", data, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post("/marks", markFormData);
         toast.success("Mark added successfully");
       }
       setShowMarkModal(false);
@@ -236,8 +250,8 @@ const ExamManagement = () => {
 
   const downloadSampleExcel = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Student ID,Exam Name,Course Title,Subject Code,Total Mark,Pass Mark,Theory Mark,Internal Mark,Practical Mark\n"
-      + "STU123,Midterm,Class 10,MAT01,100,35,40,20,10";
+      + "Student ID,Semester,Course Title,Subject Code,Theory Mark,Internal Mark,Practical Mark\n"
+      + "STU123,1,Class 10,MAT01,40,20,10";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -259,14 +273,93 @@ const ExamManagement = () => {
     }
   };
 
+  const handleBulkMarkDelete = async (groupMarks) => {
+    if (window.confirm(`Are you sure you want to delete all ${groupMarks.length} marks for this semester?`)) {
+      try {
+        await Promise.all(groupMarks.map(m => api.delete(`/marks/${m._id}`)));
+        toast.success("Semester marks deleted successfully");
+        fetchData();
+      } catch (error) {
+        toast.error("Failed to delete marks");
+      }
+    }
+  };
+
+  const handleBulkEditSave = async (updatedMarks, groupDetails) => {
+    try {
+      await Promise.all(updatedMarks.map(m => {
+        return api.put(`/marks/${m._id}`, {
+          student: groupDetails.student,
+          batch: groupDetails.batch,
+          course: groupDetails.course,
+          semester: groupDetails.semester,
+          subject: m.subject,
+          theoryMark: m.theoryMark,
+          internalMark: m.internalMark,
+          practicalMark: m.practicalMark
+        });
+      }));
+      toast.success("Semester marks updated successfully");
+      setShowBulkEditModal(false);
+      fetchData();
+    } catch (error) {
+      toast.error("Failed to update marks");
+    }
+  };
+
   const handleStudentChange = (studentId) => {
     const st = students.find(s => s._id === studentId);
     let courseId = "";
+    let batchId = "";
     if (st && st.enrolledCourses && st.enrolledCourses.length > 0) {
-      courseId = st.enrolledCourses[0].course || "";
+      courseId = st.enrolledCourses[0].course?._id || st.enrolledCourses[0].course || "";
+      // If batch exists in enrolled courses
+      batchId = st.enrolledCourses[0].batch || "";
     }
-    setMarkFormData({ ...markFormData, student: studentId, course: courseId });
+    setMarkFormData({ ...markFormData, student: studentId, course: courseId, batch: batchId });
   };
+
+  // ====== PAYMENTS LOGIC ======
+  const handlePaymentSubmit = async (formData) => {
+    try {
+      await api.post("/student-fees", formData);
+      toast.success("Payment record added successfully");
+      setShowPaymentModal(false);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to add payment");
+    }
+  };
+
+  const handleTogglePaymentStatus = async (id) => {
+    try {
+      await api.patch(`/student-fees/${id}/toggle-status`);
+      toast.success("Payment status updated");
+      fetchData();
+    } catch (error) {
+      toast.error("Failed to update payment status");
+    }
+  };
+
+  const handlePaymentDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this payment record?")) {
+      try {
+        await api.delete(`/student-fees/${id}`);
+        toast.success("Payment record deleted successfully");
+        fetchData();
+      } catch (error) {
+        toast.error("Failed to delete payment record");
+      }
+    }
+  };
+
+  const filteredStudentFees = studentFees.filter(f => {
+    if (searchQuery) {
+      return f.student?.studentNameEnglish?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+             f.student?.studentId?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return true;
+  });
 
   // ====== COLUMNS ======
   const examColumns = [
@@ -311,16 +404,15 @@ const ExamManagement = () => {
       )
     },
     {
-      name: "Subjects",
+      name: "Subject",
       cell: row => (
-        <div className="flex flex-wrap gap-1 py-2">
-          {row.subjects?.map(sub => (
-            <span key={sub._id} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-              {sub.code}
+        <div className="py-2">
+          {row.subject ? (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              {row.subject.name} ({row.subject.code})
             </span>
-          ))}
-          {(!row.subjects || row.subjects.length === 0) && (
-            <span className="text-xs text-slate-400 italic">No Subjects</span>
+          ) : (
+            <span className="text-xs text-slate-400 italic">No Subject</span>
           )}
         </div>
       ),
@@ -346,6 +438,52 @@ const ExamManagement = () => {
     });
   }
 
+  // Group marks by Student + Semester
+  const groupedMarksMap = {};
+  marks.forEach(m => {
+    if (!m.student) return;
+    const key = `${m.student._id}_${m.semester}`;
+    if (!groupedMarksMap[key]) {
+      const batchId = m.student.enrolledCourses?.[0]?.batch || null;
+      let batchObj = null;
+      if (batchId) batchObj = batches.find(b => b._id === batchId);
+
+      groupedMarksMap[key] = {
+        key,
+        student: m.student,
+        course: m.course,
+        batch: batchObj,
+        semester: m.semester,
+        marks: [],
+        totalSubjects: 0,
+        passCount: 0,
+        failCount: 0
+      };
+    }
+    
+    // Look up exam config to find pass/fail
+    const examConfig = exams.find(e => 
+      e.subject?._id === m.subject?._id && 
+      e.semester === m.semester
+    );
+    
+    let isPass = false;
+    let totalSecured = (m.theoryMark || 0) + (m.internalMark || 0) + (m.practicalMark || 0);
+    
+    if (examConfig) {
+      isPass = totalSecured >= (examConfig.passMark || 0);
+    } else {
+      isPass = totalSecured >= 35; // default fallback
+    }
+    
+    groupedMarksMap[key].marks.push({ ...m, isPass, examConfig });
+    groupedMarksMap[key].totalSubjects += 1;
+    if (isPass) groupedMarksMap[key].passCount += 1;
+    else groupedMarksMap[key].failCount += 1;
+  });
+
+  const groupedMarksArray = Object.values(groupedMarksMap);
+
   const markColumns = [
     { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
     {
@@ -360,58 +498,56 @@ const ExamManagement = () => {
       )
     },
     {
-      name: "Exam & Course",
-      selector: row => row.exam?.name,
+      name: "Batch",
+      selector: row => row.batch?.name,
       sortable: true,
       cell: row => (
-        <div>
-          <div className="font-semibold text-slate-700">{row.exam?.name || "N/A"}</div>
-          <div className="text-[10px] text-slate-500">{row.course?.title}</div>
-        </div>
+        <span className="font-semibold text-slate-700">{row.batch?.name || "N/A"}</span>
       )
     },
     {
-      name: "Subject",
-      selector: row => row.subject?.name,
+      name: "Course",
+      selector: row => row.course?.title,
       sortable: true,
       cell: row => (
-        <div>
-          <div className="font-semibold text-slate-700">{row.subject?.name}</div>
-          <div className="text-[10px] text-slate-500">{row.subject?.code}</div>
-        </div>
+        <span className="font-semibold text-slate-700">{row.course?.title || "N/A"}</span>
       )
     },
     {
-      name: "Scores",
+      name: "Semester",
+      selector: row => row.semester,
+      sortable: true,
+      center: true,
       cell: row => (
-        <div className="flex flex-col gap-1 py-1">
-          <div className="text-xs font-bold text-slate-700">Total: {row.totalMark} | Pass: {row.passMark}</div>
-          <div className="text-[10px] text-slate-500">Th: {row.theoryMark} | Int: {row.internalMark} | Pr: {row.practicalMark}</div>
+        <span className="font-semibold text-slate-700">{row.semester || "N/A"}</span>
+      )
+    },
+    {
+      name: "Total Subject",
+      selector: row => row.totalSubjects,
+      sortable: true,
+      center: true,
+      cell: row => (
+        <span className="font-bold text-slate-700">{row.totalSubjects}</span>
+      )
+    },
+    {
+      name: "Result",
+      cell: row => (
+        <div className="flex flex-col gap-1 py-1 text-xs">
+          <span className="text-emerald-600 font-bold">Pass: {row.passCount}</span>
+          {row.failCount > 0 && <span className="text-red-600 font-bold">Fail: {row.failCount}</span>}
         </div>
       ),
-      width: "180px"
+      width: "100px"
     },
     {
-      name: "Status",
-      cell: row => {
-        const totalSecured = (row.theoryMark || 0) + (row.internalMark || 0) + (row.practicalMark || 0);
-        const passed = totalSecured >= row.passMark;
-        return (
-          <span className={`px-2 py-1 rounded-md text-xs font-bold ${passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {passed ? 'PASS' : 'FAIL'} ({totalSecured})
-          </span>
-        );
-      }
-    },
-    {
-      name: "Marksheet",
+      name: "View Marksheet",
       center: true,
-      cell: row => row.marksheetUrl ? (
-        <a href={row.marksheetUrl} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 flex justify-center">
-          <FileArchive size={18} />
-        </a>
-      ) : (
-        <div className="text-xs text-slate-400 text-center">-</div>
+      cell: row => (
+        <button onClick={() => { setSelectedGroupData(row); setShowMarksheetModal(true); }} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex flex-col items-center gap-1 font-semibold text-[10px]" title="View Marksheet">
+          <FileArchive size={16} /> View
+        </button>
       )
     }
   ];
@@ -420,29 +556,95 @@ const ExamManagement = () => {
     markColumns.push({
       name: "Actions",
       center: true,
-      width: "120px",
+      width: "100px",
       cell: row => (
         <div className="flex justify-center gap-2">
-          <button onClick={() => openMarkModal(row)} className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
-            <Edit size={18} />
+          <button onClick={() => { setSelectedGroupData(row); setShowBulkEditModal(true); }} className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Edit Result">
+            <Edit size={16} />
           </button>
-          <button onClick={() => handleMarkDelete(row._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-            <Trash2 size={18} />
+          <button onClick={() => handleBulkMarkDelete(row.marks)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Result">
+            <Trash2 size={16} />
           </button>
         </div>
       )
     });
   }
 
+  const paymentColumns = [
+    { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
+    {
+      name: "Student", width:"200px",
+      selector: row => row.student?.studentNameEnglish,
+      sortable: true,
+      cell: row => (
+        <div className="py-2">
+          <div className="font-bold text-slate-900">{row.student?.studentNameEnglish}</div>
+          <div className="text-xs text-slate-500">{row.student?.studentId}</div>
+        </div>
+      )
+    },
+    {
+      name: "Fee Details",
+      selector: row => row.feeType,
+      cell: row => (
+        <div className="py-2 text-xs">
+          <div><span className="font-semibold text-slate-700">{row.course?.title}</span></div>
+          <div className="text-slate-500 flex gap-2">
+            <span>{row.batch?.name}</span>
+            <span>&bull;</span>
+            <span className="text-brand-600 font-medium">
+              {row.feeType === 'Other' ? row.otherFeeType : `${row.feeType} Fee`} 
+              {row.terms?.length > 0 && ` (Term ${row.terms[0]})`}
+            </span>
+          </div>
+        </div>
+      ),
+      width: "350px"
+    },
+    {
+      name: "Amount",
+      selector: row => row.amount,
+      sortable: true,
+      cell: row => <span className="font-bold text-slate-900">₹{row.amount}</span>
+    },
+    {
+      name: "Status",
+      selector: row => row.status,
+      sortable: true,
+      cell: row => (
+        <button
+          onClick={() => handleTogglePaymentStatus(row._id)}
+          className={`px-3 py-1 text-xs font-bold rounded-full transition-colors border ${
+            row.status === 'paid' 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+              : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+          }`}
+        >
+          {row.status === 'paid' ? 'PAID' : 'UNPAID'}
+        </button>
+      )
+    },
+    {
+      name: "Actions",
+      center: true,
+      width: "150px",
+      cell: row => (
+        <button onClick={() => handlePaymentDelete(row._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <Trash2 size={16} />
+        </button>
+      )
+    }
+  ];
+
   const filteredExams = exams.filter(e => 
     e.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.course?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredMarks = marks.filter(m => 
+  const filteredGroupedMarks = groupedMarksArray.filter(m => 
     m.student?.studentNameEnglish?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.student?.studentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.exam?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    String(m.semester).includes(searchQuery)
   );
 
   return (
@@ -452,13 +654,14 @@ const ExamManagement = () => {
           <h1 className="text-2xl font-bold text-slate-900">Examination Management</h1>
           <p className="text-sm text-slate-500">Manage academy examinations, schedules, and student marks</p>
         </div>
+        <div className="flex gap-2">
         {isAdmin && activeTab === "exams" && (
           <button onClick={() => openModal()} className="bg-brand-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 font-bold">
             <Plus size={20} /> Add Exam
           </button>
         )}
         {isAdmin && activeTab === "marks" && (
-          <div className="flex gap-2">
+          <>
             <button onClick={downloadSampleExcel} className="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-200 transition-all font-bold">
               <Download size={20} /> Sample CSV
             </button>
@@ -469,8 +672,15 @@ const ExamManagement = () => {
             <button onClick={() => openMarkModal()} className="bg-brand-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 font-bold">
               <Plus size={20} /> Upload Result
             </button>
-          </div>
+          </>
         )}
+
+        {isAdmin && activeTab === "payments" && (
+          <button onClick={() => setShowPaymentModal(true)} className="bg-brand-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-brand-700 shadow-md shadow-brand-600/20 transition-all hover:scale-[1.02]">
+            <Plus size={20} /> Add Payment
+          </button>
+        )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -491,10 +701,20 @@ const ExamManagement = () => {
         >
           <CheckSquare size={18} /> Marks
         </button>
+        {isAdmin && (
+          <button
+            className={`pb-4 px-2 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors ${
+              activeTab === "payments" ? "border-brand-600 text-brand-600" : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+            onClick={() => setActiveTab("payments")}
+          >
+            <DollarSign size={18} /> Payments
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {activeTab === "exams" ? (
           <CustomDataTable
             columns={examColumns}
@@ -504,14 +724,23 @@ const ExamManagement = () => {
             setSearch={setSearchQuery}
             searchPlaceholder="Search exams by name or course..."
           />
-        ) : (
+        ) : activeTab === "payments" ? (
           <CustomDataTable
-            columns={markColumns}
-            data={filteredMarks}
+            columns={paymentColumns}
+            data={filteredStudentFees}
             progressPending={loading}
             search={searchQuery}
             setSearch={setSearchQuery}
-            searchPlaceholder="Search marks by student name, ID or exam..."
+            searchPlaceholder="Search payments by student name or ID..."
+          />
+        ) : (
+          <CustomDataTable
+            columns={markColumns}
+            data={filteredGroupedMarks}
+            progressPending={loading}
+            search={searchQuery}
+            setSearch={setSearchQuery}
+            searchPlaceholder="Search results by student name, ID or semester..."
           />
         )}
       </div>
@@ -561,22 +790,41 @@ const ExamManagement = () => {
                     {centers.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Batch</label>
+                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.batch} onChange={(e) => setFormData({ ...formData, batch: e.target.value })}>
+                    <option value="">Select Batch</option>
+                    {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Subject</label>
+                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })}>
+                    <option value="">Select Subject</option>
+                    {subjects.map(sub => <option key={sub._id} value={sub._id}>{sub.name} ({sub.code})</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Select Subjects</label>
-                <div className="border border-slate-200 rounded-xl p-4 max-h-48 overflow-y-auto bg-slate-50 space-y-2">
-                  {subjects.map((sub) => {
-                    const isChecked = formData.subjects.includes(sub._id);
-                    return (
-                      <label key={sub._id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-colors">
-                        <input type="checkbox" className="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500" checked={isChecked} onChange={(e) => {
-                          if (e.target.checked) setFormData({ ...formData, subjects: [...formData.subjects, sub._id] });
-                          else setFormData({ ...formData, subjects: formData.subjects.filter(id => id !== sub._id) });
-                        }} />
-                        <span className="text-sm font-semibold text-slate-700">{sub.name} <span className="text-slate-400 font-normal">({sub.code})</span></span>
-                      </label>
-                    );
-                  })}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Total Mark</label>
+                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.totalMark} onChange={(e) => setFormData({ ...formData, totalMark: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Pass Mark</label>
+                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.passMark} onChange={(e) => setFormData({ ...formData, passMark: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Internal</label>
+                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.internalMark} onChange={(e) => setFormData({ ...formData, internalMark: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">External</label>
+                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.externalMark} onChange={(e) => setFormData({ ...formData, externalMark: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Theory</label>
+                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.theoryMark} onChange={(e) => setFormData({ ...formData, theoryMark: Number(e.target.value) })} />
                 </div>
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100">
@@ -615,17 +863,23 @@ const ExamManagement = () => {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Batch</label>
+                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.batch} onChange={(e) => setMarkFormData({ ...markFormData, batch: e.target.value })}>
+                    <option value="">Select Batch</option>
+                    {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Course</label>
-                  <select required className="w-full rounded-xl border-slate-200 shadow-sm bg-slate-100 text-slate-500 border p-3 text-sm" value={markFormData.course} disabled>
-                    <option value="">Auto-populated</option>
+                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.course} onChange={(e) => setMarkFormData({ ...markFormData, course: e.target.value })}>
+                    <option value="">Select Course</option>
                     {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Exam</label>
-                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.exam} onChange={(e) => setMarkFormData({ ...markFormData, exam: e.target.value })}>
-                    <option value="">Select Exam</option>
-                    {exams.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Semester</label>
+                  <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.semester} onChange={(e) => setMarkFormData({ ...markFormData, semester: Number(e.target.value) })}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
                   </select>
                 </div>
                 <div>
@@ -636,14 +890,7 @@ const ExamManagement = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Total Mark</label>
-                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.totalMark} onChange={(e) => setMarkFormData({ ...markFormData, totalMark: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Pass Mark</label>
-                  <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.passMark} onChange={(e) => setMarkFormData({ ...markFormData, passMark: Number(e.target.value) })} />
-                </div>
+
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Theory Mark</label>
                   <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.theoryMark} onChange={(e) => setMarkFormData({ ...markFormData, theoryMark: Number(e.target.value) })} />
@@ -656,10 +903,6 @@ const ExamManagement = () => {
                   <label className="block text-sm font-bold text-slate-700 mb-1">Practical Mark</label>
                   <input type="number" required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={markFormData.practicalMark} onChange={(e) => setMarkFormData({ ...markFormData, practicalMark: Number(e.target.value) })} />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Marksheet File</label>
-                  <input type="file" className="w-full rounded-xl border-slate-200 shadow-sm border p-2 text-sm bg-slate-50" onChange={(e) => setMarkFormData({ ...markFormData, marksheet: e.target.files[0] })} />
-                </div>
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button type="button" onClick={() => setShowMarkModal(false)} className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
@@ -670,6 +913,36 @@ const ExamManagement = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showMarksheetModal && selectedGroupData && (
+        <MarksheetModal 
+          data={selectedGroupData} 
+          onClose={() => setShowMarksheetModal(false)} 
+        />
+      )}
+
+      {showBulkEditModal && selectedGroupData && (
+        <BulkEditMarksModal 
+          data={selectedGroupData} 
+          onClose={() => setShowBulkEditModal(false)} 
+          onSave={handleBulkEditSave} 
+          students={students}
+          batches={batches}
+          courses={courses}
+          subjects={subjects}
+        />
+      )}
+
+      {showPaymentModal && (
+        <AddStudentFeeModal
+          onClose={() => setShowPaymentModal(false)}
+          onSave={handlePaymentSubmit}
+          students={students}
+          centers={centers}
+          courses={courses}
+          batches={batches}
+        />
       )}
     </div>
   );

@@ -50,6 +50,7 @@ const CourseManagement = () => {
     description: "",
     price: "",
     category: "Development",
+    type: "Academic",
     level: "Beginner",
     duration: "",
     durationUnit: "week",
@@ -116,6 +117,7 @@ const CourseManagement = () => {
       description: course.description,
       price: course.price,
       category: course.category,
+      type: course.type || "Academic",
       level: course.level,
       duration: course.duration,
       durationUnit: course.durationUnit || "week",
@@ -139,6 +141,7 @@ const CourseManagement = () => {
       description: course.description,
       price: course.price,
       category: course.category,
+      type: course.type || "Academic",
       level: course.level,
       duration: course.duration,
       durationUnit: course.durationUnit || "week",
@@ -291,6 +294,7 @@ const CourseManagement = () => {
       data.append("description", formData.description);
       data.append("price", formData.price);
       data.append("category", formData.category);
+      data.append("type", formData.type);
       data.append("level", formData.level);
       data.append("duration", formData.duration);
       data.append("durationUnit", formData.durationUnit);
@@ -332,6 +336,7 @@ const CourseManagement = () => {
       description: "",
       price: "",
       category: "Development",
+      type: "Academic",
       level: "Beginner",
       duration: "",
       durationUnit: "week",
@@ -761,6 +766,26 @@ const CourseManagement = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">
+                          Type
+                        </label>
+                        <select
+                          className="w-full rounded-lg border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-2.5 text-sm appearance-none"
+                          value={formData.type}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              type: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="Academic">Academic</option>
+                          <option value="Online">Online</option>
+                          <option value="Offline">Offline</option>
+                        </select>
+                      </div>
+                    </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">
                           Duration
                         </label>
                         <div className="flex border rounded-lg border-gray-200 overflow-hidden shadow-sm">
@@ -792,7 +817,6 @@ const CourseManagement = () => {
                           </select>
                         </div>
                       </div>
-                    </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1">
                         Course Instructor / Coach

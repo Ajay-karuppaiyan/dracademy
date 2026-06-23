@@ -25,10 +25,19 @@ const examSchema = new mongoose.Schema({
     ref: 'Center',
     required: true,
   },
-  subjects: [{
+  batch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+  },
+  subject: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subject',
-  }]
+  },
+  totalMark: { type: Number, default: 100 },
+  passMark: { type: Number, default: 35 },
+  internalMark: { type: Number, default: 0 },
+  externalMark: { type: Number, default: 0 },
+  theoryMark: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Exam', examSchema);

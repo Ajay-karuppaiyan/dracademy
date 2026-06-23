@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Batch = require("../models/Batch");
+const Student = require("../models/Student");
 const { protect } = require("../middleware/authMiddleware");
 
 //////////////////////////////////////////////////////
@@ -102,6 +103,52 @@ router.delete("/:id", protect, async (req, res) => {
     await batch.deleteOne();
 
     res.json({ message: "Batch deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+//////////////////////////////////////////////////////
+// ASSIGN STUDENTS TO BATCH
+//////////////////////////////////////////////////////
+router.post("/:id/assign-students", protect, async (req, res) => {
+  try {
+    const { studentIds } = req.body;
+    const batch = await Batch.findById(req.params.id);
+
+    if (!batch) {
+      return res.status(404).json({ message: "Batch not found" });
+    }
+
+    batch.students = studentIds;
+    batch.numberOfStudents = studentIds.length;
+    await batch.save();
+
+    // Also update the enrolledCourses for each student
+    // For simplicity, we just set the batch field in their enrolled course if the course matches
+    for (const studentId of studentIds) {
+      const student = await Student.findById(studentId);
+      if (student) {
+        let updated = false;
+        student.enrolledCourses = student.enrolledCourses.map(ec => {
+          if (ec.course && ec.course.toString() === batch.course.toString()) {
+            ec.batch = batch._id;
+            updated = true;
+          }
+          return ec;
+        });
+        if (updated) {
+          await student.save();
+        }
+      }
+    }
+
+    await batch.populate("course");
+    await batch.populate("center");
+    await batch.populate("semesters.subjects");
+    await batch.populate("students", "studentNameEnglish studentId");
+
+    res.json(batch);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

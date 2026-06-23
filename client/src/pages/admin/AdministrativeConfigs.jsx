@@ -11,10 +11,12 @@ import {
   Layers,
   BookOpen,
   DollarSign,
+  Users,
 } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
+import AssignStudentsModal from "../../components/AssignStudentsModal";
 
 const toTitleCase = (str) => {
   return str
@@ -46,6 +48,9 @@ const AdministrativeConfigs = () => {
     course: "",
     batch: "",
     fee: 0,
+    feeType: "Term",
+    otherFeeType: "",
+    terms: [],
     batchId: "",
     numberOfSemesters: 1,
     period: { startDate: "", endDate: "" },
@@ -59,6 +64,16 @@ const AdministrativeConfigs = () => {
   const [batchesList, setBatchesList] = useState([]);
   const [subjectsList, setSubjectsList] = useState([]);
 
+  const openAssignStudentsModal = (batch) => {
+    setCurrentBatchAssignStudents(batch);
+    setShowAssignStudentsModal(true);
+  };
+
+  const handleAssignStudentsSuccess = (updatedBatch) => {
+    setData(data.map((item) => (item._id === updatedBatch._id ? updatedBatch : item)));
+    setShowAssignStudentsModal(false);
+  };
+
   // Login Management State
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginData, setLoginData] = useState({
@@ -68,6 +83,16 @@ const AdministrativeConfigs = () => {
   });
   const [isSavingLogin, setIsSavingLogin] = useState(false);
   const [loginExists, setLoginExists] = useState(false);
+
+  // Assign Subjects State
+  const [showAssignSubjectModal, setShowAssignSubjectModal] = useState(false);
+  const [currentBatchAssign, setCurrentBatchAssign] = useState(null);
+  const [assignSemTab, setAssignSemTab] = useState(1);
+  const [assignSubjectsData, setAssignSubjectsData] = useState([]);
+
+  // Assign Students State
+  const [showAssignStudentsModal, setShowAssignStudentsModal] = useState(false);
+  const [currentBatchAssignStudents, setCurrentBatchAssignStudents] = useState(null);
 
   const config = {
     departments: {
@@ -126,7 +151,7 @@ const AdministrativeConfigs = () => {
         ]);
         setData(feesRes.data);
         setCentersList(centersRes.data);
-        setCoursesList(coursesRes.data);
+        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
         setBatchesList(batchesRes.data);
       } else if (activeTab === "batches") {
         const [batchesRes, coursesRes, subjectsRes, centersRes] = await Promise.all([
@@ -136,7 +161,7 @@ const AdministrativeConfigs = () => {
           api.get("/centers")
         ]);
         setData(batchesRes.data);
-        setCoursesList(coursesRes.data);
+        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
         setSubjectsList(subjectsRes.data);
         setCentersList(centersRes.data);
       } else if (activeTab === "subjects") {
@@ -145,7 +170,7 @@ const AdministrativeConfigs = () => {
           api.get("/courses")
         ]);
         setData(subjectsRes.data);
-        setCoursesList(coursesRes.data);
+        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
       } else {
         const { data } = await api.get(config[activeTab].endpoint);
         setData(data);
@@ -179,11 +204,6 @@ const AdministrativeConfigs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (activeTab === "batches" && batchStep === 1) {
-      setBatchStep(2);
-      return;
-    }
 
     const formattedData = {
       ...formData,
@@ -229,10 +249,12 @@ const AdministrativeConfigs = () => {
         course: item.course?._id || item.course || "",
         batch: item.batch?._id || item.batch || "",
         fee: item.fee || 0,
+        feeType: item.feeType || "Term",
+        otherFeeType: item.otherFeeType || "",
+        terms: item.terms || [],
         batchId: item.batchId || "",
         numberOfSemesters: item.numberOfSemesters || 1,
         period: item.period || { startDate: "", endDate: "" },
-        numberOfStudents: item.numberOfStudents || 0,
         semesters: item.semesters || [],
       });
       setIsEditing(true);
@@ -250,10 +272,12 @@ const AdministrativeConfigs = () => {
         course: "",
         batch: "",
         fee: 0,
+        feeType: "Term",
+        otherFeeType: "",
+        terms: [],
         batchId: "",
         numberOfSemesters: 1,
         period: { startDate: "", endDate: "" },
-        numberOfStudents: 0,
         semesters: [],
       });
       setIsEditing(false);
@@ -298,6 +322,45 @@ const AdministrativeConfigs = () => {
       toast.error(error.response?.data?.message || "Error saving login");
     } finally {
       setIsSavingLogin(false);
+    }
+  };
+
+  const openAssignSubjectModal = (batch) => {
+    setCurrentBatchAssign(batch);
+    const initialData = Array.from({ length: batch.numberOfSemesters || 1 }).map((_, i) => {
+      const semNum = i + 1;
+      const existingSem = batch.semesters?.find(s => s.semesterNumber === semNum);
+      return {
+        semesterNumber: semNum,
+        noOfSubjects: existingSem?.subjects?.length || 0,
+        subjects: existingSem?.subjects?.map(s => typeof s === 'object' ? s._id : s) || []
+      };
+    });
+    setAssignSubjectsData(initialData);
+    setAssignSemTab(1);
+    setShowAssignSubjectModal(true);
+  };
+
+  const handleAssignSubjectSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedSemesters = assignSubjectsData.map(sem => ({
+        semesterNumber: sem.semesterNumber,
+        subjects: sem.subjects
+      }));
+      
+      const { data: updatedBatch } = await api.put(`/batches/${currentBatchAssign._id}`, {
+        ...currentBatchAssign,
+        center: currentBatchAssign.center?._id || currentBatchAssign.center,
+        course: currentBatchAssign.course?._id || currentBatchAssign.course,
+        semesters: updatedSemesters
+      });
+      
+      setData(data.map((item) => (item._id === currentBatchAssign._id ? updatedBatch : item)));
+      toast.success("Subjects assigned successfully");
+      setShowAssignSubjectModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error assigning subjects");
     }
   };
 
@@ -359,22 +422,10 @@ const AdministrativeConfigs = () => {
           ),
         },
         {
-          name: "Course",
-          selector: r => r.course?.title,
-          sortable: true,
-        },
-        {
           name: "Type",
           selector: r => r.type,
           sortable: true,
           width: "120px",
-        },
-        {
-          name: "Semester",
-          selector: r => r.semester,
-          sortable: true,
-          width: "130px",
-          center: true,
         },
       ]
       : []),
@@ -417,7 +468,7 @@ const AdministrativeConfigs = () => {
         },
         {
           name: "Students",
-          selector: r => r.numberOfStudents,
+          selector: r => r.students?.length || r.numberOfStudents || 0,
           sortable: true,
           width: "120px",
           center: true,
@@ -429,6 +480,8 @@ const AdministrativeConfigs = () => {
         { name: "Center", selector: r => r.center?.name, sortable: true },
         { name: "Course", selector: r => r.course?.title, sortable: true },
         { name: "Batch", selector: r => r.batch?.name, sortable: true },
+        { name: "Type", selector: r => r.feeType === "Other" ? r.otherFeeType : (r.feeType || "Term"), sortable: true },
+        { name: "Terms", selector: r => r.terms?.join(", ") || "-", sortable: true },
         {
           name: "Fee",
           selector: r => r.fee,
@@ -448,6 +501,16 @@ const AdministrativeConfigs = () => {
             <button onClick={() => openLoginModal(r)} className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50">
               <Key size={18} />
             </button>
+          )}
+          {activeTab === "batches" && (
+            <>
+              <button onClick={() => openAssignStudentsModal(r)} className="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50" title="Assign Students">
+                <Users size={18} />
+              </button>
+              <button onClick={() => openAssignSubjectModal(r)} className="text-emerald-600 hover:text-emerald-900 p-2 rounded-lg hover:bg-emerald-50" title="Assign Subjects">
+                <BookOpen size={18} />
+              </button>
+            </>
           )}
           <button onClick={() => openModal(r)} className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-50">
             <Edit size={18} />
@@ -538,7 +601,7 @@ const AdministrativeConfigs = () => {
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {activeTab !== "examFees" && (activeTab !== "batches" || batchStep === 1) && (
+              {activeTab !== "examFees" && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     {config[activeTab].singular} Name
@@ -560,6 +623,20 @@ const AdministrativeConfigs = () => {
               {activeTab === "examFees" && (
                 <>
                   <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Fee Type</label>
+                    <select required className="w-full rounded-xl border-gray-200 p-3 bg-white border shadow-sm focus:border-brand-500" value={formData.feeType} onChange={e => setFormData({ ...formData, feeType: e.target.value })}>
+                      <option value="Term">Term Fees</option>
+                      <option value="Exam">Exam Fees</option>
+                      <option value="Other">Other Fees</option>
+                    </select>
+                  </div>
+                  {formData.feeType === "Other" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Specify Other Fee</label>
+                      <input type="text" required className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3" value={formData.otherFeeType} onChange={e => setFormData({ ...formData, otherFeeType: e.target.value })} placeholder="E.g., Library Fee" />
+                    </div>
+                  )}
+                  <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Center</label>
                     <select required className="w-full rounded-xl border-gray-200 p-3 bg-white border shadow-sm focus:border-brand-500" value={formData.center} onChange={e => setFormData({ ...formData, center: e.target.value })}>
                       <option value="">Select Center</option>
@@ -578,6 +655,17 @@ const AdministrativeConfigs = () => {
                     <select required className="w-full rounded-xl border-gray-200 p-3 bg-white border shadow-sm focus:border-brand-500" value={formData.batch} onChange={e => setFormData({ ...formData, batch: e.target.value })}>
                       <option value="">Select Batch</option>
                       {batchesList.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Term</label>
+                    <select required className="w-full rounded-xl border-gray-200 p-3 bg-white border shadow-sm focus:border-brand-500" value={formData.terms[0] || ""} onChange={e => {
+                      setFormData({ ...formData, terms: [Number(e.target.value)] });
+                    }}>
+                      <option value="">Select Term</option>
+                      {[1, 2].map(term => (
+                        <option key={term} value={term}>Term {term}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -655,43 +743,10 @@ const AdministrativeConfigs = () => {
                       <option value="Both">Both</option>
                     </select>
                   </div>
-                                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Course
-                    </label>
-                    <select
-                      required
-                      className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 bg-white"
-                      value={formData.course}
-                      onChange={(e) =>
-                        setFormData({ ...formData, course: e.target.value })
-                      }
-                    >
-                      <option value="">Select Course</option>
-                      {coursesList.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Semester
-                    </label>
-                    <select
-                      required
-                      className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3"
-                      value={formData.semester}
-                      onChange={(e) =>
-                        setFormData({ ...formData, semester: Number(e.target.value) })
-                      }
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                        <option key={sem} value={sem}>{sem}</option>
-                      ))}
-                    </select>
-                  </div>
                 </>
               )}
 
-              {activeTab === "batches" && batchStep === 1 && (
+              {activeTab === "batches" && (
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Batch ID</label>
@@ -721,23 +776,11 @@ const AdministrativeConfigs = () => {
                       <input type="month" required className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3" value={formData.period?.endDate} onChange={e => setFormData({ ...formData, period: { ...formData.period, endDate: e.target.value } })} />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Students</label>
-                    <input type="number" min="1" required className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3" value={formData.numberOfStudents} onChange={e => setFormData({ ...formData, numberOfStudents: Number(e.target.value) })} />
-                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Certificate Date (Optional)</label>
                     <input type="date" className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3" value={formData.certificateDate} onChange={e => setFormData({ ...formData, certificateDate: e.target.value })} />
                   </div>
-                </>
-              )}
-              {activeTab === "batches" && batchStep === 2 && (
-                <div className="space-y-4">
-                  <div className="bg-brand-50 p-4 rounded-xl border border-brand-100 mb-4">
-                    <p className="text-sm text-brand-800 flex justify-between"><span className="font-semibold">Batch Name:</span> {formData.name}</p>
-                    <p className="text-sm text-brand-800 flex justify-between mt-1"><span className="font-semibold">Course:</span> {coursesList.find(c => c._id === formData.course)?.title}</p>
-                  </div>
-
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Semesters</label>
                     <input type="number" min="1" required className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3" value={formData.numberOfSemesters} onChange={e => {
@@ -745,80 +788,128 @@ const AdministrativeConfigs = () => {
                       setFormData(prev => ({ ...prev, numberOfSemesters: num, semesters: prev.semesters.slice(0, num) }));
                     }} />
                   </div>
-
-                  <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2">
-                    {Array.from({ length: formData.numberOfSemesters }).map((_, i) => {
-                      const semNum = i + 1;
-                      const semData = formData.semesters.find(s => s.semesterNumber === semNum) || { semesterNumber: semNum, subjects: [] };
-
-                      const handleSubjectSelect = (e) => {
-                        const selectedOptions = Array.from(e.target.selectedOptions).map(opt => opt.value);
-                        setFormData(prev => {
-                          const newSems = [...prev.semesters];
-                          const idx = newSems.findIndex(s => s.semesterNumber === semNum);
-                          if (idx >= 0) {
-                            newSems[idx] = { ...newSems[idx], subjects: selectedOptions };
-                          } else {
-                            newSems.push({ semesterNumber: semNum, subjects: selectedOptions });
-                          }
-                          return { ...prev, semesters: newSems };
-                        });
-                      };
-
-                      return (
-                        <div key={semNum} className="border border-gray-200 rounded-xl p-4">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Semester {semNum} Subjects</label>
-                          <select
-                            multiple
-                            className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 min-h-[120px] bg-white"
-                            value={semData.subjects.map(s => typeof s === 'object' ? s._id : s)}
-                            onChange={handleSubjectSelect}
-                          >
-                            {subjectsList.filter(s => s.semester === semNum && (typeof s.course === 'object' ? s.course?._id === formData.course : s.course === formData.course)).map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
-                          </select>
-                          <p className="text-xs text-gray-500 mt-2">Hold Ctrl/Cmd to select multiple subjects</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                </>
               )}
               <div className="flex justify-end gap-3 mt-8">
-                {activeTab === "batches" && batchStep === 2 ? (
-                  <button
-                    type="button"
-                    onClick={() => setBatchStep(1)}
-                    className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    Back
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    Cancel
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 shadow-md shadow-brand-200 transition-all hover:scale-[1.02]"
+                >
+                  {isEditing
+                    ? "Save Changes"
+                    : `Add ${config[activeTab].singular}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-                {activeTab === "batches" && batchStep === 1 ? (
+      {/* Assign Subjects Modal */}
+      {showAssignSubjectModal && currentBatchAssign && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-start justify-center p-4 py-10">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl scale-in-center">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                <BookOpen size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Assign Subjects to {currentBatchAssign.name || currentBatchAssign.batchId}
+              </h2>
+            </div>
+            
+            <form onSubmit={handleAssignSubjectSubmit} className="space-y-4">
+              <div className="flex border-b border-gray-200 gap-4 mb-4 overflow-x-auto">
+                {assignSubjectsData.map((sem) => (
                   <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 shadow-md shadow-brand-200 transition-all hover:scale-[1.02]"
+                    key={sem.semesterNumber}
+                    type="button"
+                    onClick={() => setAssignSemTab(sem.semesterNumber)}
+                    className={`pb-3 px-2 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                      assignSemTab === sem.semesterNumber
+                        ? "text-brand-600"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
                   >
-                    Next
+                    Semester {sem.semesterNumber}
+                    {assignSemTab === sem.semesterNumber && (
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full" />
+                    )}
                   </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 shadow-md shadow-brand-200 transition-all hover:scale-[1.02]"
-                  >
-                    {isEditing
-                      ? "Save Changes"
-                      : `Add ${config[activeTab].singular}`}
-                  </button>
-                )}
+                ))}
+              </div>
+              
+              {assignSubjectsData.map((sem, index) => {
+                if (sem.semesterNumber !== assignSemTab) return null;
+                
+                return (
+                  <div key={sem.semesterNumber} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Number of Subjects
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-full rounded-xl border-gray-200 p-3"
+                        value={sem.noOfSubjects}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          const newData = [...assignSubjectsData];
+                          newData[index].noOfSubjects = val;
+                          setAssignSubjectsData(newData);
+                        }}
+                      />
+                    </div>
+                    
+                    {sem.noOfSubjects > 0 && (
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Subjects</label>
+                        <select
+                          multiple
+                          className="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 min-h-[200px] bg-white"
+                          value={sem.subjects}
+                          onChange={(e) => {
+                            const selectedOptions = Array.from(e.target.selectedOptions).map(opt => opt.value);
+                            if (selectedOptions.length <= sem.noOfSubjects) {
+                              const newData = [...assignSubjectsData];
+                              newData[index].subjects = selectedOptions;
+                              setAssignSubjectsData(newData);
+                            } else {
+                              toast.error(`You can only select up to ${sem.noOfSubjects} subjects`);
+                            }
+                          }}
+                        >
+                          {subjectsList.map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-2">Hold Ctrl/Cmd to select multiple subjects (up to {sem.noOfSubjects})</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="flex justify-end gap-3 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignSubjectModal(false)}
+                  className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 shadow-md transition-all"
+                >
+                  Save Assignments
+                </button>
               </div>
             </form>
           </div>
@@ -894,6 +985,14 @@ const AdministrativeConfigs = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showAssignStudentsModal && currentBatchAssignStudents && (
+        <AssignStudentsModal
+          batch={currentBatchAssignStudents}
+          onClose={() => setShowAssignStudentsModal(false)}
+          onAssignSuccess={handleAssignStudentsSuccess}
+        />
       )}
     </div>
   );

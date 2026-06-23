@@ -6,7 +6,6 @@ const Exam = require('../models/Exam');
 const Course = require('../models/Course');
 const Subject = require('../models/Subject');
 const { protect } = require('../middleware/authMiddleware');
-const { upload } = require('../config/cloudinary');
 
 const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
@@ -21,8 +20,8 @@ router.get('/', protect, async (req, res) => {
   try {
     const marks = await Mark.find()
       .populate('student', 'studentNameEnglish studentId')
-      .populate('exam', 'name date')
       .populate('course', 'title')
+      .populate('batch', 'name')
       .populate('subject', 'name code type')
       .sort({ createdAt: -1 });
     res.json(marks);
@@ -35,7 +34,6 @@ router.get('/', protect, async (req, res) => {
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
     const marks = await Mark.find({ student: req.params.studentId })
-      .populate('exam', 'name date')
       .populate('course', 'title')
       .populate('subject', 'name code type');
     res.json(marks);
@@ -45,31 +43,28 @@ router.get('/student/:studentId', protect, async (req, res) => {
 });
 
 // POST create a new mark (Admin only)
-router.post('/', protect, isAdmin, upload.single('marksheet'), async (req, res) => {
+router.post('/', protect, isAdmin, async (req, res) => {
   try {
-    const { student, exam, course, subject, totalMark, passMark, theoryMark, internalMark, practicalMark } = req.body;
+    const { student, semester, batch, course, subject, theoryMark, internalMark, practicalMark } = req.body;
     
-    // Check if mark for this student, exam and subject already exists
-    const existing = await Mark.findOne({ student, exam, subject });
+    // Check if mark for this student, semester and subject already exists
+    const existing = await Mark.findOne({ student, semester, subject });
     if (existing) {
-      return res.status(400).json({ message: 'Mark for this student and subject already exists in this exam.' });
+      return res.status(400).json({ message: 'Mark for this student and subject already exists in this semester.' });
     }
 
     const markData = {
       student,
-      exam,
+      semester: Number(semester),
+      batch,
       course,
       subject,
-      totalMark: Number(totalMark),
-      passMark: Number(passMark),
       theoryMark: Number(theoryMark || 0),
       internalMark: Number(internalMark || 0),
       practicalMark: Number(practicalMark || 0)
     };
 
-    if (req.file) {
-      markData.marksheetUrl = req.file.path;
-    }
+
 
     const mark = await Mark.create(markData);
     
@@ -80,9 +75,9 @@ router.post('/', protect, isAdmin, upload.single('marksheet'), async (req, res) 
 });
 
 // PUT update a mark (Admin only)
-router.put('/:id', protect, isAdmin, upload.single('marksheet'), async (req, res) => {
+router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
-    const { student, exam, course, subject, totalMark, passMark, theoryMark, internalMark, practicalMark } = req.body;
+    const { student, semester, batch, course, subject, theoryMark, internalMark, practicalMark } = req.body;
     const mark = await Mark.findById(req.params.id);
     
     if (!mark) {
@@ -90,18 +85,15 @@ router.put('/:id', protect, isAdmin, upload.single('marksheet'), async (req, res
     }
 
     if (student) mark.student = student;
-    if (exam) mark.exam = exam;
+    if (semester !== undefined) mark.semester = Number(semester);
+    if (batch) mark.batch = batch;
     if (course) mark.course = course;
     if (subject) mark.subject = subject;
-    if (totalMark !== undefined) mark.totalMark = Number(totalMark);
-    if (passMark !== undefined) mark.passMark = Number(passMark);
     if (theoryMark !== undefined) mark.theoryMark = Number(theoryMark);
     if (internalMark !== undefined) mark.internalMark = Number(internalMark);
     if (practicalMark !== undefined) mark.practicalMark = Number(practicalMark);
 
-    if (req.file) {
-      mark.marksheetUrl = req.file.path;
-    }
+
 
     await mark.save();
     res.json(mark);
@@ -128,26 +120,24 @@ router.post('/bulk', protect, isAdmin, async (req, res) => {
       const row = marks[i];
       try {
         const studentDoc = await Student.findOne({ studentId: row['Student ID'] });
-        const examDoc = await Exam.findOne({ name: row['Exam Name'] });
         const courseDoc = await Course.findOne({ title: row['Course Title'] });
         const subjectDoc = await Subject.findOne({ code: row['Subject Code'] });
+        const semester = Number(row['Semester']);
 
-        if (!studentDoc || !examDoc || !courseDoc || !subjectDoc) {
-          throw new Error(`Missing reference: Student(${!!studentDoc}), Exam(${!!examDoc}), Course(${!!courseDoc}), Subject(${!!subjectDoc})`);
+        if (!studentDoc || !courseDoc || !subjectDoc || isNaN(semester)) {
+          throw new Error(`Missing reference or invalid semester`);
         }
 
-        const existing = await Mark.findOne({ student: studentDoc._id, exam: examDoc._id, subject: subjectDoc._id });
+        const existing = await Mark.findOne({ student: studentDoc._id, semester, subject: subjectDoc._id });
         if (existing) {
-          throw new Error('Mark already exists for this student, exam, and subject');
+          throw new Error('Mark already exists for this student, semester, and subject');
         }
 
         await Mark.create({
           student: studentDoc._id,
-          exam: examDoc._id,
+          semester,
           course: courseDoc._id,
           subject: subjectDoc._id,
-          totalMark: Number(row['Total Mark'] || 100),
-          passMark: Number(row['Pass Mark'] || 35),
           theoryMark: Number(row['Theory Mark'] || 0),
           internalMark: Number(row['Internal Mark'] || 0),
           practicalMark: Number(row['Practical Mark'] || 0)

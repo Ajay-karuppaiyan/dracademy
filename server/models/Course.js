@@ -92,6 +92,12 @@ const courseSchema = mongoose.Schema({
     required: true,
   },
 
+  type: {
+    type: String,
+    enum: ['Academic', 'Online', 'Offline'],
+    default: 'Academic'
+  },
+
   level: {
     type: String,
     enum: ['Beginner', 'Intermediate', 'Advanced'],
