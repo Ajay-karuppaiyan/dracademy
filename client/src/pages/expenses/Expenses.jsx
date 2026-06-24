@@ -17,7 +17,7 @@ import AddExpenseModal from "./AddExpenseModel";
 import CustomDataTable from "../../components/DataTable";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
 
-const Expenses = () => {
+const Expenses = ({ hideHeader = false }) => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -161,21 +161,23 @@ const Expenses = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">Expense Management</h2>
-          <p className="text-sm text-slate-500">
-            Track and manage expense claims
-          </p>
-        </div>
+      {!hideHeader && (
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Expense Management</h2>
+            <p className="text-sm text-slate-500">
+              Track and manage expense claims
+            </p>
+          </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700"
-        >
-          <Plus size={16} /> Add Expense
-        </button>
-      </div>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700"
+          >
+            <Plus size={16} /> Add Expense
+          </button>
+        </div>
+      )}
 
       <AddExpenseModal
         isOpen={isAddModalOpen}

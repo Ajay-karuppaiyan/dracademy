@@ -94,8 +94,8 @@ const courseSchema = mongoose.Schema({
 
   type: {
     type: String,
-    enum: ['Academic', 'Online', 'Offline'],
-    default: 'Academic'
+    enum: ['Online Courses', 'Center Courses'],
+    default: 'Online Courses'
   },
 
   level: {

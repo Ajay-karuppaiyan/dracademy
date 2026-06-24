@@ -24,9 +24,17 @@ import {
   MapPin,
   BookOpen,
   Heart,
-  UserCheck
+  UserCheck,
+  Laptop,
+  Building2,
+  UserCircle,
+  Wallet,
+  CalendarRange
 } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
+import Attendance from "../../pages/attendance/Attendance";
+import Payroll from "../../pages/payroll/Payroll";
+import LeaveRequestList from "../../components/LeaveRequestList";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
@@ -217,6 +225,7 @@ const StudentList = ({ students, loading, onEdit, onToggleStatus, onDelete, onVi
 };
 
 const Students = () => {
+  const [activeTab, setActiveTab] = useState("online_students");
   const [students, setStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -271,16 +280,28 @@ const Students = () => {
   }, []);
 
   useEffect(() => {
-    const result = students.filter(
-      (s) =>
-        s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        s.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
-        s.studentId?.toLowerCase().includes(search.toLowerCase()) ||
-        s.phone?.toLowerCase().includes(search.toLowerCase()) ||
-        s.whatsapp?.toLowerCase().includes(search.toLowerCase())
-    );
+    let result = students;
+
+    if (activeTab === "online_students") {
+      result = result.filter(s => !s.center);
+    } else if (activeTab === "center_students") {
+      result = result.filter(s => !!s.center);
+    } else if (activeTab === "internship") {
+      result = result.filter(s => s.internships && s.internships.length > 0);
+    }
+
+    if (search) {
+      result = result.filter(
+        (s) =>
+          s.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+          s.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
+          s.studentId?.toLowerCase().includes(search.toLowerCase()) ||
+          s.phone?.toLowerCase().includes(search.toLowerCase()) ||
+          s.whatsapp?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
     setFiltered(result);
-  }, [search, students]);
+  }, [search, students, activeTab]);
 
   const handleDelete = (id) => {
     setConfirmConfig({ isOpen: true, id });
@@ -323,7 +344,7 @@ const Students = () => {
   };
 
   const exportToExcel = () => {
-    const data = students.map((s, i) => ({
+    const data = filtered.map((s, i) => ({
       "S.No": i + 1,
       "Student ID": s.studentId || "-",
       Name: s.user?.name,
@@ -340,82 +361,136 @@ const Students = () => {
     XLSX.writeFile(workbook, "Students.xlsx");
   };
 
+  const tabs = {
+    online_students: { label: "Online Students", icon: <Laptop size={20} /> },
+    center_students: { label: "Center Students", icon: <Building2 size={20} /> },
+    internship: { label: "Internship", icon: <UserCircle size={20} /> },
+    student_attendance: { label: "Student Attendance", icon: <CheckCircle size={20} /> },
+    intern_attendance: { label: "Intern Attendance", icon: <Clock size={20} /> },
+    intern_payroll: { label: "Intern Payroll", icon: <Wallet size={20} /> },
+    leaves: { label: "Leaves", icon: <CalendarRange size={20} /> },
+  };
+
   return (
-    <div className="p-4 sm:p-6 space-y-8 animate-in fade-in duration-500 max-w-full overflow-hidden">
+    <div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500 max-w-full overflow-hidden">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative z-10">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Student Directory</h1>
           <p className="text-slate-500 text-sm font-medium">Manage student profiles, enrollments, and internship status.</p>
         </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={exportToExcel}
-            className="flex items-center gap-2 px-5 py-2.5 font-bold text-brand-700 bg-brand-50 rounded-2xl hover:bg-brand-100 transition-all active:scale-95"
-          >
-            Export XL
-          </button>
-          <button 
-            onClick={() => window.open("/student-registration", "_blank")}
-            className="flex items-center gap-2 px-6 py-2.5 font-bold text-white bg-brand-600 rounded-2xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all active:scale-95"
-          >
-            <UserPlus size={18} /> Add Student
-          </button>
-        </div>
+        
+        {["online_students", "center_students", "internship"].includes(activeTab) && (
+          <div className="flex gap-3">
+            <button 
+              onClick={exportToExcel}
+              className="flex items-center gap-2 px-5 py-2.5 font-bold text-brand-700 bg-brand-50 rounded-2xl hover:bg-brand-100 transition-all active:scale-95"
+            >
+              Export XL
+            </button>
+            <button 
+              onClick={() => window.open("/student-registration", "_blank")}
+              className="flex items-center gap-2 px-6 py-2.5 font-bold text-white bg-brand-600 rounded-2xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all active:scale-95"
+            >
+              <UserPlus size={18} /> Add Student
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Total Students", value: students.length, icon: Users, color: "blue" },
-          { label: "Active Records", value: students.filter(s => s.status === "active").length, icon: CheckCircle, color: "emerald" },
-          { label: "Interns", value: students.filter(s => s.internships?.length > 0).length, icon: Briefcase, color: "amber" },
-          { label: "Departments", value: [...new Set(students.map(s => s.department))].length, icon: GraduationCap, color: "indigo" },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-200 transition-all">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">{stat.label}</p>
-              <p className="text-3xl font-black text-slate-900 mt-2">{stat.value}</p>
-            </div>
-            <div className={`p-4 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:rotate-12 transition-all shrink-0`}>
-              <stat.icon size={26} strokeWidth={2.5}/>
-            </div>
-          </div>
+      {/* TABS */}
+      <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-200 gap-8">
+        {Object.keys(tabs).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`pb-4 px-2 text-sm font-medium transition-colors relative whitespace-nowrap flex items-center gap-2 ${activeTab === tab
+              ? "text-brand-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
+          >
+            {tabs[tab].icon}
+            {tabs[tab].label}
+            {activeTab === tab && (
+              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full" />
+            )}
+          </button>
         ))}
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <StudentList 
-          students={filtered}
-          loading={loading}
-          onEdit={(s) => {
-             const clone = JSON.parse(JSON.stringify(s));
-             setEditStudent({...clone, email: s.user?.email || s.email || ""});
-          }}
-          onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
-          onView={(s) => setSelectedStudent(s)}
-          onPromote={(row) => {
-            if (row.internships && row.internships.length > 0) {
-              const latest = row.internships[row.internships.length - 1];
-              setPromoteForm({
-                vendorId: latest.vendor?._id || latest.vendor || "",
-                location: latest.location || "",
-                startDate: latest.startDate ? latest.startDate.split('T')[0] : "",
-                endDate: latest.endDate ? latest.endDate.split('T')[0] : "",
-                paymentBy: latest.paymentBy || "",
-                salary: latest.salary || ""
-              });
-            } else {
-              setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "", salary: "" });
-            }
-            setPromoteConfig({ isOpen: true, student: row });
-          }}
-          search={search}
-          setSearch={setSearch}
-        />
-      </div>
+      {/* Content Area */}
+      {["online_students", "center_students", "internship"].includes(activeTab) ? (
+        <>
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { label: "Total Displayed", value: filtered.length, icon: Users, color: "blue" },
+              { label: "Active Records", value: filtered.filter(s => s.status === "active").length, icon: CheckCircle, color: "emerald" },
+              { label: "Interns", value: filtered.filter(s => s.internships?.length > 0).length, icon: Briefcase, color: "amber" },
+              { label: "Departments", value: [...new Set(filtered.map(s => s.department))].length, icon: GraduationCap, color: "indigo" },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-200 transition-all">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">{stat.label}</p>
+                  <p className="text-3xl font-black text-slate-900 mt-2">{stat.value}</p>
+                </div>
+                <div className={`p-4 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:rotate-12 transition-all shrink-0`}>
+                  <stat.icon size={26} strokeWidth={2.5}/>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table Section */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <StudentList 
+              students={filtered}
+              loading={loading}
+              onEdit={(s) => {
+                 const clone = JSON.parse(JSON.stringify(s));
+                 setEditStudent({...clone, email: s.user?.email || s.email || ""});
+              }}
+              onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus}
+              onView={(s) => setSelectedStudent(s)}
+              onPromote={(row) => {
+                if (row.internships && row.internships.length > 0) {
+                  const latest = row.internships[row.internships.length - 1];
+                  setPromoteForm({
+                    vendorId: latest.vendor?._id || latest.vendor || "",
+                    location: latest.location || "",
+                    startDate: latest.startDate ? latest.startDate.split('T')[0] : "",
+                    endDate: latest.endDate ? latest.endDate.split('T')[0] : "",
+                    paymentBy: latest.paymentBy || "",
+                    salary: latest.salary || ""
+                  });
+                } else {
+                  setPromoteForm({ vendorId: "", location: "", startDate: "", endDate: "", paymentBy: "", salary: "" });
+                }
+                setPromoteConfig({ isOpen: true, student: row });
+              }}
+              search={search}
+              setSearch={setSearch}
+            />
+          </div>
+        </>
+      ) : activeTab === "student_attendance" ? (
+         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-2 overflow-hidden">
+             <Attendance studentOnly={true} hideHeader={true} />
+         </div>
+      ) : activeTab === "intern_attendance" ? (
+         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-2 overflow-hidden">
+             <Attendance internOnly={true} hideHeader={true} />
+         </div>
+      ) : activeTab === "intern_payroll" ? (
+         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-2 overflow-hidden">
+             <Payroll internOnly={true} hideHeader={true} />
+         </div>
+      ) : activeTab === "leaves" ? (
+         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-2 overflow-hidden">
+             <LeaveRequestList />
+         </div>
+      ) : null}
 
       {/* PROMOTE INTERN MODAL (PORTAL) */}
       {promoteConfig.isOpen && ReactDOM.createPortal(

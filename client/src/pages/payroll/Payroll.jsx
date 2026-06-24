@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import CustomDataTable from "../../components/DataTable";
 
-const Payroll = () => {
+const Payroll = ({ hideHeader = false, internOnly = false }) => {
 const { user } = useAuth();
 const [payrolls, setPayrolls] = useState([]);
 const [loading, setLoading] = useState(true);
@@ -58,7 +58,13 @@ useEffect(() => {
 if (user.role === "admin" || user.role === "Hr") {
 api.get("/employees")
 .then(res => {
-setEmployees(res.data);
+let result = res.data;
+if (internOnly) {
+  result = result.filter(emp => emp.role === "student" && emp.internships?.length > 0);
+} else {
+  result = result.filter(emp => emp.role !== "student" && emp.role !== "admin");
+}
+setEmployees(result);
 })
 .catch(() => toast.error("Failed to fetch employees"));
 } else {
@@ -68,7 +74,7 @@ firstName: user.name,
 lastName: ""
 });
 }
-}, [user]);
+}, [user, internOnly]);
 
 /* ==============================
 MONTH OPTIONS
@@ -94,7 +100,7 @@ const fetchPayrolls = async () => {
   const [year, month] = selectedMonth.split("-");
   setLoading(true);
   try {
-    const res = await api.get(`/payroll/salary/all?month=${month}&year=${year}`);
+    const res = await api.get(`/payroll/salary/all?month=${month}&year=${year}&internOnly=${internOnly}`);
     setPayrolls(res.data);
   } catch (err) {
     console.error("Failed to load payroll", err);
@@ -305,6 +311,7 @@ const generatePayslip = async (payrollId, employeeName) => {
   return (
     <div className="space-y-6">
       {/* HEADER */}
+      {!hideHeader && (
       <div className="flex justify-between items-center bg-white border p-5 rounded-xl shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-gray-600 font-semibold">Payroll Month:</span>
@@ -351,6 +358,7 @@ const generatePayslip = async (payrollId, employeeName) => {
           Add Adjustment
         </button>
       </div>
+      )}
 
       {/* PAYROLL TABLE */}
       <div

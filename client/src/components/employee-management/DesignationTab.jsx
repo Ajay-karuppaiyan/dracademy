@@ -27,8 +27,8 @@ const toTitleCase = (str) => {
     .join(" ");
 };
 
-const AdministrativeConfigs = () => {
-  const [activeTab, setActiveTab] = useState("departments");
+const DesignationTab = () => {
+  const activeTab = "designations";
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -120,24 +120,6 @@ const AdministrativeConfigs = () => {
       endpoint: "/centers",
       icon: <MapPin size={20} />,
     },
-    batches: {
-      title: "Batches",
-      singular: "Batch",
-      endpoint: "/batches",
-      icon: <Layers size={20} />,
-    },
-    subjects: {
-      title: "Subjects",
-      singular: "Subject",
-      endpoint: "/subjects",
-      icon: <BookOpen size={20} />,
-    },
-    examFees: {
-      title: "Fees",
-      singular: "Exam Fee",
-      endpoint: "/exam-fees",
-      icon: <DollarSign size={20} />,
-    },
   };
 
   const fetchData = async () => {
@@ -152,7 +134,7 @@ const AdministrativeConfigs = () => {
         ]);
         setData(feesRes.data);
         setCentersList(centersRes.data);
-        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
+        setCoursesList(coursesRes.data.filter(c => c.type === "Center Courses"));
         setBatchesList(batchesRes.data);
       } else if (activeTab === "batches") {
         const [batchesRes, coursesRes, subjectsRes, centersRes] = await Promise.all([
@@ -162,7 +144,7 @@ const AdministrativeConfigs = () => {
           api.get("/centers")
         ]);
         setData(batchesRes.data);
-        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
+        setCoursesList(coursesRes.data.filter(c => c.type === "Center Courses"));
         setSubjectsList(subjectsRes.data);
         setCentersList(centersRes.data);
       } else if (activeTab === "subjects") {
@@ -171,7 +153,7 @@ const AdministrativeConfigs = () => {
           api.get("/courses")
         ]);
         setData(subjectsRes.data);
-        setCoursesList(coursesRes.data.filter(c => c.type === "Academic" || !c.type));
+        setCoursesList(coursesRes.data.filter(c => c.type === "Center Courses"));
       } else {
         const { data } = await api.get(config[activeTab].endpoint);
         setData(data);
@@ -185,7 +167,7 @@ const AdministrativeConfigs = () => {
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, []);
 
   const handleDelete = async (id) => {
     if (
@@ -536,15 +518,8 @@ const AdministrativeConfigs = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Administrative Configs
-          </h1>
-          <p className="text-sm text-gray-500">
-            Manage departments, roles, designations, and centers
-          </p>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Designations</h2>
         <button
           onClick={() => openModal()}
           className="bg-brand-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-brand-700 transition-colors shadow-sm"
@@ -553,27 +528,7 @@ const AdministrativeConfigs = () => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 gap-8">
-        {Object.keys(config).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-4 px-2 text-sm font-medium transition-colors relative ${activeTab === tab
-              ? "text-brand-600"
-              : "text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            <div className="flex items-center gap-2">
-              {config[tab].icon}
-              {config[tab].title}
-            </div>
-            {activeTab === tab && (
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full" />
-            )}
-          </button>
-        ))}
-      </div>
+
 
       {/* Content */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-4">
@@ -991,4 +946,4 @@ const AdministrativeConfigs = () => {
   );
 };
 
-export default AdministrativeConfigs;
+export default DesignationTab;

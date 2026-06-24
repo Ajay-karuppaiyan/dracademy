@@ -6,7 +6,7 @@ import CustomDataTable from "../../components/DataTable";
 import Loading from "../../components/Loading";
 import { Search } from "lucide-react";
 
-const Attendance = () => {
+const Attendance = ({ employeeOnly = false, studentOnly = false, internOnly = false, hideHeader = false }) => {
   const { user, token } = useAuth();
   const [photo, setPhoto] = useState(null);
   const [attendanceList, setAttendanceList] = useState([]);
@@ -171,11 +171,21 @@ const Attendance = () => {
         const matchTo = filterTo ? new Date(a.date) <= new Date(filterTo) : true;
 
         // NON-ADMIN: show only self (except for center role which sees all in their center)
-        const matchUser = !["admin", "center"].includes(user.role) ? a.name === user.name : true;
+        const matchUser = !["admin", "center"].includes(user?.role) ? a.name === user?.name : true;
 
-        return matchSearch && matchFrom && matchTo && matchUser;
+        // ROLE FILTERS
+        let matchRole = true;
+        if (employeeOnly) {
+          matchRole = ["admin", "hr", "sub-admin", "coach", "employee", "finance", "center", "vendor"].includes(a.role?.toLowerCase());
+        } else if (studentOnly) {
+          matchRole = a.role?.toLowerCase() === "student" && !(a.internships?.length > 0);
+        } else if (internOnly) {
+          matchRole = a.role?.toLowerCase() === "student" && a.internships?.length > 0;
+        }
+
+        return matchSearch && matchFrom && matchTo && matchUser && matchRole;
       });
-  }, [attendanceList, searchTerm, filterFrom, filterTo, user]);
+  }, [attendanceList, searchTerm, filterFrom, filterTo, user, employeeOnly, studentOnly, internOnly]);
 
   // COLUMNS
   const calculateWorkingHours = (loginTime, logoutTime) => {
@@ -296,7 +306,7 @@ const Attendance = () => {
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Tabs */}
-        {user.role !== "student" && (
+        {!hideHeader && user.role !== "student" && (
           <div className="border-b border-slate-200 mb-4">
             <div className="flex gap-6">
               {["attendance", "payroll"].map((tab) => (
@@ -320,23 +330,25 @@ const Attendance = () => {
           {activeTab === "attendance" && (
             <>
               {/* HEADER */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
-                  <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
-                </div>
+              {!hideHeader && (
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
+                    <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
+                  </div>
 
-                {/* {user.role !== "admin" && !showForm && (
-                  <button
-                    onClick={() => setShowForm(true)}
-                    disabled={hasMarkedToday}
-                    className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                  >
-                    {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
-                  </button>
-                )} */}
-              </div>
+                  {/* {user.role !== "admin" && !showForm && (
+                    <button
+                      onClick={() => setShowForm(true)}
+                      disabled={hasMarkedToday}
+                      className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                    >
+                      {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
+                    </button>
+                  )} */}
+                </div>
+              )}
 
               {/* FORM */}
               {user.role !== "admin" && showForm && (

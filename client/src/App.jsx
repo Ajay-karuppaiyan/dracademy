@@ -25,10 +25,11 @@ import CertificateView from "./pages/lms/CertificateView";
 import Dashboard from "./pages/Dashboard";
 import MyLearning from "./pages/lms/MyLearning";
 import CoursePlayer from "./pages/lms/CoursePlayer";
+import PaymentsHub from "./pages/dashboard/PaymentsHub";
 import EnrollClass from "./pages/lms/EnrollClass";
 import CourseManagement from "./pages/admin/CourseManagement";
 import ExamManagement from "./pages/dashboard/ExamManagement";
-import AdministrativeConfigs from "./pages/admin/AdministrativeConfigs";
+import CenterManagement from "./pages/admin/CenterManagement";
 import HR from "./pages/dashboard/HR";
 import Settings from "./pages/dashboard/Settings";
 import Students from "./pages/dashboard/Students";
@@ -286,9 +287,12 @@ function App() {
 
             {/* Subscription */}
             <Route path="subscription" element={<PrivateRoute> <Subscription /> </PrivateRoute>} />
+            {/* Finance & Payments */}
+            <Route path="payments/*" element={<PaymentsHub />} />
+
             {/* Admin */}
             <Route path="admin/courses" element={<CourseManagement />} />
-            <Route path="admin/configs" element={<AdministrativeConfigs />} />
+            <Route path="admin/centers" element={<CenterManagement />} />
             <Route path="admin/logins" element={<AdminLogins />} />
             <Route path="admin/parents" element={<ParentManagement />} />
             <Route path="admin/vendors" element={<VendorManagement />} />
