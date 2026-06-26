@@ -1,0 +1,104 @@
+import React, { useEffect, useState } from "react";
+import api from "../../services/api";
+import CustomDataTable from "../DataTable";
+
+const OnlineCoursePayments = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/finance/payments?type=inward&all=true");
+      setPayments(res.data.payments || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = payments.filter((p) => {
+    const term = search.toLowerCase();
+    return (
+      p.student?.studentNameEnglish?.toLowerCase().includes(term) ||
+      p.student?.email?.toLowerCase().includes(term) ||
+      p.course?.title?.toLowerCase().includes(term) ||
+      p.razorpayPaymentId?.toLowerCase().includes(term)
+    );
+  });
+
+  const columns = [
+    { name: "S.No", selector: (row, i) => i + 1, width: "70px", center: true },
+    { 
+      name: "Student", 
+      selector: row => row.student?.studentNameEnglish, 
+      sortable: true,
+      cell: row => (
+        <div>
+          <div className="font-bold text-gray-800">{row.student?.studentNameEnglish || "N/A"}</div>
+          <div className="text-[10px] text-gray-500">{row.student?.email || ""}</div>
+        </div>
+      )
+    },
+    { 
+      name: "Course", 
+      selector: row => row.course?.title, 
+      sortable: true,
+      cell: row => <span className="font-medium text-gray-700">{row.course?.title || "-"}</span>
+    },
+    { 
+      name: "Amount", 
+      selector: row => row.amount, 
+      sortable: true, 
+      cell: row => <span className="font-bold text-green-600">₹ {row.amount?.toLocaleString("en-IN")}</span> 
+    },
+    { 
+      name: "Payment ID", 
+      selector: row => row.razorpayPaymentId,
+      cell: row => <span className="font-mono text-xs text-gray-500">{row.razorpayPaymentId || "Manual"}</span>
+    },
+    { 
+      name: "Status", 
+      selector: row => row.status, 
+      sortable: true, 
+      center: true,
+      cell: row => (
+        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+          row.status === "success" || row.status === "paid" ? "bg-green-100 text-green-700" :
+          row.status === "failed" ? "bg-red-100 text-red-700" :
+          "bg-gray-100 text-gray-700"
+        }`}>
+          {row.status}
+        </span>
+      )
+    },
+    { 
+      name: "Date", 
+      selector: row => row.createdAt, 
+      sortable: true, 
+      cell: row => <span className="text-gray-600 font-medium">{new Date(row.createdAt).toLocaleDateString("en-GB")}</span> 
+    }
+  ];
+
+  return (
+    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-4 sm:p-6 overflow-hidden">
+      <CustomDataTable
+        columns={columns}
+        data={filtered}
+        progressPending={loading}
+        search={search}
+        setSearch={setSearch}
+        searchPlaceholder="Search by student, email, course or payment ID..."
+        pagination
+      />
+    </div>
+  );
+};
+
+export default OnlineCoursePayments;

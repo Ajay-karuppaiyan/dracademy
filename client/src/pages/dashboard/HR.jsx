@@ -4,6 +4,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 
 import AddEmployeeModal from "../../components/modals/AddEmployeeModal";
+import TakeAttendanceModal from "../../components/modals/TakeAttendanceModal";
 
 import Attendance from "../../pages/attendance/Attendance";
 import Payroll from "../../pages/payroll/Payroll";
@@ -185,6 +186,7 @@ const EmployeeTable = ({ employees, loading, onEdit, onToggleStatus, onDelete })
 const HR = () => {
   const [activeTab, setActiveTab] = useState("employee");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -252,6 +254,10 @@ const HR = () => {
           fetchEmployees();
         }}
       />
+      <TakeAttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => setIsAttendanceModalOpen(false)}
+      />
 
       <div className="flex justify-between items-center">
         <div>
@@ -273,10 +279,11 @@ const HR = () => {
           )}
           {activeTab === "attendance" && (
             <button
+              onClick={() => setIsAttendanceModalOpen(true)}
               className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all"
             >
               <CalendarCheck size={18} />
-              Add Attendance
+              Mark Attendance
             </button>
           )}
         </div>

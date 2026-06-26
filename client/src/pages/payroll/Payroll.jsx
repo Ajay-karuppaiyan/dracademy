@@ -55,17 +55,25 @@ FETCH EMPLOYEES
 ================================ */
 useEffect(() => {
 if (user.role === "admin" || user.role === "Hr") {
-api.get("/employees")
-.then(res => {
-let result = res.data;
-if (internOnly) {
-  result = result.filter(emp => emp.role === "student" && emp.internships?.length > 0);
-} else {
-  result = result.filter(emp => emp.role !== "student" && emp.role !== "admin");
-}
-setEmployees(result);
-})
-.catch(() => toast.error("Failed to fetch employees"));
+  if (internOnly) {
+    api.get("/students")
+      .then(res => {
+        let result = res.data.students || [];
+        result = result.filter(stu => stu.internships?.length > 0);
+        // Map student structure to match expected employee structure in payroll if necessary
+        // or just setEmployees
+        setEmployees(result);
+      })
+      .catch(() => toast.error("Failed to fetch interns"));
+  } else {
+    api.get("/employees")
+      .then(res => {
+        let result = res.data;
+        result = result.filter(emp => emp.role !== "student" && emp.role !== "admin");
+        setEmployees(result);
+      })
+      .catch(() => toast.error("Failed to fetch employees"));
+  }
 } else {
 setSelectedEmployee({
 _id: user.id,

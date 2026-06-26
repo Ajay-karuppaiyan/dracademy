@@ -39,6 +39,7 @@ import LeaveRequestList from "../../components/LeaveRequestList";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
+import TakeAttendanceModal from "../../components/modals/TakeAttendanceModal";
 import ReactDOM from "react-dom";
 import toast from "react-hot-toast";
 
@@ -231,6 +232,7 @@ const Students = () => {
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
   const [promoteConfig, setPromoteConfig] = useState({ isOpen: false, student: null });
   const [vendors, setVendors] = useState([]);
@@ -374,8 +376,12 @@ const Students = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500 max-w-full overflow-hidden">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative z-10">
+      {/* Header */}
+      <TakeAttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => setIsAttendanceModalOpen(false)}
+      />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative z-10">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Student Directory</h1>
           <p className="text-slate-500 text-sm font-medium">Manage student profiles, enrollments, and internship status.</p>
@@ -401,6 +407,7 @@ const Students = () => {
 
           {(activeTab === "student_attendance" || activeTab === "intern_attendance") && (
             <button 
+              onClick={() => setIsAttendanceModalOpen(true)}
               className="flex items-center gap-2 px-6 py-2.5 font-bold text-white bg-brand-600 rounded-2xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all active:scale-95"
             >
               <Plus size={18} /> Add Attendance

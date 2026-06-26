@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, DollarSign } from 'lucide-react';
 
 const AddStudentFeeModal = ({ onClose, onSave, students, centers, courses, batches }) => {
@@ -19,12 +20,12 @@ const AddStudentFeeModal = ({ onClose, onSave, students, centers, courses, batch
     onSave(formData);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200 mt-10 md:mt-0">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
               <DollarSign size={24} />
             </div>
             <h2 className="text-xl font-bold text-slate-900">Add Student Payment</h2>
@@ -102,13 +103,14 @@ const AddStudentFeeModal = ({ onClose, onSave, students, centers, courses, batch
 
           <div className="flex gap-3 pt-4 border-t border-slate-100">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+            <button type="submit" className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2">
               <Save size={18} /> Save Payment
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

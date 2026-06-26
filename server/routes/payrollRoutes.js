@@ -11,7 +11,7 @@ const toWords = require('number-to-words');
 // GET ALL PAYROLLS
 router.get("/salary/all", protect, async (req, res) => {
   try {
-    const { month, year } = req.query;
+    const { month, year, internOnly } = req.query;
 
     if (!month || !year) {
       return res.status(400).json({ message: "Month & year required" });
@@ -23,10 +23,30 @@ router.get("/salary/all", protect, async (req, res) => {
     const endDate = new Date(y, m, 0, 23, 59, 59, 999);
     const totalDaysInMonth = endDate.getDate();
 
-    const employees = await Employee.find({ status: "active" });
+    let targetUsers = [];
+    if (internOnly === "true") {
+      const Student = require("../models/Student");
+      const students = await Student.find({ status: "active", "internships.0": { $exists: true } }).populate("user");
+      targetUsers = students.map(s => {
+        const latestInternship = s.internships[s.internships.length - 1];
+        const salary = latestInternship?.salary ? Number(latestInternship.salary) : 0;
+        return {
+          _id: s._id,
+          user: s.user?._id,
+          firstName: s.user?.name || s.studentNameEnglish,
+          lastName: "",
+          department: "Intern",
+          salary: salary,
+          shift: { start: "09:30" },
+          isIntern: true
+        };
+      });
+    } else {
+      targetUsers = await Employee.find({ status: "active" });
+    }
 
     const data = await Promise.all(
-      employees.map(async (emp, index) => {
+      targetUsers.map(async (emp, index) => {
         const userId = emp.user;
 
         if (!userId) {
@@ -163,20 +183,32 @@ router.post("/adjustment", protect, async (req, res) => {
     });
 
     if (!payroll) {
-
-      const employee = await Employee.findById(employeeId);
+      let salary = 0;
+      let employee = await Employee.findById(employeeId);
+      
+      if (employee) {
+        salary = employee.salary;
+      } else {
+        const Student = require("../models/Student");
+        employee = await Student.findById(employeeId);
+        if (employee) {
+          const latestInternship = employee.internships?.[employee.internships.length - 1];
+          salary = latestInternship?.salary ? Number(latestInternship.salary) : 0;
+        } else {
+          return res.status(404).json({ message: "Employee/Intern not found" });
+        }
+      }
 
       payroll = new Payroll({
         employee: employeeId,
         month: Number(month),
         year: Number(year),
-        basicSalary: employee.salary,
+        basicSalary: salary,
         totalAllowances: 0,
         totalDeductions: 0,
         advance: 0,
         adjustments: []
       });
-
     }
 
     // Add adjustment
@@ -214,10 +246,29 @@ router.post("/adjustment", protect, async (req, res) => {
 // ==============================
 router.get('/payslip/:id', protect, async (req, res) => {
   try {
-    const payroll = await Payroll.findById(req.params.id).populate('employee');
-
-    if (!payroll) return res.status(404).json({ message: "Payroll not found" });
-    const emp = payroll.employee;
+    const payrollRaw = await Payroll.findById(req.params.id);
+    if (!payrollRaw) return res.status(404).json({ message: "Payroll not found" });
+    
+    let payroll = await Payroll.findById(req.params.id).populate('employee');
+    let emp = payroll.employee;
+    
+    if (!emp) {
+      const Student = require("../models/Student");
+      const student = await Student.findById(payrollRaw.employee).populate('user');
+      if (student) {
+        emp = {
+          _id: student._id,
+          user: student.user?._id,
+          firstName: student.user?.name || student.studentNameEnglish,
+          lastName: "",
+          department: "Intern",
+          shift: { start: "09:30" }
+        };
+      } else {
+        return res.status(404).json({ message: "Employee/Intern not found for this payroll" });
+      }
+    }
+    
     const userId = emp.user; // To fetch attendance
 
     // Recalculate Attendance precisely since it is not saved to Payroll model continuously

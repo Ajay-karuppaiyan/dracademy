@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import Expenses from "../expenses/Expenses";
 import Payroll from "../payroll/Payroll";
+import OnlineCoursePayments from "../../components/payments/OnlineCoursePayments";
+import StudentFeesList from "../../components/payments/StudentFeesList";
 
 const PlaceholderTable = ({ title, description }) => {
   return (
@@ -155,36 +157,16 @@ const PaymentsHub = () => {
       <div className="animate-in slide-in-from-bottom-2 fade-in duration-300">
         {mainTab === "inward" ? (
           <>
-            {inwardTab === "online_course" && (
-              <PlaceholderTable
-                title="Online Course Payments"
-                description="Records of all transactions related to online course purchases and subscriptions."
-              />
-            )}
-            {inwardTab === "exam_fees" && (
-              <PlaceholderTable
-                title="Exam Fees"
-                description="Collection of fees for upcoming academic and competitive examinations."
-              />
-            )}
-            {inwardTab === "term_fees" && (
-              <PlaceholderTable
-                title="Term Fees"
-                description="Standard academic term fees collected from enrolled students."
-              />
-            )}
+            {inwardTab === "online_course" && <OnlineCoursePayments />}
+            {inwardTab === "exam_fees" && <StudentFeesList feeType="Exam" />}
+            {inwardTab === "term_fees" && <StudentFeesList feeType="Term" />}
             {inwardTab === "vendor_payments" && (
               <PlaceholderTable
                 title="Vendor Payments (Inward)"
                 description="Commissions or revenues received from partnered vendors."
               />
             )}
-            {inwardTab === "others" && (
-              <PlaceholderTable
-                title="Other Inward Revenues"
-                description="Miscellaneous incomes, donations, or undefined inward transactions."
-              />
-            )}
+            {inwardTab === "others" && <StudentFeesList feeType="Other" />}
           </>
         ) : (
           <>
