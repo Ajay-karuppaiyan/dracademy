@@ -477,4 +477,47 @@ router.get("/parent/:parentId", async (req, res) => {
   }
 });
 
+// =======================================================
+// ✅ ASSIGN STUDENTS TO PARENT (Admin Only)
+// =======================================================
+router.post("/parent/:parentId/assign-students", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { parentId } = req.params;
+    const { studentIds } = req.body;
+
+    const parent = await User.findOne({ _id: parentId, role: "parent" });
+    if (!parent) {
+      return res.status(404).json({ message: "Parent not found" });
+    }
+
+    // 1. Remove parent link from students who were previously assigned to this parent
+    // but are not in the new studentIds list.
+    await Student.updateMany(
+      { parent: parentId, _id: { $nin: studentIds || [] } },
+      { $unset: { parent: "" } }
+    );
+
+    // 2. Add parent link to the new students
+    if (studentIds && studentIds.length > 0) {
+      await Student.updateMany(
+        { _id: { $in: studentIds } },
+        { $set: { parent: parentId } }
+      );
+    }
+
+    // 3. Update parent's children array
+    parent.children = studentIds || [];
+    await parent.save();
+
+    res.json({ message: "Students assigned successfully", children: parent.children });
+  } catch (error) {
+    console.error("ASSIGN STUDENTS ERROR:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 module.exports = router;

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { XCircle, Plus } from "lucide-react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import ReactDOM from "react-dom";
 
 const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
   const [title, setTitle] = useState("");
@@ -87,9 +88,9 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex justify-center items-center"
+      className="fixed inset-0 bg-black/40 z-[10000] flex justify-center items-center"
       onClick={() => {
         resetForm();
         onClose();
@@ -121,7 +122,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             placeholder="Expense Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             required
           />
 
@@ -129,7 +130,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             required
           >
             <option value="">Select Category</option>
@@ -148,7 +149,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
-            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             required
           />
 
@@ -157,7 +158,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
           />
 
           {/* Description */}
@@ -166,7 +167,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="3"
-            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
           />
 
           {/* Receipt */}
@@ -200,7 +201,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700"
+              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
             >
               <Plus size={16} />
               {loading ? "Adding..." : "Add Expense"}
@@ -208,7 +209,8 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

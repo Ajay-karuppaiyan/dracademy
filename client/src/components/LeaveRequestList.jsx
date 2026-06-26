@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Eye, Trash2 } from "lucide-react";
 import LeaveApplicationForm from "./LeaveApplicationForm";
 import CustomDataTable from "./DataTable";
+import ReactDOM from "react-dom";
 
 const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
   const [requests, setRequests] = useState([]);
@@ -207,10 +208,10 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
             <p className="text-sm text-slate-500">Manage employee leave applications</p>
           </div>
 
-          {showApplyButton && user && user.role !== "admin" && (
+          {showApplyButton && user && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl shadow-md transition"
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl shadow-md transition"
             >
               + Apply Leave
             </button>
@@ -232,9 +233,9 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
       </div>
 
       {/* ===== APPLY LEAVE MODAL ===== */}
-      {showApplyButton && showForm && user && user.role !== "admin" && (
+      {showApplyButton && showForm && user && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
           onClick={() => setShowForm(false)}
         >
           <div
@@ -249,13 +250,14 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
               onCancel={() => setShowForm(false)}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ===== DETAILS MODAL ===== */}
-      {selectedLeave && (
+      {selectedLeave && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
           onClick={() => setSelectedLeave(null)}
         >
           <div
@@ -323,7 +325,8 @@ const LeaveRequestList = ({ showApplyButton = true, onlyMine = false }) => {
               ✕
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

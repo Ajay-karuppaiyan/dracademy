@@ -337,16 +337,16 @@ const Attendance = ({ employeeOnly = false, studentOnly = false, internOnly = fa
                     <p className="text-sm  pb-4 text-slate-500">Manage daily login/logout</p>
                   </div>
 
-                  {/* {user.role !== "admin" && !showForm && (
+                  {!showForm && (
                     <button
                       onClick={() => setShowForm(true)}
                       disabled={hasMarkedToday}
                       className={`bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-2.5 rounded-xl shadow-md w-full md:w-auto ${hasMarkedToday ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                     >
-                      {hasMarkedToday ? "Already Marked" : "+ Mark Attendance"}
+                      {hasMarkedToday ? "Already Marked" : "+ Add Attendance"}
                     </button>
-                  )} */}
+                  )}
                 </div>
               )}
 

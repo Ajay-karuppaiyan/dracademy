@@ -29,7 +29,8 @@ import {
   Building2,
   UserCircle,
   Wallet,
-  CalendarRange
+  CalendarRange,
+  Plus
 } from "lucide-react";
 import CustomDataTable from "../../components/DataTable";
 import Attendance from "../../pages/attendance/Attendance";
@@ -380,22 +381,32 @@ const Students = () => {
           <p className="text-slate-500 text-sm font-medium">Manage student profiles, enrollments, and internship status.</p>
         </div>
         
-        {["online_students", "center_students", "internship"].includes(activeTab) && (
-          <div className="flex gap-3">
+        <div className="flex gap-3">
+          {["online_students", "center_students", "internship"].includes(activeTab) && (
+            <>
+              <button 
+                onClick={exportToExcel}
+                className="flex items-center gap-2 px-5 py-2.5 font-bold text-brand-700 bg-brand-50 rounded-2xl hover:bg-brand-100 transition-all active:scale-95"
+              >
+                Export XL
+              </button>
+              <button 
+                onClick={() => window.open("/student-registration", "_blank")}
+                className="flex items-center gap-2 px-6 py-2.5 font-bold text-white bg-brand-600 rounded-2xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all active:scale-95"
+              >
+                <UserPlus size={18} /> Add Student
+              </button>
+            </>
+          )}
+
+          {(activeTab === "student_attendance" || activeTab === "intern_attendance") && (
             <button 
-              onClick={exportToExcel}
-              className="flex items-center gap-2 px-5 py-2.5 font-bold text-brand-700 bg-brand-50 rounded-2xl hover:bg-brand-100 transition-all active:scale-95"
-            >
-              Export XL
-            </button>
-            <button 
-              onClick={() => window.open("/student-registration", "_blank")}
               className="flex items-center gap-2 px-6 py-2.5 font-bold text-white bg-brand-600 rounded-2xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all active:scale-95"
             >
-              <UserPlus size={18} /> Add Student
+              <Plus size={18} /> Add Attendance
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* TABS */}

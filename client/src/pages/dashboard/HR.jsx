@@ -258,18 +258,28 @@ const HR = () => {
           <h1 className="text-2xl font-bold text-gray-900">Employee Management</h1>
           <p className="text-sm text-gray-500">Manage staff profiles, attendance, payroll, and configs</p>
         </div>
-        {activeTab === "employee" && (
-          <button
-            onClick={() => {
-              setSelectedEmployee(null);
-              setIsAddModalOpen(true);
-            }}
-            className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all"
-          >
-            <UserCheck size={18} />
-            Add Employee
-          </button>
-        )}
+        <div className="flex gap-3">
+          {activeTab === "employee" && (
+            <button
+              onClick={() => {
+                setSelectedEmployee(null);
+                setIsAddModalOpen(true);
+              }}
+              className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all"
+            >
+              <UserCheck size={18} />
+              Add Employee
+            </button>
+          )}
+          {activeTab === "attendance" && (
+            <button
+              className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all"
+            >
+              <CalendarCheck size={18} />
+              Add Attendance
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Quick Stats (Only show on Employee and Coach tabs) */}
@@ -367,7 +377,7 @@ const HR = () => {
         )}
         {activeTab === "leave" && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2 overflow-hidden">
-             <LeaveRequestList showApplyButton={false} onlyMine={false} />
+             <LeaveRequestList showApplyButton={true} onlyMine={false} />
           </div>
         )}
         {activeTab === "department" && <DepartmentTab />}

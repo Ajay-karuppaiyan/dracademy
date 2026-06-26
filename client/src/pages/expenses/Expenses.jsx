@@ -172,7 +172,7 @@ const Expenses = ({ hideHeader = false }) => {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700"
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
           >
             <Plus size={16} /> Add Expense
           </button>
@@ -250,7 +250,7 @@ const StatCard = ({ label, value, icon: Icon }) => (
       <p className="text-xs text-slate-500 uppercase">{label}</p>
       <p className="text-xl font-bold mt-1">{value}</p>
     </div>
-    <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600">
+    <div className="p-3 rounded-lg bg-red-50 text-red-600">
       <Icon size={20} />
     </div>
   </div>

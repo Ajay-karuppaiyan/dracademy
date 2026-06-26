@@ -49,9 +49,8 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => {
           <div className="flex items-center">
             <div className="flex-shrink-0">{item.icon}</div>
             <span
-              className={`ml-3 font-medium transition-opacity duration-300 ${
-                isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
-              }`}
+              className={`ml-3 font-medium transition-opacity duration-300 ${isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
+                }`}
             >
               {item.label}
             </span>
@@ -63,28 +62,33 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => {
             />
           )}
         </button>
-        {isOpen && !isCollapsed && (
-          <ul className="pl-10 space-y-1 mt-1 mb-2">
-            {item.subItems.map((subItem) => (
-              <li key={subItem.path}>
-                <NavLink
-                  to={subItem.path}
-                  end
-                  onClick={closeMobile}
-                  className={({ isActive }) =>
-                    `flex items-center p-2 rounded-lg transition-all duration-200 text-sm ${
-                      isActive
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            isOpen && !isCollapsed ? "grid-rows-[1fr] opacity-100 mt-1 mb-2" : "grid-rows-[0fr] opacity-0 mt-0 mb-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <ul className="pl-10 space-y-1">
+              {item.subItems.map((subItem) => (
+                <li key={subItem.path}>
+                  <NavLink
+                    to={subItem.path}
+                    end
+                    onClick={closeMobile}
+                    className={({ isActive }) =>
+                      `flex items-center p-2 rounded-lg transition-all duration-200 text-sm ${isActive
                         ? "text-brand-400 font-semibold"
                         : "text-slate-500 hover:text-white hover:bg-slate-800/50"
-                    }`
-                  }
-                >
-                  {subItem.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        )}
+                      }`
+                    }
+                  >
+                    {subItem.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </li>
     );
   }
@@ -96,18 +100,16 @@ const NavItem = ({ item, isCollapsed, closeMobile }) => {
         end
         onClick={closeMobile}
         className={({ isActive }) =>
-          `flex items-center p-3 my-1 rounded-xl transition-all duration-200 group overflow-hidden whitespace-nowrap ${
-            isActive
-              ? "bg-brand-600 text-white shadow-lg shadow-brand-900/30"
-              : "text-slate-400 hover:bg-slate-800 hover:text-white"
+          `flex items-center p-3 my-1 rounded-xl transition-all duration-200 group overflow-hidden whitespace-nowrap ${isActive
+            ? "bg-brand-600 text-white shadow-lg shadow-brand-900/30"
+            : "text-slate-400 hover:bg-slate-800 hover:text-white"
           }`
         }
       >
         <div className="flex-shrink-0">{item.icon}</div>
         <span
-          className={`ml-3 font-medium transition-opacity duration-300 ${
-            isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
-          }`}
+          className={`ml-3 font-medium transition-opacity duration-300 ${isCollapsed ? "lg:opacity-0 lg:w-0" : "opacity-100"
+            }`}
         >
           {item.label}
         </span>
@@ -141,9 +143,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <GraduationCap size={22} />, label: "Students", path: "/dashboard/students" },
     { icon: <Users size={22} />, label: "Parent Mgmt", path: "/dashboard/admin/parents" },
     { icon: <Building2 size={22} />, label: "Center Management", path: "/dashboard/admin/centers" },
-    { 
-      icon: <CreditCard size={22} />, 
-      label: "Payments", 
+    {
+      icon: <CreditCard size={22} />,
+      label: "Payments",
       subItems: [
         { label: "Inward", path: "/dashboard/payments/inward" },
         { label: "Outward", path: "/dashboard/payments/outward" }
@@ -215,9 +217,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     { icon: <Users size={22} />, label: "Employee Management", path: "/dashboard/hr" },
     { icon: <Megaphone size={22} />, label: "Announcements", path: "/dashboard/announcements" },
     { icon: <MessageSquare size={22} />, label: "Discussion Forum", path: "/dashboard/forum" },
-    { 
-      icon: <CreditCard size={22} />, 
-      label: "Payments", 
+    {
+      icon: <CreditCard size={22} />,
+      label: "Payments",
       subItems: [
         { label: "Inward", path: "/dashboard/payments/inward" },
         { label: "Outward", path: "/dashboard/payments/outward" }

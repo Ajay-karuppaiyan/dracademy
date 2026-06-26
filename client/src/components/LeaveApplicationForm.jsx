@@ -135,13 +135,13 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
     }
   };
 
-  const inputClasses = "w-full border border-slate-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-slate-50/30";
+  const inputClasses = "w-full border border-slate-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all duration-200 bg-slate-50/30";
   const labelClasses = "block text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-2";
 
   return (
     <div className="bg-white w-full max-w-3xl mx-auto rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-300">
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <Briefcase size={80} />
         </div>
@@ -154,7 +154,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
               Apply for Request
             </h2>
           </div>
-          <p className="text-blue-100 text-sm">
+          <p className="text-red-100 text-sm">
             Submit your leave or permission request for approval.
           </p>
         </div>
@@ -169,7 +169,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
             onClick={() => setMode("leave")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
               mode === "leave"
-                ? "bg-white text-blue-700 shadow-sm"
+                ? "bg-white text-red-700 shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -181,7 +181,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
             onClick={() => setMode("permission")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
               mode === "permission"
-                ? "bg-white text-blue-700 shadow-sm"
+                ? "bg-white text-red-700 shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -195,7 +195,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className={labelClasses}>
-                <User size={16} className="text-blue-500" />
+                <User size={16} className="text-red-500" />
                 Employee Name
               </label>
               <div className="relative">
@@ -213,7 +213,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
 
             <div>
               <label className={labelClasses}>
-                <Briefcase size={16} className="text-blue-500" />
+                <Briefcase size={16} className="text-red-500" />
                 {mode === "leave" ? "Leave Type" : "Permission Type"}
               </label>
               <select
@@ -250,7 +250,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
         {/* DATES & TIMES */}
         <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500 delay-300">
           <div className="flex items-center gap-2 text-slate-800 font-semibold text-lg border-b border-slate-100 pb-2">
-            {mode === "leave" ? <Calendar size={20} className="text-blue-600" /> : <Clock size={20} className="text-blue-600" />}
+            {mode === "leave" ? <Calendar size={20} className="text-red-600" /> : <Clock size={20} className="text-red-600" />}
             {mode === "leave" ? "Leave Schedule" : "Permission Schedule"}
           </div>
 
@@ -311,12 +311,12 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
           )}
 
           {mode === "leave" && numDays > 0 && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="text-blue-600" size={20} />
-                <span className="text-blue-800 font-medium">Total Duration Calculated</span>
+                <CheckCircle2 className="text-red-600" size={20} />
+                <span className="text-red-800 font-medium">Total Duration Calculated</span>
               </div>
-              <div className="text-2xl font-bold text-blue-700">
+              <div className="text-2xl font-bold text-red-700">
                 {numDays} {numDays === 1 ? "Day" : "Days"}
               </div>
             </div>
@@ -326,7 +326,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
         {/* ADDITIONAL DETAILS */}
         <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500 delay-500">
           <div className="flex items-center gap-2 text-slate-800 font-semibold text-lg border-b border-slate-100 pb-2">
-            <FileText size={20} className="text-blue-600" />
+            <FileText size={20} className="text-red-600" />
             Additional Information
           </div>
 
@@ -344,7 +344,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
           <div>
             <label className={labelClasses}>Supporting Document</label>
             <div className="relative">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-2xl hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer group">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-2xl hover:border-red-400 hover:bg-red-50/50 transition-all cursor-pointer group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   {file ? (
                     <>
@@ -365,7 +365,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
                     </>
                   ) : (
                     <>
-                      <div className="p-3 bg-slate-100 rounded-full mb-3 text-slate-500 group-hover:text-blue-500 group-hover:bg-blue-100 transition-colors">
+                      <div className="p-3 bg-slate-100 rounded-full mb-3 text-slate-500 group-hover:text-red-500 group-hover:bg-red-100 transition-colors">
                         <Upload size={24} />
                       </div>
                       <p className="text-sm text-slate-600">
@@ -400,7 +400,7 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
             className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 ${
               submitting
                 ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25"
+                : "bg-red-600 text-white hover:bg-red-700 shadow-red-500/25"
             }`}
           >
             {submitting ? (
@@ -411,7 +411,6 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
             ) : (
               <>
                 Confirm Submission
-                <Plus size={20} />
               </>
             )}
           </button>
@@ -421,4 +420,4 @@ const LeaveApplicationForm = ({ onSuccess, onCancel }) => {
   );
 };
 
-export default LeaveApplicationForm;
+export default LeaveApplicationForm;

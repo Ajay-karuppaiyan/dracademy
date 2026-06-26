@@ -5,6 +5,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import CustomDataTable from "../../components/DataTable";
+import ReactDOM from "react-dom";
 
 const Payroll = ({ hideHeader = false, internOnly = false }) => {
 const { user } = useAuth();
@@ -48,8 +49,6 @@ const viewAdjustments = (employee, type) => {
   setSelectedAdjustmentEmployee(employee);
   setAdjustmentModalOpen(true);
 };
-
-// fetchAttendanceSummary logic moved to backend payroll controller for performance and reliability
 
 /* ==============================
 FETCH EMPLOYEES
@@ -346,8 +345,8 @@ const generatePayslip = async (payrollId, employeeName) => {
                     }}
                     className={`px-3 py-2 rounded-md text-sm font-medium transition ${
                       selectedMonth === m.value
-                        ? "bg-brand-600 text-white shadow-md shadow-brand-200"
-                        : "bg-gray-50 text-gray-700 hover:bg-brand-50 hover:text-brand-600"
+                        ? "bg-red-600 text-white shadow-md shadow-red-200"
+                        : "bg-gray-50 text-gray-700 hover:bg-red-50 hover:text-red-600"
                     }`}
                   >
                     {m.label}
@@ -360,7 +359,7 @@ const generatePayslip = async (payrollId, employeeName) => {
 
         <button
           onClick={openPayrollForm}
-          className="flex items-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white px-5 py-2.5 rounded-lg hover:from-brand-600 hover:to-brand-700 transition shadow-md shadow-brand-200 font-medium"
+          className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2.5 rounded-lg hover:from-red-600 hover:to-red-700 transition shadow-md shadow-red-200 font-medium"
         >
           <Plus size={18} />
           Add Adjustment
@@ -386,8 +385,8 @@ const generatePayslip = async (payrollId, employeeName) => {
       </div>
 
       {/* ATTENDANCE MODAL */}
-      {attendanceModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      {attendanceModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[10000] p-4">
           <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-gray-50 p-5 border-b flex justify-between items-center">
               <div>
@@ -426,12 +425,13 @@ const generatePayslip = async (payrollId, employeeName) => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ADJUSTMENT MODAL */}
-      {adjustmentModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      {adjustmentModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[10000] p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
             <div className="bg-gray-50 p-5 border-b flex justify-between items-center">
               <div>
@@ -458,12 +458,13 @@ const generatePayslip = async (payrollId, employeeName) => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* CREATE ADJUSTMENT PAYROLL FORM MODAL */}
-      {payrollFormOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      {payrollFormOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[10000] p-4">
           <div className="bg-white rounded-2xl p-6 w-[450px] shadow-2xl space-y-5">
             <div className="flex justify-between items-center pb-3 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-800">New Payroll Adjustment</h2>
@@ -480,7 +481,7 @@ const generatePayslip = async (payrollId, employeeName) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                 <select
-                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
+                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
                   value={selectedEmployee?._id || ""}
                   onChange={(e) =>
                     setSelectedEmployee(
@@ -501,7 +502,7 @@ const generatePayslip = async (payrollId, employeeName) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adjustment Type</label>
                 <select
-                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
+                  className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-gray-50 text-gray-800 font-medium cursor-pointer"
                   value={salaryData.adjustmentType}
                   onChange={(e) =>
                     setSalaryData({
@@ -525,7 +526,7 @@ const generatePayslip = async (payrollId, employeeName) => {
                   <input
                     type="number"
                     placeholder="0"
-                    className="w-full border border-gray-300 pl-8 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 font-medium text-gray-800"
+                    className="w-full border border-gray-300 pl-8 p-2.5 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-gray-50 font-medium text-gray-800"
                     value={salaryData.adjustmentAmount || ""}
                     onChange={(e) =>
                       setSalaryData({
@@ -542,7 +543,7 @@ const generatePayslip = async (payrollId, employeeName) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Note / Reason</label>
                 <textarea
                   placeholder="Enter details..."
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 resize-none h-24 custom-scrollbar text-gray-800"
+                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-gray-50 resize-none h-24 custom-scrollbar text-gray-800"
                   value={salaryData.adjustmentNote}
                   onChange={(e) =>
                     setSalaryData({
@@ -555,13 +556,14 @@ const generatePayslip = async (payrollId, employeeName) => {
 
               <button
                 onClick={handleSavePayroll}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-md shadow-blue-200 mt-2"
+                className="w-full bg-red-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-red-700 active:bg-red-800 transition shadow-md shadow-red-200 mt-2"
               >
                 Save Adjustment
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

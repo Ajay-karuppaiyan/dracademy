@@ -4,6 +4,7 @@ import { UserPlus, Check, Loader2, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import CustomDataTable from "../../components/DataTable";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
+import AssignParentStudentsModal from "../../components/AssignParentStudentsModal";
 
 const ParentManagement = () => {
   const [parents, setParents] = useState([]);
@@ -11,6 +12,7 @@ const ParentManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedChildren, setSelectedChildren] = useState([]);
   const [showChildrenModal, setShowChildrenModal] = useState(false);
+  const [selectedParentForAssignment, setSelectedParentForAssignment] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,6 +31,9 @@ const ParentManagement = () => {
     { name: 'Mobile', selector: row => row.mobile || "N/A" },
     { name: 'Actions', center: true, cell: row => (
         <div className="flex justify-center gap-2">
+          <button onClick={() => setSelectedParentForAssignment(row)} className="bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-600 transition" title="Assign Students">
+            <UserPlus size={16} />
+          </button>
           <button onClick={() => fetchChildren(row._id)} className="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 transition" title="View Children">
             <Users size={16} />
           </button>
@@ -279,6 +284,16 @@ const ParentManagement = () => {
         onClose={() => setConfirmConfig({ isOpen: false, id: null })}
         type="danger"
       />
+
+      {selectedParentForAssignment && (
+        <AssignParentStudentsModal
+          parent={selectedParentForAssignment}
+          onClose={() => setSelectedParentForAssignment(null)}
+          onAssignSuccess={() => {
+            fetchParents();
+          }}
+        />
+      )}
     </div>
   );
 };

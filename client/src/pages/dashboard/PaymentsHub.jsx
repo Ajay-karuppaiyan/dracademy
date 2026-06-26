@@ -190,12 +190,12 @@ const PaymentsHub = () => {
           <>
             {outwardTab === "expense" && (
               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-4 sm:p-6 overflow-hidden">
-                <Expenses hideHeader={true} />
+                <Expenses />
               </div>
             )}
             {outwardTab === "salary" && (
               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-4 sm:p-6 overflow-hidden">
-                <Payroll hideHeader={true} />
+                <Payroll />
               </div>
             )}
           </>
