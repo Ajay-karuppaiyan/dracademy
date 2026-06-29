@@ -33,7 +33,7 @@ const examRoutes = require("./routes/examRoutes");
 const markRoutes = require("./routes/markRoutes");
 const examFeeRoutes = require("./routes/examFeeRoutes");
 const studentFeeRoutes = require("./routes/studentFeeRoutes");
-
+const publicResultRoutes = require("./routes/publicResultRoutes");
 
 
 dotenv.config();
@@ -84,7 +84,7 @@ app.use("/api/exams", examRoutes);
 app.use("/api/marks", markRoutes);
 app.use("/api/exam-fees", examFeeRoutes);
 app.use("/api/student-fees", studentFeeRoutes);
-
+app.use("/api/public-results", publicResultRoutes);
 
 
 app.get('/', (req, res) => {
