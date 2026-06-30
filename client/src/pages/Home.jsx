@@ -13,6 +13,7 @@ import {
   Settings,
   Info,
   Clock,
+  FileText,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import Slider from "../components/Slider";
@@ -59,7 +60,6 @@ const Home = () => {
     };
   }, []);
 
-  // Handle seamless loop for Verticals
   useEffect(() => {
     if (vIndex === verticals.length) {
       setTimeout(() => {
@@ -123,7 +123,7 @@ const Home = () => {
                 world-class universities and companies.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8 justify-center lg:justify-start">
                 <Link
                   to="/register"
                   className="px-8 py-4 bg-brand-700 text-white rounded font-bold text-lg hover:bg-brand-800 transition-colors shadow-lg shadow-brand-900/10"
@@ -146,6 +146,12 @@ const Home = () => {
                 >
                   <Clock size={20} /> Mark Attendance
                 </a>
+                <Link
+                  to="/results"
+                  className="px-8 py-4 bg-brand-500 text-white rounded font-bold text-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2"
+                >
+                  <FileText size={20} /> Exam Results
+                </Link>
               </div>
             </div>
 

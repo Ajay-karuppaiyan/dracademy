@@ -17,6 +17,7 @@ import Expenses from "../expenses/Expenses";
 import Payroll from "../payroll/Payroll";
 import OnlineCoursePayments from "../../components/payments/OnlineCoursePayments";
 import StudentFeesList from "../../components/payments/StudentFeesList";
+import VendorPaymentsList from "../../components/payments/VendorPaymentsList";
 
 const PlaceholderTable = ({ title, description }) => {
   return (
@@ -161,10 +162,7 @@ const PaymentsHub = () => {
             {inwardTab === "exam_fees" && <StudentFeesList feeType="Exam" />}
             {inwardTab === "term_fees" && <StudentFeesList feeType="Term" />}
             {inwardTab === "vendor_payments" && (
-              <PlaceholderTable
-                title="Vendor Payments (Inward)"
-                description="Commissions or revenues received from partnered vendors."
-              />
+              <VendorPaymentsList />
             )}
             {inwardTab === "others" && <StudentFeesList feeType="Other" />}
           </>

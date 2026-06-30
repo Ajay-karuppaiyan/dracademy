@@ -70,7 +70,6 @@ const AddStudentFeeModal = ({ onClose, onSave, students, centers, courses, batch
               <select required className="w-full rounded-xl border-slate-200 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-3 text-sm bg-slate-50" value={formData.feeType} onChange={e => setFormData({...formData, feeType: e.target.value})}>
                 <option value="Term">Term Fee</option>
                 <option value="Exam">Exam Fee</option>
-                <option value="Other">Other Fee</option>
               </select>
             </div>
             {formData.feeType === 'Other' && (
